@@ -60,6 +60,27 @@ Potential audiences: families managing multiple children's lessons or household 
 - Record partial/full payments; optionally confirm receipt.
 - Keep an audit history: who did what and when.
 
+### Children and lesson assignments (Household implementation v0.3.8)
+
+A household maintains a private list of children/students, initially **Melita, Elisavet and Konstantinos** for the original household. The application stores these as real child profiles rather than free-text labels on calendar cards.
+
+**Implemented in PLDS Household v0.3.8:**
+- A parent can add or rename a child.
+- An activity can be assigned to **zero, one or several** children.
+- Weekly schedule slots inherit the parent activity's assignments by default; a specific slot can override with a different child selection, including an explicit empty selection.
+- Month and list views display child markers/names, with an **Everyone / individual child / Unassigned** filter.
+- **Household financial totals remain unfiltered and are not multiplied by the number of assigned children.** A scheduled session remains one charge even when shared by siblings.
+- Assignments are synced with Supabase and restricted to adults with household access through database row-level policies.
+- The current app applies assignment edits across the recurring schedule, including past displayed months. **Historical assignment snapshots are not implemented yet**; this needs attention before paid rollout.
+
+**For the commercial teacher–family platform:**
+- Students should have separate, minimal identifiers and optional grade/level metadata, with explicit household consent and strict access control.
+- When a teacher is invited to teach a child, expose only the linked student's needed details rather than the whole household roster or other children's data.
+- Homework, study materials, lesson debriefs and progress should reference the **specific child(ren)** involved.
+- For billing, distinguish **one group session with several attendees** from **multiple separately charged individual lessons**, so selecting multiple children never silently changes prices.
+- Keep effective dates/versioned history for child assignment changes and role-based authorization for teacher edits.
+- No child account or direct child-to-teacher messaging is required for the initial household implementation.
+
 ## 4. Lesson notes and brief debriefs **[AGREED NEW FEATURE]**
 
 Both **parent and teacher** can write notes **before and after** each individual lesson.
@@ -132,7 +153,7 @@ The two products could form a useful optional integration:
 1. A teacher adds material to PLDS, tags it with subject, grade and curriculum topics, and attaches it to homework.
 2. **With the appropriate permissions and a deliberate user action**, the family/student opens the assignment in Greeklingo, views the relevant material and practices aligned exercises.
 3. If enabled and consented to, Greeklingo can send **assignment completion or topic-level progress** back to the linked PLDS teacher dashboard, without exposing unrelated child data.
-5. Teachers may eventually build/reuse interactive Greeklingo exercises from **their own licensed content**, but file-to-exercise conversion, copyright handling and pedagogical quality need separate validation.
+6. Teachers may eventually build/reuse interactive Greeklingo exercises from **their own licensed content**, but file-to-exercise conversion, copyright handling and pedagogical quality need separate validation.
 
 **Architecture:** keep **PLDS as scheduling, family–teacher communication, assignments and billing**, while **Greeklingo handles interactive learning and adaptive practice**. Use optional interoperability and well-defined permissions rather than merging both into one complicated app. Neither should require the other to function.
 
@@ -153,12 +174,12 @@ Different teacher-family relationships, activities, and service types may need d
 **Proposed fair policy workflow (must be agreed before launch):**
 1. Each participant can propose its preferred advance-notice requirements.
 2. Terms that affect **the other participant** take effect only when both parties accept the policy, with a clear summary of what happens on each side.
-5. When a cancellation/rescheduling is requested, show the applicable cutoff timestamp and whether it is **within the free window** or **late** before confirmation.
-6. Both parties can propose changes; the counterparty sees **Accept / Decline / Suggest another time**.
-7. Fee-free cancellations remove the lesson charge. A late parent cancellation can retain an agreed fee; a teacher cancellation must not automatically charge the parent for an undelivered session. Any credits/penalties are explicitly defined in the agreed terms.
-8. A replacement session is linked to the original to prevent duplicate charges.
-9. Policy changes should apply **prospectively**, not retroactively, unless both parties explicitly agree.
-10. Keep an audit log of policy versions, acceptance timestamps, actions, and any billing outcomes.
+6. When a cancellation/rescheduling is requested, show the applicable cutoff timestamp and whether it is **within the free window** or **late** before confirmation.
+7. Both parties can propose changes; the counterparty sees **Accept / Decline / Suggest another time**.
+8. Fee-free cancellations remove the lesson charge. A late parent cancellation can retain an agreed fee; a teacher cancellation must not automatically charge the parent for an undelivered session. Any credits/penalties are explicitly defined in the agreed terms.
+9. A replacement session is linked to the original to prevent duplicate charges.
+10. Policy changes should apply **prospectively**, not retroactively, unless both parties explicitly agree.
+11. Keep an audit log of policy versions, acceptance timestamps, actions, and any billing outcomes.
 
 **Edge cases to specify before implementation:** differing teacher/parent preferred windows, no-shows, force majeure, mutually agreed exemptions, recurring lessons vs one-offs, DST/timezone boundaries, overlapping reschedule proposals, and payment already made.
 
@@ -193,8 +214,8 @@ Trigger candidates:
 Delivery options, in priority order:
 1. In-app notifications (core feature, can be implemented without per-message email costs).
 2. Browser/PWA push notifications where device/browser support permits and the user opts in. Requires proper push subscription handling and backend delivery.
-5. Optional email digests/critical alerts after cost and provider quotas are assessed. **Do not rely on Supabase's restrictive free authentication-email allowance for general messaging.**
-6. SMS/WhatsApp **not in the initial plan** due to costs and provider dependencies.
+6. Optional email digests/critical alerts after cost and provider quotas are assessed. **Do not rely on Supabase's restrictive free authentication-email allowance for general messaging.**
+7. SMS/WhatsApp **not in the initial plan** due to costs and provider dependencies.
 
 Preferences: per event type and channel, quiet hours, reminder lead time, email opt-in, unread badges, no spam from repeated schedule edits. Respect privacy by avoiding sensitive lesson-note content in lock-screen notification previews.
 
@@ -252,6 +273,7 @@ Preferences: per event type and channel, quiet hours, reminder lead time, email 
 ## 14. Delivery roadmap
 
 ### Phase A — secure working household baseline
+- [x] Household children profiles, per-activity assignments, per-weekly-slot overrides and a child calendar filter (v0.3.8; verified with simulated UI and database RLS checks).
 - [ ] Verify both existing password accounts can sign in with persistent sessions.
 - [ ] Confirm household data syncs accurately between phones and is protected by RLS.
 - [ ] Bring approved demo visual design to the real Supabase-connected app.
@@ -261,6 +283,7 @@ Preferences: per event type and channel, quiet hours, reminder lead time, email 
 - [ ] Teacher profiles and multi-household membership/relationship model.
 - [ ] Invitations initiated by either participant.
 - [ ] Shared lesson records, role-scoped calendars and payment views.
+- [ ] Child-scoped permissions between teacher and household, and effective-dated assignment history.
 - [ ] Pre-lesson notes + post-lesson debriefs from both sides.
 - [ ] Homework linked to lessons and individual students, with due dates, completion/review states and an outstanding-work overview.
 - [ ] Private teacher resource library: uploads, metadata, sharing permissions, resource-to-homework links and secure downloads.
@@ -285,13 +308,14 @@ Preferences: per event type and channel, quiet hours, reminder lead time, email 
 2. Whether lesson notes have separate private/shared channels and how edit history works.
 3. Homework authoring/assignment permissions, optional child access, and submission/attachment scope.
 4. Teacher library formats, storage quotas, copyright controls, sharing/retention, and optional Greeklingo curriculum/progress integration.
-5. Whether the same session can be marked completed by either party without confirmation; payment confirmation workflow.
-6. How households with two adults divide notes, notifications and permissions.
-7. Whether a teacher can communicate with more than one parent at a time and whether read receipts are worth the complexity.
-8. Which notification channels and reminders are included free vs paid.
-9. Whether professionals can set recurring availability, breaks and multiple locations.
-10. Consumer vs teacher pricing, one-time vs subscription, taxes, invoicing.
-11. Final broader brand name and rollout strategy.
+5. Billing semantics for shared/group lessons vs individually priced lessons; historical assignment snapshots, effective dates, and teacher-visible child details.
+6. Whether the same session can be marked completed by either party without confirmation; payment confirmation workflow.
+7. How households with two adults divide notes, notifications and permissions.
+8. Whether a teacher can communicate with more than one parent at a time and whether read receipts are worth the complexity.
+9. Which notification channels and reminders are included free vs paid.
+10. Whether professionals can set recurring availability, breaks and multiple locations.
+11. Consumer vs teacher pricing, one-time vs subscription, taxes, invoicing.
+12. Final broader brand name and rollout strategy.
 
 ---
 
