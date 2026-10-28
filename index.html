@@ -151,18 +151,18 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 /* v0.3.7: new official activity colors, always white lettering for scheduled lessons.
    Selected swatches retain the exact palette hex; shaded text gives contrast on light colors.
    The cancelled/rescheduled status palettes remain completely unaffected. */
-:root .calendar-event[data-palette="true"][data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement),
-:root .activity-box[data-palette="true"][data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement){
+:root[data-theme] .calendar-event[data-palette="true"][data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement),
+:root[data-theme] .activity-box[data-palette="true"][data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement){
  background:var(--chosen-bg)!important;
 }
-:root .calendar-event[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement),
-:root .calendar-event[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement) *,
-:root .activity-box[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement),
-:root .activity-box[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement) .entry,
-:root .activity-box[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement) .entry b,
-:root .activity-box[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement) .entry small,
-:root .activity-box[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement) b,
-:root .activity-box[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement) small{
+:root[data-theme] .calendar-event[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement),
+:root[data-theme] .calendar-event[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement) *,
+:root[data-theme] .activity-box[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement),
+:root[data-theme] .activity-box[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement) .entry,
+:root[data-theme] .activity-box[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement) .entry b,
+:root[data-theme] .activity-box[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement) .entry small,
+:root[data-theme] .activity-box[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement) b,
+:root[data-theme] .activity-box[data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement) small{
  color:#ffffff!important;
  text-shadow:0 1px 2px rgba(0,0,0,.85),0 0 3px rgba(0,0,0,.65)!important;
 }
