@@ -214,10 +214,11 @@ Preferences: per event type and channel, quiet hours, reminder lead time, email 
 
 ## 11. Visual language from PLDS Household prototype
 
-**Baseline is the latest design demo v0.3.4, not the deployed authentication app.** Transfer to production only after core authentication and synchronization are stable.
+**Current household design baseline: live PLDS Household v0.3.7** (October 2026). The commercial platform will adapt this visual language, while the teacher-facing dashboard will need its own workflow-specific layout.
 
 - Light and dark themes; month and list calendar, colored dashboard cards.
-- Scheduled sessions retain each activity's original hue but appear lighter / more vivid as iterated; predominantly white bold text; yellow activity uses darker text for legibility.
+- Scheduled session and dashboard-card colors use the agreed selectable palette: `#50BEF5`, `#5065F5`, `#9850F5`, `#F550C7`, `#43C8C4`, `#48D183`, `#90E852`, `#F0C956`, `#F0A956`. **All scheduled activity lettering is bold white**, with dark text shadow to help contrast on brighter shades.
+- Current household mapping: Greek `#5065F5`, English `#43C8C4`, French `#9850F5`, Piano `#F0A956`, Cleaning `#F550C7`, Speech therapy `#F0C956`. The remaining shades are choices for other activities; colors are editable and synchronized between household devices.
 - Cancelled: light grey background, **red 3px outline**, bold red letters.
 - Rescheduled original: light grey background, **black 3px outline**, bold black letters.
 - Rescheduled replacement: light grey background, **green 3px outline**, bold green letters.
