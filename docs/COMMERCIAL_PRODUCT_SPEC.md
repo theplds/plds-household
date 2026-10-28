@@ -37,6 +37,7 @@ Potential audiences: families managing multiple children's lessons or household 
 - Mark attendance, propose cancellation or a new time, respond to changes.
 - Shared pre-lesson and post-lesson notes; optional private family notes.
 - Homework per child, with deadlines, completion progress and teacher feedback.
+- Teacher-shared study resources linked to relevant lessons and homework, with explicit access permissions.
 - Message a teacher about a relationship or specific lesson.
 - Receive reminders, proposed changes, notes, invoices/payment confirmations.
 
@@ -48,6 +49,7 @@ Potential audiences: families managing multiple children's lessons or household 
 - Earnings, payments received, outstanding balances per client.
 - Shared pre-lesson notes and post-lesson debriefs; optional private professional notes.
 - Assign homework and track submitted/completed work for linked students.
+- Maintain a private teacher-owned **study-material library** and share selected items with particular families, students, lessons or homework.
 - Communicate with parents and receive confirmations/notifications.
 - Professional reports and exports are potential premium features.
 
@@ -102,7 +104,41 @@ Each lesson should have a clearly labelled **Homework** area, separate from the 
 
 **Open decisions:** Can parents create homework/reminders of their own, or only teachers? Should assignments be visible to children via a future child-facing view? Should teachers be able to mark an assignment optional? Define data retention and attachment size limits before public launch.
 
-## 6. Cancellation and rescheduling rules **[AGREED NEW FEATURE]**
+## 6. Teacher resource library and study materials **[AGREED NEW FEATURE]**
+
+Teachers have a **private, teacher-owned study-material library**, independent of individual lessons. They can upload their own resources, organize them, and **selectively share** resources with specific linked students/families, lessons, or homework assignments.
+
+**Essential workflow:**
+- Upload and manage **PDF worksheets, lesson notes, images, documents**, and external learning-resource links; distinguish original teacher-created materials from third-party materials.
+- Add a title, optional description, subject, level/grade, topics/learning objectives, tags, and an optional resource revision/version. A teacher should be able to reuse one resource across lessons and families without uploading duplicate copies.
+- A resource is **private by default**. The teacher explicitly selects which household/student(s) can access it; sharing the link must not expose it to every client or to the general public.
+- Attach existing library resources to a **specific lesson**, pre-lesson briefing, post-lesson debrief, or **homework** item. Parents can open/download shared resources according to the sharing permissions; optionally request clarification through the lesson conversation.
+- Show a student/family-facing **Materials** area with a clear record of which teacher shared each item, when it was shared, and the relevant lesson/homework. Teachers see a private overview of their whole library and sharing destinations.
+- The teacher may update material in the library while retaining an appropriate revision history for previously assigned versions, especially when it affects homework.
+
+**Trust, safety and operating costs:**
+- Store files in private storage with authorization checks and short-lived signed download links, not publicly readable GitHub or storage URLs.
+- Enforce appropriate file type/size limits, storage quotas, and malware/unsafe-file screening before a commercial launch.
+- Do not assume teachers own copyright to textbook scans or other third-party materials; require appropriate upload and redistribution rights, provide a takedown/removal process, and avoid publicly indexing private teaching content.
+- Keep access strictly between teacher and authorized family adults. Clarify whether teacher access persists after a household relationship ends, and define material retention/deletion/export policy.
+- Avoid AI processing, redistribution, or training on uploaded materials without a clear lawful basis and explicit controls. Protect child/student data.
+
+### Connection with **Greeklingo** (separate educational app concept)
+
+Greeklingo is the independently conceived **Greek-school-curriculum learning app**, with adaptive exercises, freely chosen lessons/revision topics, and **non-addictive engagement** (no streak penalties or coercive point resets). It initially focuses on Greek primary curriculum and can expand later.
+
+The two products could form a useful optional integration:
+
+1. A teacher adds material to PLDS, tags it with subject, grade and curriculum topics, and attaches it to homework.
+2. **With the appropriate permissions and a deliberate user action**, the family/student opens the assignment in Greeklingo, views the relevant material and practices aligned exercises.
+3. If enabled and consented to, Greeklingo can send **assignment completion or topic-level progress** back to the linked PLDS teacher dashboard, without exposing unrelated child data.
+5. Teachers may eventually build/reuse interactive Greeklingo exercises from **their own licensed content**, but file-to-exercise conversion, copyright handling and pedagogical quality need separate validation.
+
+**Architecture:** keep **PLDS as scheduling, family–teacher communication, assignments and billing**, while **Greeklingo handles interactive learning and adaptive practice**. Use optional interoperability and well-defined permissions rather than merging both into one complicated app. Neither should require the other to function.
+
+**Open decisions:** teacher resource quota and allowed formats; offline access; editable documents vs view-only; default student downloads; resource licensing; per-student access after the teaching relationship ends; whether Greeklingo integration is optional/free/paid; how teachers tag curriculum concepts; data portability between apps.
+
+## 7. Cancellation and rescheduling rules **[AGREED NEW FEATURE]**
 
 **Both parent and teacher can define cutoff periods for cancelling or rescheduling without charge/penalty.**
 
@@ -117,16 +153,16 @@ Different teacher-family relationships, activities, and service types may need d
 **Proposed fair policy workflow (must be agreed before launch):**
 1. Each participant can propose its preferred advance-notice requirements.
 2. Terms that affect **the other participant** take effect only when both parties accept the policy, with a clear summary of what happens on each side.
-4. When a cancellation/rescheduling is requested, show the applicable cutoff timestamp and whether it is **within the free window** or **late** before confirmation.
-5. Both parties can propose changes; the counterparty sees **Accept / Decline / Suggest another time**.
-6. Fee-free cancellations remove the lesson charge. A late parent cancellation can retain an agreed fee; a teacher cancellation must not automatically charge the parent for an undelivered session. Any credits/penalties are explicitly defined in the agreed terms.
-7. A replacement session is linked to the original to prevent duplicate charges.
-8. Policy changes should apply **prospectively**, not retroactively, unless both parties explicitly agree.
-9. Keep an audit log of policy versions, acceptance timestamps, actions, and any billing outcomes.
+5. When a cancellation/rescheduling is requested, show the applicable cutoff timestamp and whether it is **within the free window** or **late** before confirmation.
+6. Both parties can propose changes; the counterparty sees **Accept / Decline / Suggest another time**.
+7. Fee-free cancellations remove the lesson charge. A late parent cancellation can retain an agreed fee; a teacher cancellation must not automatically charge the parent for an undelivered session. Any credits/penalties are explicitly defined in the agreed terms.
+8. A replacement session is linked to the original to prevent duplicate charges.
+9. Policy changes should apply **prospectively**, not retroactively, unless both parties explicitly agree.
+10. Keep an audit log of policy versions, acceptance timestamps, actions, and any billing outcomes.
 
 **Edge cases to specify before implementation:** differing teacher/parent preferred windows, no-shows, force majeure, mutually agreed exemptions, recurring lessons vs one-offs, DST/timezone boundaries, overlapping reschedule proposals, and payment already made.
 
-## 7. Communication system **[AGREED NEW FEATURE]**
+## 8. Communication system **[AGREED NEW FEATURE]**
 
 **In-app messaging** between linked teachers and household adults, with two layers:
 
@@ -142,7 +178,7 @@ Design ideas:
 - Protect private information, prevent cross-family message exposure, consider blocking/reporting and account-disconnection behavior before public rollout.
 - **Critical decisions stay structured:** chat messages alone should not silently change session times, agreed fees, or cancellation terms. Use explicit proposal/accept actions and keep their confirmation in the conversation as a system event.
 
-## 8. Notifications **[AGREED NEW FEATURE]**
+## 9. Notifications **[AGREED NEW FEATURE]**
 
 **Start with an in-app notification center**: reliable, low operating cost, read/unread states, and direct links to relevant sessions or messages.
 
@@ -157,14 +193,14 @@ Trigger candidates:
 Delivery options, in priority order:
 1. In-app notifications (core feature, can be implemented without per-message email costs).
 2. Browser/PWA push notifications where device/browser support permits and the user opts in. Requires proper push subscription handling and backend delivery.
-4. Optional email digests/critical alerts after cost and provider quotas are assessed. **Do not rely on Supabase's restrictive free authentication-email allowance for general messaging.**
-5. SMS/WhatsApp **not in the initial plan** due to costs and provider dependencies.
+5. Optional email digests/critical alerts after cost and provider quotas are assessed. **Do not rely on Supabase's restrictive free authentication-email allowance for general messaging.**
+6. SMS/WhatsApp **not in the initial plan** due to costs and provider dependencies.
 
 Preferences: per event type and channel, quiet hours, reminder lead time, email opt-in, unread badges, no spam from repeated schedule edits. Respect privacy by avoiding sensitive lesson-note content in lock-screen notification previews.
 
 **Open:** default reminder timings, whether urgent changes should bypass quiet hours, and feasible free-tier notification limits.
 
-## 9. Financial and session engine
+## 10. Financial and session engine
 
 - Recurring lesson templates create individual session instances.
 - Session states: scheduled, completed, cancelled-free, cancelled-chargeable, rescheduled-original, rescheduled-replacement; consider proposed/pending confirmation as distinct states.
@@ -176,7 +212,7 @@ Preferences: per event type and channel, quiet hours, reminder lead time, email 
 - In-app money tracking first. Processing actual payments, invoices and tax compliance are separate potential commercial phases.
 - Auditable change history with actor, timestamp, before/after values and links to relevant agreements.
 
-## 10. Visual language from PLDS Household prototype
+## 11. Visual language from PLDS Household prototype
 
 **Baseline is the latest design demo v0.3.4, not the deployed authentication app.** Transfer to production only after core authentication and synchronization are stable.
 
@@ -189,7 +225,7 @@ Preferences: per event type and channel, quiet hours, reminder lead time, email 
 - Responsive phone-first layout; sufficient contrast in both themes.
 - Professional dashboard can use consistent statuses but optimize for viewing multiple families.
 
-## 11. Privacy, account and technical principles
+## 12. Privacy, account and technical principles
 
 - **One platform, two role-specific dashboards**, shared session/ledger engine.
 - Many-to-many teacher ↔ household relationships via invitation and acceptance.
@@ -201,7 +237,7 @@ Preferences: per event type and channel, quiet hours, reminder lead time, email 
 - Sensitive notes require careful scope; no public sharing by default.
 - Backup/export strategy, audit trails, account recovery, accessibility and mobile reliability required before paid rollout.
 
-## 12. Commercialization thoughts — **NOT FINAL DECISIONS**
+## 13. Commercialization thoughts — **NOT FINAL DECISIONS**
 
 - **Two acquisition paths:** families invite teachers, teachers invite families. This supports referral growth without forcing both parties to join simultaneously.
 - Consumer/free tier should remain genuinely useful, not crippled.
@@ -212,7 +248,7 @@ Preferences: per event type and channel, quiet hours, reminder lead time, email 
 - Starting in Greece could suit Greek parents and local lesson practices; international expansion possible later.
 - Name/branding: “PLDS Household” is the existing family prototype name. A broader product name may suit teacher + parent users.
 
-## 13. Delivery roadmap
+## 14. Delivery roadmap
 
 ### Phase A — secure working household baseline
 - [ ] Verify both existing password accounts can sign in with persistent sessions.
@@ -226,6 +262,7 @@ Preferences: per event type and channel, quiet hours, reminder lead time, email 
 - [ ] Shared lesson records, role-scoped calendars and payment views.
 - [ ] Pre-lesson notes + post-lesson debriefs from both sides.
 - [ ] Homework linked to lessons and individual students, with due dates, completion/review states and an outstanding-work overview.
+- [ ] Private teacher resource library: uploads, metadata, sharing permissions, resource-to-homework links and secure downloads.
 - [ ] Configurable **bilateral** free cancellation/rescheduling cutoffs and agreement flow.
 - [ ] Structured proposals for session changes, linked replacement sessions, and audit log.
 - [ ] Teacher-family + session-specific conversations.
@@ -238,20 +275,22 @@ Preferences: per event type and channel, quiet hours, reminder lead time, email 
 - [ ] Reliability testing, backups and a clear support process.
 - [ ] Pilot with families and teachers; measure retention and paid demand.
 - [ ] Choose sustainable pricing and payments/tax implementation.
+- [ ] Optional Greeklingo integration for curriculum-linked homework and consented progress sharing.
 - [ ] Professional reporting, exports and other validated premium features.
 
-## 14. Open product decisions
+## 15. Open product decisions
 
 1. Exact definition of "free" cutoff by actor and action: who sets requirements vs who agrees, and who bears a late cancellation fee or credit.
 2. Whether lesson notes have separate private/shared channels and how edit history works.
 3. Homework authoring/assignment permissions, optional child access, and submission/attachment scope.
-4. Whether the same session can be marked completed by either party without confirmation; payment confirmation workflow.
-5. How households with two adults divide notes, notifications and permissions.
-6. Whether a teacher can communicate with more than one parent at a time and whether read receipts are worth the complexity.
-7. Which notification channels and reminders are included free vs paid.
-8. Whether professionals can set recurring availability, breaks and multiple locations.
-9. Consumer vs teacher pricing, one-time vs subscription, taxes, invoicing.
-10. Final broader brand name and rollout strategy.
+4. Teacher library formats, storage quotas, copyright controls, sharing/retention, and optional Greeklingo curriculum/progress integration.
+5. Whether the same session can be marked completed by either party without confirmation; payment confirmation workflow.
+6. How households with two adults divide notes, notifications and permissions.
+7. Whether a teacher can communicate with more than one parent at a time and whether read receipts are worth the complexity.
+8. Which notification channels and reminders are included free vs paid.
+9. Whether professionals can set recurring availability, breaks and multiple locations.
+10. Consumer vs teacher pricing, one-time vs subscription, taxes, invoicing.
+11. Final broader brand name and rollout strategy.
 
 ---
 
