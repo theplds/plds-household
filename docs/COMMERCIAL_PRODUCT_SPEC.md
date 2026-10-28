@@ -1,3 +1,11 @@
+## Household phone push notifications — implemented v0.3.11 (2026-10-28)
+
+- Household members opt in separately per Android/browser device with **Enable alerts**; browser permission is required.
+- Installed web-app manifest and service worker receive Web Push messages even when the dashboard is not open, subject to OS/browser delivery rules.
+- Authenticated writes to activities, schedules, overrides, payments, children and assignment joins produce audit entries. The writing client calls a Supabase Edge Function after a successful save to dispatch a push to *other* household members' subscribed devices, never to the actor.
+- Push endpoints and encryption keys are stored in a household-restricted Supabase table; duplicate delivery attempts are tracked server-side. Web Push VAPID signing credentials live only in the deployed Edge Function, not the public GitHub Pages client.
+- **Limitations:** delivery depends on browser support, notification permission, the sender remaining connected long enough to invoke the dispatch endpoint, and push-provider availability. No full end-to-end device test has been completed. A database-triggered background retry queue and opt-out UI are future hardening work. No email or WhatsApp notifications are sent.
+
 # PLDS — Commercial Platform Product Specification
 
 > **Living product reference** · Created 2026-10-28
