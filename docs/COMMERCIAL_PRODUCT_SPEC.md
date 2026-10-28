@@ -62,7 +62,7 @@ Potential audiences: families managing multiple children's lessons or household 
 
 ### Children and lesson assignments (Household implementation v0.3.8)
 
-A household maintains a private list of children/students, initially **Melita, Elisavet and Konstantinos** for the original household. The application stores these as real child profiles rather than free-text labels on calendar cards.
+A household maintains a private list of children/students. The original household's profiles are seeded directly into its protected database; real children's names should never appear in this public product specification. The application stores them as child profiles rather than free-text labels on calendar cards.
 
 **Implemented in PLDS Household v0.3.8:**
 - A parent can add or rename a child.
