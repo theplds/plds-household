@@ -3,8 +3,8 @@ import {readFileSync} from 'node:fs';
 import {Script,createContext,runInContext} from 'node:vm';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.129/);
-assert.ok(!html.includes('v0.3.128'),'The deployed version must be updated consistently');
+assert.match(html,/PLDS Household v0\.3\.130/);
+assert.ok(!html.includes('v0.3.129'),'The deployed version must be updated consistently');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.ok(scripts.length>=1,'No embedded app scripts found');
 for(const [,code] of scripts)new Script(code);
@@ -59,7 +59,9 @@ assert.ok(!html.includes('Changing an activity price can recalculate historical 
 assert.match(html,/monthlyReportCsv/);
 // The 3-dot menu offers navigation, not financial or destructive actions.
 const menu=html.slice(html.indexOf('<details id="headerMoreMenu"'),html.indexOf('</details>',html.indexOf('<details id="headerMoreMenu"'))+10);
-assert.match(menu,/data-menu-tab="children"/);
+assert.ok(!menu.includes('data-menu-tab="children"'),'Children must be under Household Options, not the 3-dot menu');
+assert.match(menu,/class="header-menu-dots"/);
+assert.match(html,/#headerMoreMenu \.header-menu-dots\{[^}]*box-shadow:0 -7px 0 currentColor,0 7px 0 currentColor/);
 assert.match(menu,/data-menu-tab="history"/);
 assert.match(menu,/id="openSettings"/);
 for(const id of ['openMonthlyReport','openSetupGuide','resetMonthActivities']){
@@ -71,11 +73,17 @@ const options=html.slice(html.indexOf('<dialog id="settingsDialog"'),html.indexO
 for(const id of ['optionsProfile','optionsHousehold','optionsNotifications','optionsAppearance','optionsAccount']){
  assert.ok(options.includes('id="'+id+'"'),'Missing Options section '+id);
 }
-for(const id of ['openSetupGuide','resetMonthActivities','settingsName','enablePush','repairPush','themeToggle','dailyReminderEnabled','dailyReminderTime','logout','refreshAccess']){
+for(const id of ['manageChildren','openSetupGuide','resetMonthActivities','settingsName','enablePush','repairPush','themeToggle','dailyReminderEnabled','dailyReminderTime','logout','refreshAccess']){
  assert.ok(options.includes('id="'+id+'"'),'Misplaced Options action '+id);
  assert.equal(html.split('id="'+id+'"').length-1,1,'Duplicated UI id '+id);
 }
 assert.match(html,/optionsHousehold'\)\.addEventListener\('toggle'/);
+assert.match(options,/<details id="optionsProfile" class="options-section">/);
+assert.ok(!options.includes('<details id="optionsProfile" class="options-section" open>'),'Profile must initially be collapsed');
+assert.match(html,/\$\('optionsProfile'\)\.open=false/);
+assert.match(html,/\$\('manageChildren'\)\.onclick=\(\)=>\{\$\('settingsDialog'\)\.close\(\);tab='children';render\(\)\}/);
+assert.ok(options.indexOf('id="manageChildren"')>options.indexOf('id="optionsHousehold"'),'Children action should be within Household section');
+assert.ok(options.indexOf('id="manageChildren"')<options.indexOf('</details>',options.indexOf('id="optionsHousehold"')),'Children action must be inside Household accordion');
 assert.match(html,/Price changes apply from today/);
 assert.match(html,/password of at least 12 characters and your name/);
 assert.ok(!html.includes('Changing an activity price affects past months too'),'Stale pricing guidance');
@@ -139,4 +147,4 @@ for(const mode of ['monthview','sessions','budget','activities','payments','chil
 assert.match(html,/#content\[hidden\]\{display:none!important\}/);
 assert.ok(!html.includes('content:"⌄"'),'Replace the legacy Options dropdown glyph');
 assert.match(html,/border-right:2px solid currentColor/);
-console.log('PASS: finance, navigation exclusivity, highlights, content visibility, and modern chevrons.');
+console.log('PASS: finance, navigation exclusivity, Options closed by default, centered three dots, relocated Children and modern chevrons.');
