@@ -713,8 +713,14 @@ function billingPeriodAt(a,date){
  for(const h of activityPrices)if(h.activity_id===a.id&&h.effective_from<=monthStart)period=h.billing_period||'session';
  return period;
 }
+function activityCreatedMonth(a){
+ if(!a.created_at)return '0001-01';
+ const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Athens',year:'numeric',month:'2-digit'}).formatToParts(new Date(a.created_at));
+ const year=parts.find(p=>p.type==='year')?.value,mon=parts.find(p=>p.type==='month')?.value;
+ return year&&mon?year+'-'+mon:a.created_at.slice(0,7);
+}
 function monthlyActivityFee(a,forMonth){
- if(a.created_at&&a.created_at.slice(0,7)>forMonth)return 0;
+ if(activityCreatedMonth(a)>forMonth)return 0;
  return billingPeriodAt(a,forMonth+'-01')==='monthly'?priceAt(a,forMonth+'-01'):0;
 }
 function activityMonthTotal(a,forMonth,ss){
@@ -1536,7 +1542,7 @@ function monthlyReportModel(reportMonth=month,includeSessions=false){
    time:lessonTimeRange(x),children:lessonKids(x),
    status,charge:Number(x.charge)||0
   };
- }),...activities.filter(a=>billingPeriodAt(a,reportMonth+'-01')==='monthly'&&(!a.created_at||a.created_at.slice(0,7)<=reportMonth)).map(a=>({
+ }),...activities.filter(a=>billingPeriodAt(a,reportMonth+'-01')==='monthly'&&activityCreatedMonth(a)<=reportMonth).map(a=>({
   activityId:a.id,activity:a.name,date:reportMonth+'-01',originalDate:'',
   time:'—',children:activityKids(a)||'—',status:'Fixed monthly fee',charge:monthlyActivityFee(a,reportMonth)
  }))].sort((a,b)=>a.date.localeCompare(b.date)||a.activity.localeCompare(b.activity));
