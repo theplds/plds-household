@@ -1244,5 +1244,160 @@ $('openSetupGuide').onclick=()=>{
  openHouseholdSetup(false);
 };
 
+
+/* Export selected billing month without sending financial data to a third party. */
+let currentMonthlyReport=null;
+function monthlyReportModel(){
+ if(!user||!HOUSE||!householdProfile)throw Error('Sign in to your household first.');
+ if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))throw Error('Choose a valid billing month.');
+ const monthName=new Date(month+'-01T12:00:00').toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+ const name=householdProfile.name;
+ const timestamp=new Date();
+ const lessonRows=sessions().map(x=>{
+  const status=x.replacement?'Rescheduled — new date':
+    x.o?.status==='rescheduled'?'Rescheduled — original (no charge)':
+    x.o?.status==='cancelled_free'?'Cancelled — no charge':
+    x.o?.status==='cancelled_charged'?'Cancelled — charged':
+    x.o?.status==='completed'?'Completed':'Scheduled';
+  return {
+   activityId:x.a.id,activity:x.a.name,
+   date:x.d.date,originalDate:x.replacement?x.o.session_date:'',
+   time:lessonTimeRange(x),children:lessonKids(x),
+   status,charge:Number(x.charge)||0
+  };
+ });
+ // Credits applied to the selected billing month, even when paid in a different month.
+ const credits=payments.flatMap(p=>(p.payment_allocations||[])
+  .filter(a=>String(a.billing_month||'').slice(0,7)===month)
+  .map(a=>({
+   activityId:p.activity_id,activity:activities.find(x=>x.id===p.activity_id)?.name||'Activity',
+   paidOn:p.paid_on||'',allocated:Number(a.amount)||0,paymentTotal:Number(p.amount)||0,notes:p.notes||''
+  })));
+ // Cash received in the calendar month can differ from credits allocated to this billing month.
+ const cash=payments.filter(p=>String(p.paid_on||'').slice(0,7)===month).map(p=>({
+  activityId:p.activity_id,activity:activities.find(x=>x.id===p.activity_id)?.name||'Activity',
+  date:p.paid_on||'',amount:Number(p.amount)||0,
+  allocation:(p.payment_allocations||[]).map(a=>String(a.billing_month).slice(0,7)+': '+euro(a.amount)).join('; '),
+  notes:p.notes||''
+ }));
+ const activityRows=activities.map(a=>{
+  const entries=lessonRows.filter(x=>x.activityId===a.id),allocated=credits.filter(x=>x.activityId===a.id);
+  const charges=entries.reduce((sum,x)=>sum+x.charge,0);
+  const paid=allocated.reduce((sum,x)=>sum+x.allocated,0);
+  return {
+   activity:a.name,
+   entries:entries.length,
+   cancelledFree:entries.filter(x=>x.status==='Cancelled — no charge').length,
+   cancelledCharged:entries.filter(x=>x.status==='Cancelled — charged').length,
+   moved:entries.filter(x=>x.status.startsWith('Rescheduled')).length,
+   charges,paid,net:charges-paid
+  };
+ });
+ const total=(arr,k)=>arr.reduce((n,x)=>n+Number(x[k]||0),0);
+ return {household:name,month,monthName,generated:timestamp.toLocaleString('en-GB'),
+  activityRows,lessonRows,credits,cash,
+  charges:total(activityRows,'charges'),allocated:total(activityRows,'paid'),
+  cashReceived:total(cash,'amount'),net:total(activityRows,'net')
+ };
+}
+function reportTable(headings,rows,empty){
+ const makeCell=(value,numeric,tag)=>'<'+tag+(numeric?' class="number"':'')+'>'+esc(value)+'</'+tag+'>';
+ return '<div class="report-table-scroll"><table><thead><tr>'+headings.map(x=>makeCell(x.label,x.numeric,'th')).join('')+'</tr></thead>'
+  +'<tbody>'+(rows.length?rows.map(r=>'<tr>'+r.map((value,i)=>makeCell(value,!!headings[i].numeric,'td')).join('')+'</tr>').join(''):
+    '<tr><td colspan="'+headings.length+'">'+esc(empty)+'</td></tr>')+'</tbody></table></div>';
+}
+function renderMonthlyReport(){
+ const m=monthlyReportModel();currentMonthlyReport=m;
+ $('monthlyReportSubtitle').textContent=m.household+' · '+m.monthName;
+ const chargesLabel=m.charges, allocatedLabel=m.allocated;
+ const kpis=[
+  ['Charges',chargesLabel],
+  ['Allocated payments',allocatedLabel],
+  ['Net for month',m.net],
+  ['Cash received in month',m.cashReceived]
+ ];
+ const summary=reportTable([
+  {label:'Activity'},{label:'Entries',numeric:true},{label:'Free cancellations',numeric:true},
+  {label:'Charged cancellations',numeric:true},{label:'Moved entries',numeric:true},
+  {label:'Charges',numeric:true},{label:'Allocated',numeric:true},{label:'Net',numeric:true}
+ ],m.activityRows.map(x=>[x.activity,x.entries,x.cancelledFree,x.cancelledCharged,x.moved,euro(x.charges),euro(x.paid),euro(x.net)]),'No activities have been created.');
+ const lessons=reportTable([
+  {label:'Date'},{label:'Activity'},{label:'Time'},{label:'Children'},{label:'Status'},
+  {label:'Original date'},{label:'Charge',numeric:true}
+ ],m.lessonRows.map(x=>[displayDateDMY(x.date),x.activity,x.time,x.children,x.status,
+  x.originalDate?displayDateDMY(x.originalDate):'—',euro(x.charge)]),'No lessons in this billing month.');
+ const credits=reportTable([
+  {label:'Payment date'},{label:'Activity'},{label:'Allocated to month',numeric:true},{label:'Whole payment',numeric:true},{label:'Notes'}
+ ],m.credits.map(x=>[displayDateDMY(x.paidOn),x.activity,euro(x.allocated),euro(x.paymentTotal),x.notes]),'No payments allocated to this month.');
+ const cash=reportTable([
+  {label:'Paid on'},{label:'Activity'},{label:'Cash received',numeric:true},{label:'Allocated billing months'},{label:'Notes'}
+ ],m.cash.map(x=>[displayDateDMY(x.date),x.activity,euro(x.amount),x.allocation||'Unallocated',x.notes]),'No cash payments recorded with a payment date in this month.');
+ $('monthlyReportBody').innerHTML=
+   '<div class="report-heading"><h2>'+esc(m.household)+'</h2><span>'+esc(m.monthName)+'</span></div>'
+  +'<p class="muted">Generated '+esc(m.generated)+' · Billing period '+esc(m.month)+' · Currency EUR</p>'
+  +'<div class="report-kpis">'+kpis.map(([label,value])=>'<div class="report-kpi"><small>'+esc(label)+'</small><strong>'+euro(value)+'</strong></div>').join('')+'</div>'
+  +'<h3>Activity financial summary</h3>'+summary
+  +'<h3>All lesson occurrences and changes</h3>'+lessons
+  +'<h3>Payments allocated to this billing month</h3>'+credits
+  +'<h3>Cash payments received during this calendar month</h3>'+cash
+  +'<p class="report-footnote"><strong>How figures work:</strong> Charges and allocated payments use the same month-based calculations as Household Lite. A cancelled free lesson or the original date of a rescheduled lesson carries no charge. The replacement date carries the rescheduled charge. A cancelled charged lesson retains its charge. Net for month = charges − payments allocated to this billing month. Cash received uses actual payment dates and may differ from allocated payments.</p>'
+  +'<p class="report-footnote"><strong>Important:</strong> This is a live operational report, not a locked accounting statement. Changing the current activity price can change historical lesson charges in existing app calculations. Verify older months before using them for formal accounting.</p>';
+ return m;
+}
+function monthlyReportCsv(model){
+ const rows=[
+  ['Household monthly report',model.household],
+  ['Billing period',model.month],
+  ['Generated',model.generated],
+  ['Currency','EUR'],
+  [],
+  ['ACTIVITY FINANCIAL SUMMARY'],
+  ['Activity','Entries','Cancelled no charge','Cancelled charged','Moved entries','Charges EUR','Payments allocated EUR','Net EUR'],
+  ...model.activityRows.map(x=>[x.activity,x.entries,x.cancelledFree,x.cancelledCharged,x.moved,x.charges,x.paid,x.net]),
+  ['TOTAL','','','','',model.charges,model.allocated,model.net],
+  [],
+  ['LESSON OCCURRENCES'],
+  ['Date','Activity','Time','Children','Status','Original date','Charge EUR'],
+  ...model.lessonRows.map(x=>[x.date,x.activity,x.time,x.children,x.status,x.originalDate,x.charge]),
+  [],
+  ['PAYMENTS ALLOCATED TO THIS BILLING MONTH'],
+  ['Paid on','Activity','Allocated EUR','Whole payment EUR','Notes'],
+  ...model.credits.map(x=>[x.paidOn,x.activity,x.allocated,x.paymentTotal,x.notes]),
+  [],
+  ['CASH RECEIVED THIS CALENDAR MONTH'],
+  ['Paid on','Activity','Cash received EUR','Allocation months','Notes'],
+  ...model.cash.map(x=>[x.date,x.activity,x.amount,x.allocation,x.notes]),
+  [],
+  ['Notes','Monthly net is charges less allocations to selected billing month. Cash received is by actual payment date.'],
+  ['Historical pricing','Changing an activity price can recalculate historical charges; not a locked accounting statement.']
+ ];
+ const cell=value=>{
+  if(typeof value==='number')return Number(value.toFixed(2)).toString();
+  let text=String(value??'');
+  // Prevent Excel/LibreOffice CSV formula injection from untrusted names/notes.
+  if(/^\s*[=+\-@\t\r]/.test(text))text="'"+text;
+  return '"'+text.replaceAll('"','""')+'"';
+ };
+ return '\ufeff'+rows.map(row=>row.map(cell).join(',')).join('\r\n')+'\r\n';
+}
+$('openMonthlyReport').onclick=()=>{
+ $('headerMoreMenu').open=false;
+ try{renderMonthlyReport();$('monthlyReportDialog').showModal();$('monthlyReportHeading').focus({preventScroll:true})}
+ catch(err){msg('Report unavailable: '+(err?.message||String(err)))}
+};
+$('reportClose').onclick=()=>$('monthlyReportDialog').close();
+$('reportPrint').onclick=()=>window.print();
+$('reportCSV').onclick=()=>{
+ try{
+  const m=currentMonthlyReport||renderMonthlyReport(),csv=monthlyReportCsv(m);
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=window.URL.createObjectURL(blob);
+  const file=(m.household||'Household').replace(/[^\p{L}\p{N}-]+/gu,'-').slice(0,48)||'Household';
+  const link=document.createElement('a');link.href=url;link.download=file+'-'+m.month+'-report.csv';
+  document.body.appendChild(link);link.click();link.remove();
+  setTimeout(()=>window.URL.revokeObjectURL(url),1500);
+ }catch(err){msg('CSV export failed: '+(err?.message||String(err)))}
+};
+
 start();
 </script></body></html>
