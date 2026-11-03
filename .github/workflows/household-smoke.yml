@@ -1,0 +1,17 @@
+name: Household static and pricing checks
+on:
+  push:
+    branches: [main, household-hardening-20261103]
+  pull_request:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run offline application tests
+        run: node tests/household-smoke.mjs

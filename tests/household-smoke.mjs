@@ -1,0 +1,60 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {Script,createContext,runInContext} from 'node:vm';
+
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+assert.match(html,/PLDS Household v0\.3\.127/);
+assert.ok(!html.includes('v0.3.126'),'The deployed version must be updated consistently');
+const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
+assert.ok(scripts.length>=1,'No embedded app scripts found');
+for(const [,code] of scripts)new Script(code);
+
+const start=html.indexOf('function priceAt(');
+const end=html.indexOf('function getName(',start);
+assert.ok(start>0&&end>start,'Historical pricing/session functions not found');
+const lessonCode=html.slice(start,end);
+const activity={id:'A',name:'Piano',price:40};
+const schedule={id:'S',activity_id:'A',weekday:4,start_time:'14:00',valid_from:'2026-10-01',valid_until:null};
+const dates=ym=>{
+ const [y,m]=ym.split('-').map(Number),out=[];
+ for(let d=new Date(Date.UTC(y,m-1,1));d.getUTCMonth()===m-1;d.setUTCDate(d.getUTCDate()+1)){
+  out.push({date:d.toISOString().slice(0,10),weekday:d.getUTCDay()});
+ }
+ return out;
+};
+const ctx=createContext({
+ activities:[activity],schedules:[schedule],overrides:[],
+ activityPrices:[
+  {activity_id:'A',effective_from:'0001-01-01',price:30},
+  {activity_id:'A',effective_from:'2026-10-30',price:40},
+  {activity_id:'A',effective_from:'2026-12-01',price:50}
+ ],
+ dates,month:'2026-10',Date
+});
+runInContext(lessonCode,ctx);
+const history=runInContext('priceAt(activities[0],"2026-10-29")',ctx);
+const current=runInContext('priceAt(activities[0],"2026-11-05")',ctx);
+const future=runInContext('priceAt(activities[0],"2026-12-03")',ctx);
+assert.equal(history,30);
+assert.equal(current,40);
+assert.equal(future,50);
+
+ctx.overrides=[{schedule_id:'S',session_date:'2026-10-29',status:'rescheduled',new_date:'2026-11-05',new_time:'15:00'}];
+let october=runInContext('sessions("2026-10")',ctx);
+let november=runInContext('sessions("2026-11")',ctx);
+assert.equal(october.find(x=>x.d.date==='2026-10-29').charge,0,'Original rescheduled lesson must be free');
+assert.equal(november.find(x=>x.replacement).charge,30,'Replacement preserves original date fee');
+assert.equal(november.find(x=>x.d.date==='2026-11-05'&&!x.replacement).charge,40);
+
+ctx.overrides=[{schedule_id:'S',session_date:'2026-10-29',status:'cancelled_charged'}];
+october=runInContext('sessions("2026-10")',ctx);
+assert.equal(october.find(x=>x.d.date==='2026-10-29').charge,30);
+ctx.overrides[0].status='cancelled_free';
+october=runInContext('sessions("2026-10")',ctx);
+assert.equal(october.find(x=>x.d.date==='2026-10-29').charge,0);
+
+ctx.activityPrices=[];
+assert.throws(()=>runInContext('priceAt(activities[0],"2026-10-29")',ctx),/Price history is unavailable/);
+assert.ok(!html.includes('Changing an activity price can recalculate historical charges'),'Old report disclaimer must be corrected');
+assert.match(html,/monthlyReportCsv/);
+console.log('PASS: app scripts parse; dated pricing, reschedules, cancellations, report and version checks pass.');
