@@ -3,8 +3,8 @@ import {readFileSync} from 'node:fs';
 import {Script,createContext,runInContext} from 'node:vm';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.127/);
-assert.ok(!html.includes('v0.3.126'),'The deployed version must be updated consistently');
+assert.match(html,/PLDS Household v0\.3\.128/);
+assert.ok(!html.includes('v0.3.127'),'The deployed version must be updated consistently');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.ok(scripts.length>=1,'No embedded app scripts found');
 for(const [,code] of scripts)new Script(code);
@@ -57,4 +57,26 @@ ctx.activityPrices=[];
 assert.throws(()=>runInContext('priceAt(activities[0],"2026-10-29")',ctx),/Price history is unavailable/);
 assert.ok(!html.includes('Changing an activity price can recalculate historical charges'),'Old report disclaimer must be corrected');
 assert.match(html,/monthlyReportCsv/);
-console.log('PASS: app scripts parse; dated pricing, reschedules, cancellations, report and version checks pass.');
+// The 3-dot menu offers navigation, not financial or destructive actions.
+const menu=html.slice(html.indexOf('<details id="headerMoreMenu"'),html.indexOf('</details>',html.indexOf('<details id="headerMoreMenu"'))+10);
+assert.match(menu,/data-menu-tab="children"/);
+assert.match(menu,/data-menu-tab="history"/);
+assert.match(menu,/id="openSettings"/);
+for(const id of ['openMonthlyReport','openSetupGuide','resetMonthActivities']){
+ assert.ok(!menu.includes('id="'+id+'"'),'Unexpected '+id+' in overflow menu');
+}
+const budget=html.slice(html.indexOf('<div id="budgetDetails"'),html.indexOf('<section class="panel" id="content"'));
+assert.ok(budget.includes('id="openMonthlyReport"'),'Monthly report must be inside Budget');
+const options=html.slice(html.indexOf('<dialog id="settingsDialog"'),html.indexOf('<dialog id="passwordDialog"'));
+for(const id of ['optionsProfile','optionsHousehold','optionsNotifications','optionsAppearance','optionsAccount']){
+ assert.ok(options.includes('id="'+id+'"'),'Missing Options section '+id);
+}
+for(const id of ['openSetupGuide','resetMonthActivities','settingsName','enablePush','repairPush','themeToggle','dailyReminderEnabled','dailyReminderTime','logout','refreshAccess']){
+ assert.ok(options.includes('id="'+id+'"'),'Misplaced Options action '+id);
+ assert.equal(html.split('id="'+id+'"').length-1,1,'Duplicated UI id '+id);
+}
+assert.match(html,/optionsHousehold'\)\.addEventListener\('toggle'/);
+assert.match(html,/Price changes apply from today/);
+assert.match(html,/password of at least 12 characters and your name/);
+assert.ok(!html.includes('Changing an activity price affects past months too'),'Stale pricing guidance');
+console.log('PASS: scripts, financial calculations, grouped Options, simple menu, and Budget reporting checks pass.');
