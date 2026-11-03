@@ -1002,5 +1002,171 @@ document.addEventListener('click',async e=>{
 });
 const originalLoad=load;
 load=async function(){await originalLoad();await refreshTeacherRequests()};
+
+/* First-run onboarding and household-specific title */
+function renderHouseholdTitle(){
+ const name=(user&&householdProfile&&householdProfile.name?householdProfile.name:'PLDS Household').trim();
+ const title=$('householdTitle');if(title)title.textContent=name;
+ document.title=name+' · v0.3.121';
+}
+async function loadHouseholdProfile(){
+ if(!HOUSE||!user)throw Error('Sign in before loading household details.');
+ const r=await db.from('households').select('id,name,onboarding_completed_at').eq('id',HOUSE);
+ if(r.error)throw r.error;
+ const profile=r.data&&r.data[0];
+ if(!profile||!profile.name)throw Error('Your household details are unavailable. Check your household membership.');
+ householdProfile=profile;
+ renderHouseholdTitle();
+ return profile;
+}
+async function saveHouseholdProfile(name,complete){
+ const r=await db.rpc('update_my_household_setup',{p_household_name:name,p_complete:!!complete});
+ if(r.error)throw r.error;
+ if(!r.data||r.data.id!==HOUSE)throw Error('Could not verify the saved household.');
+ householdProfile={...householdProfile,...r.data};
+ renderHouseholdTitle();
+ return householdProfile;
+}
+let setupStep=0,setupBusy=false;
+function openHouseholdSetup(firstRun){
+ if(!user||!householdProfile)return;
+ const d=$('householdSetupDialog');
+ if(d.open)return;
+ setupStep=0;
+ renderHouseholdSetup();
+ d.showModal();
+ $('setupHeading').focus({preventScroll:true});
+}
+function setupList(items,empty){
+ return '<div class="setup-list">'+(items.length?items.join(''):('<div class="muted">'+empty+'</div>'))+'</div>';
+}
+function renderHouseholdSetup(){
+ const content=$('setupContent'),next=$('setupNext');
+ $('setupMessage').textContent='';
+ $('setupProgress').textContent='Step '+(setupStep+1)+' of 5 · '+['Household & appearance','Children','Activities & costs','Weekly timetable','Finish'][setupStep];
+ $('setupBack').hidden=setupStep===0;
+ next.textContent=setupStep===4?'Finish setup':'Continue';
+ if(setupStep===0){
+  const currentName=householdProfile?.name||'';
+  const myName=members.find(m=>m.user_id===user?.id)?.display_name||($('betaName')?.value||'');
+  const currentTheme=document.documentElement.dataset.theme||'dark';
+  content.innerHTML='<p class="muted">Give your household a name. Everyone in this household will see it in the header. The theme is chosen for this device.</p>'
+   +'<label for="setupHouseholdName">Household name</label><input id="setupHouseholdName" maxlength="80" value="'+esc(currentName)+'" placeholder="e.g. McLaren Household">'
+   +'<label for="setupDisplayName">Your display name</label><input id="setupDisplayName" maxlength="60" value="'+esc(myName)+'" placeholder="Your first name">'
+   +'<label for="setupTheme">Appearance</label><select id="setupTheme"><option value="dark" '+(currentTheme==='dark'?'selected':'')+'>Dark</option><option value="light" '+(currentTheme==='light'?'selected':'')+'>Light</option></select>';
+ }else if(setupStep===1){
+  content.innerHTML='<p class="muted">Add each child separately. You can also return later to edit or add children.</p>'
+   +setupList(children.map(c=>'<div>'+esc(c.name)+'</div>'),'No children added yet.')
+   +'<label for="setupChildName">Child name</label><input id="setupChildName" maxlength="80" placeholder="First name" autocomplete="off">'
+   +'<div class="setup-actions"><button type="button" id="setupAddChild">+ Add child</button></div>';
+  $('setupAddChild').onclick=()=>runSetupAction(async()=>{await setupAddChild();renderHouseholdSetup()});
+ }else if(setupStep===2){
+  content.innerHTML='<p class="muted">Set the price for a single lesson or visit. You can assign one or more children; cleaning or other household services can have no child assigned.</p>'
+   +setupList(activities.map(a=>'<div>'+esc(a.name)+' · '+euro(a.price)+' per lesson</div>'),'No activities added yet.')
+   +'<label for="setupActivityName">Activity name</label><input id="setupActivityName" maxlength="100" placeholder="e.g. English, Piano, Cleaning">'
+   +'<label for="setupActivityPrice">Price per lesson (€)</label><input id="setupActivityPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 20">'
+   +(children.length?'<label>Children attending</label><div class="setup-kids">'+children.map(c=>'<label><input type="checkbox" name="setupActivityKid" value="'+esc(c.id)+'"> '+esc(c.name)+'</label>').join('')+'</div>':'<p class="muted">No children added. You can assign children to this activity later.</p>')
+   +'<div class="setup-actions"><button type="button" id="setupAddActivity">+ Add activity</button></div>';
+  $('setupAddActivity').onclick=()=>runSetupAction(async()=>{await setupAddActivity();renderHouseholdSetup()});
+ }else if(setupStep===3){
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  content.innerHTML='<p class="muted">Add the recurring days and times. Activity costs start accumulating when you schedule lessons, not simply when you create an activity.</p>'
+   +setupList(schedules.map(sc=>{const a=activities.find(a=>a.id===sc.activity_id);return '<div>'+esc(a?.name||'Activity')+' · '+days[sc.weekday]+' '+esc(sc.start_time.slice(0,5))+'–'+esc(sc.end_time.slice(0,5))+'</div>';}),'No weekly lessons added yet.')
+   +(activities.length?'<label for="setupScheduleActivity">Activity</label><select id="setupScheduleActivity">'+activities.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.name)+'</option>').join('')+'</select>'
+   +'<label for="setupScheduleDay">Weekday</label><select id="setupScheduleDay">'+days.map((d,i)=>'<option value="'+i+'" '+(i===1?'selected':'')+'>'+d+'</option>').join('')+'</select>'
+   +'<label for="setupScheduleStart">Start time</label><input id="setupScheduleStart" type="time" value="15:00">'
+   +'<label for="setupScheduleEnd">End time</label><input id="setupScheduleEnd" type="time" value="16:00">'
+   +'<label for="setupScheduleFrom">Effective from</label><input id="setupScheduleFrom" type="date" value="'+localDate(new Date())+'">'
+   +'<div class="setup-actions"><button type="button" id="setupAddSchedule">+ Add weekly lesson</button></div>':'<p class="muted">Add an activity on the previous step before creating weekly lessons.</p>');
+  if(activities.length)$('setupAddSchedule').onclick=()=>runSetupAction(async()=>{await setupAddSchedule();renderHouseholdSetup()});
+ }else{
+  content.innerHTML='<p>Review your household before entering the calendar.</p>'
+   +'<div class="setup-list"><div><strong>'+esc(householdProfile?.name||'Household')+'</strong></div>'
+   +'<div>Children: '+children.length+'</div><div>Activities: '+activities.length+'</div>'
+   +'<div>Weekly lessons: '+schedules.length+'</div></div>'
+   +(!schedules.length?'<p class="muted">No weekly lessons have been added yet. Your calendar and charges will remain empty until lessons are scheduled.</p>':'')
+   +'<p class="muted">You can change all of these later in Household setup, Children, Activities and Settings. Finishing saves the setup status for the whole household.</p>';
+ }
+}
+async function setupAddChild(){
+ const field=$('setupChildName'),name=field?.value.trim()||'';
+ if(!name||name.length>80)throw Error('Enter a child name of up to 80 characters.');
+ if(children.some(c=>c.name.toLocaleLowerCase()===name.toLocaleLowerCase()))throw Error('That child is already added.');
+ const r=await db.from('children').insert({household_id:HOUSE,name,sort_order:children.length+1});
+ if(r.error)throw r.error;
+ await load();
+}
+async function setupAddActivity(){
+ const name=$('setupActivityName')?.value.trim()||'';
+ const raw=$('setupActivityPrice')?.value;
+ const price=Number(raw);
+ if(!name||name.length>100)throw Error('Enter an activity name (up to 100 characters).');
+ if(raw===''||!Number.isFinite(price)||price<0)throw Error('Enter a valid non-negative lesson price.');
+ if(activities.some(a=>a.name.toLocaleLowerCase()===name.toLocaleLowerCase()))throw Error('That activity already exists.');
+ const r=await db.from('activities').upsert({household_id:HOUSE,name,price,active:true,updated_by:user.id},{returning:true});
+ if(r.error)throw r.error;
+ const id=r.data?.[0]?.id;
+ if(!id)throw Error('Activity saved but its ID could not be retrieved. Reload before retrying.');
+ const selected=[...document.querySelectorAll('input[name="setupActivityKid"]:checked')].map(e=>e.value);
+ if(selected.length)await saveChildAssignments('activity_children','activity_id',id,selected);
+ await load();
+}
+async function setupAddSchedule(){
+ const activity_id=$('setupScheduleActivity')?.value;
+ const weekday=Number($('setupScheduleDay')?.value);
+ const start_time=$('setupScheduleStart')?.value,end_time=$('setupScheduleEnd')?.value;
+ const valid_from=$('setupScheduleFrom')?.value;
+ if(!activities.some(a=>a.id===activity_id))throw Error('Choose an activity.');
+ if(!Number.isInteger(weekday)||weekday<0||weekday>6)throw Error('Choose a weekday.');
+ if(!start_time||!end_time||start_time>=end_time)throw Error('The end time must be after the start time.');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(valid_from||''))throw Error('Choose an effective date.');
+ if(schedules.some(sc=>sc.activity_id===activity_id&&sc.weekday===weekday&&sc.start_time.slice(0,5)===start_time&&sc.end_time.slice(0,5)===end_time))throw Error('That weekly lesson already exists.');
+ const r=await db.from('schedules').insert({activity_id,weekday,start_time,end_time,valid_from});
+ if(r.error)throw r.error;
+ await load();
+}
+async function runSetupAction(fn){
+ if(setupBusy)return;
+ setupBusy=true;
+ const dialog=$('householdSetupDialog');
+ dialog.querySelectorAll('button').forEach(b=>b.disabled=true);
+ $('setupMessage').textContent='Saving…';
+ try{await fn();$('setupMessage').textContent='Saved.'}
+ catch(err){$('setupMessage').textContent='Could not save: '+(err?.message||String(err))}
+ finally{setupBusy=false;dialog.querySelectorAll('button').forEach(b=>b.disabled=false)}
+}
+$('setupLater').onclick=()=>{if(!setupBusy)$('householdSetupDialog').close()};
+$('setupBack').onclick=()=>{if(setupBusy||setupStep===0)return;setupStep--;renderHouseholdSetup()};
+$('setupNext').onclick=()=>runSetupAction(async()=>{
+ if(setupStep===0){
+  const name=$('setupHouseholdName').value.trim(),display=$('setupDisplayName').value.trim();
+  if(name.length<2||name.length>80)throw Error('Enter a household name between 2 and 80 characters.');
+  if(!display||display.length>60)throw Error('Enter your display name.');
+  const member=members.find(m=>m.user_id===user.id);
+  if(member&&member.display_name!==display){
+   const r=await db.from('household_members').update({display_name:display}).eq('household_id',HOUSE).eq('user_id',user.id);
+   if(r.error)throw r.error;
+   member.display_name=display;showWelcome();
+  }
+  await saveHouseholdProfile(name,false);
+  setTheme($('setupTheme').value==='light'?'light':'dark');
+ }else if(setupStep===1&&$('setupChildName')?.value.trim()){
+  await setupAddChild();
+ }else if(setupStep===2&&$('setupActivityName')?.value.trim()){
+  await setupAddActivity();
+ }else if(setupStep===4){
+  await saveHouseholdProfile(householdProfile.name,true);
+  $('householdSetupDialog').close();
+  await load();
+  return;
+ }
+ setupStep++;
+ renderHouseholdSetup();
+});
+$('openSetupGuide').onclick=()=>{
+ $('headerMoreMenu').open=false;
+ openHouseholdSetup(false);
+};
+
 start();
 </script></body></html>
