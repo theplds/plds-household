@@ -3,8 +3,8 @@ import {readFileSync} from 'node:fs';
 import {Script,createContext,runInContext} from 'node:vm';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.128/);
-assert.ok(!html.includes('v0.3.127'),'The deployed version must be updated consistently');
+assert.match(html,/PLDS Household v0\.3\.129/);
+assert.ok(!html.includes('v0.3.128'),'The deployed version must be updated consistently');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.ok(scripts.length>=1,'No embedded app scripts found');
 for(const [,code] of scripts)new Script(code);
@@ -79,4 +79,64 @@ assert.match(html,/optionsHousehold'\)\.addEventListener\('toggle'/);
 assert.match(html,/Price changes apply from today/);
 assert.match(html,/password of at least 12 characters and your name/);
 assert.ok(!html.includes('Changing an activity price affects past months too'),'Stale pricing guidance');
-console.log('PASS: scripts, financial calculations, grouped Options, simple menu, and Budget reporting checks pass.');
+// Navigation state machine: all five visible destinations must stay exclusive.
+const navStart=html.indexOf('function navigateDashboard(');
+const navEnd=html.indexOf("$('viewToggle').onclick",navStart);
+assert.ok(navStart>0&&navEnd>navStart,'Dashboard navigation handler missing');
+let renderCount=0;
+const navCtx=createContext({tab:'monthview',lastCalendarTab:'monthview',listWeek:'',render:()=>renderCount++});
+runInContext(html.slice(navStart,navEnd),navCtx);
+const go=(target,expected,last)=>{runInContext('navigateDashboard('+JSON.stringify(target)+')',navCtx);assert.equal(navCtx.tab,expected);if(last)assert.equal(navCtx.lastCalendarTab,last)};
+go('budget','budget');
+go('activities','activities');
+go('payments','payments');
+go('calendar','monthview','monthview');
+go('calendar','sessions','sessions');
+go('budget','budget','sessions');
+go('calendar','sessions','sessions'); // Returning preserves the previous calendar mode
+go('activities','activities','sessions');
+go('activities','sessions','sessions'); // Tapping the active destination returns to calendar
+go('calendar','monthview','monthview');
+go('budget','budget','monthview');
+go('budget','monthview','monthview');
+go('history','history','monthview');
+go('calendar','monthview','monthview');
+assert.equal(renderCount,14);
+
+// Test the real markup state-update logic using a tiny DOM substitute.
+const stateStart=html.indexOf(' // Main navigation is exclusive:');
+const stateEnd=html.indexOf(" let html='';",stateStart);
+assert.ok(stateStart>0&&stateEnd>stateStart);
+const stateCode=html.slice(stateStart,stateEnd);
+function viewState(mode,previousCalendar){
+ const ids=['viewToggle','budgetToggle','activities','payments'];
+ const buttons=ids.map(id=>({
+  id,classes:new Set(),attrs:{},textContent:'',title:'',
+  setAttribute(k,v){this.attrs[k]=v;},
+  classList:{toggle(){}}
+ }));
+ for(const b of buttons)b.classList={toggle(name,on){if(on)b.classes.add(name);else b.classes.delete(name)}};
+ const items={viewToggle:buttons[0],budgetToggle:buttons[1],budgetDetails:{hidden:true},content:{hidden:false}};
+ const doc={querySelectorAll(q){assert.equal(q,'.calendar-view-nav .tab');return buttons}};
+ buttons[2].dataset={tab:'activities'};buttons[3].dataset={tab:'payments'};
+ const context=createContext({tab:mode,lastCalendarTab:previousCalendar,budgetToggle:buttons[1],document:doc,$:id=>items[id]});
+ runInContext(stateCode,context);
+ const selected=buttons.filter(b=>b.attrs['aria-pressed']==='true');
+ if(mode==='budget'){
+  assert.equal(selected.length,1);assert.equal(selected[0].id,'budgetToggle');
+  assert.equal(items.budgetDetails.hidden,false);assert.equal(items.content.hidden,true);
+  assert.equal(buttons[1].attrs['aria-expanded'],'true');
+ }else{
+  assert.equal(items.budgetDetails.hidden,true);assert.equal(items.content.hidden,false);
+  assert.equal(buttons[1].attrs['aria-expanded'],'false');
+  if(mode==='monthview'||mode==='sessions'||mode==='activities'||mode==='payments'){
+   assert.equal(selected.length,1,'Exactly one main view must be selected');
+   assert.equal(selected[0].id,mode==='monthview'||mode==='sessions'?'viewToggle':mode);
+  }else assert.equal(selected.length,0,'Secondary menu views must not highlight a main view');
+ }
+}
+for(const mode of ['monthview','sessions','budget','activities','payments','children','history'])viewState(mode,'sessions');
+assert.match(html,/#content\[hidden\]\{display:none!important\}/);
+assert.ok(!html.includes('content:"⌄"'),'Replace the legacy Options dropdown glyph');
+assert.match(html,/border-right:2px solid currentColor/);
+console.log('PASS: finance, navigation exclusivity, highlights, content visibility, and modern chevrons.');
