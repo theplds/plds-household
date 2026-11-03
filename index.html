@@ -626,33 +626,104 @@ async function loadPreferences(){if(!user)return;try{const r=await db.from('hous
 function checkDailyReminder(){if(!user||!userPreferences?.daily_schedule_enabled||!('Notification' in window)||Notification.permission!=='granted')return;const now=new Date(),today=localDate(now),hhmm=String(userPreferences.daily_schedule_time||'08:00').slice(0,5),key=user.id+':'+today;if(lastDailyReminderKey===key||now.getHours()*60+now.getMinutes()<Number(hhmm.slice(0,2))*60+Number(hhmm.slice(3,5)))return;if(localStorage.getItem('plds-daily-reminder:'+key)==='sent')return;const previousMonth=month;month=today.slice(0,7);let todaySessions;try{todaySessions=sessions()}finally{month=previousMonth}const lessons=todaySessions.filter(x=>x.d.date===today&&(x.replacement||(!(x.o?.status||'').startsWith('cancelled_')&&x.o?.status!=='rescheduled')));lastDailyReminderKey=key;localStorage.setItem('plds-daily-reminder:'+key,'sent');const lines=lessons.sort((a,b)=>lessonTimeRange(a).localeCompare(lessonTimeRange(b))).map(x=>lessonTimeRange(x)+' '+x.a.name);new Notification('Today’s household schedule',{body:lines.length?lines.join(' · ').slice(0,240):'No lessons scheduled today.',tag:'plds-daily-'+today})}
 
 async function refreshHouseholdAccess(){
- const el=$('accessRoster'),button=$('refreshAccess');
- if(!user||!HOUSE){el.textContent='Sign in to view access.';return;}
- button.disabled=true;
- el.textContent='Checking access…';
+ const el=$('accessRoster'),button=$('refreshAccess'),controls=$('accessOwnerControls');
+ if(!user||!HOUSE){el.textContent='Sign in to view access.';controls.hidden=true;return;}
+ button.disabled=true;el.textContent='Checking access…';controls.hidden=true;
  try{
   const r=await db.rpc('my_household_access');
   if(r.error)throw r.error;
   const data=r.data;
-  if(!data||data.household_id!==HOUSE||!Array.isArray(data.members)||!Array.isArray(data.teachers))
+  if(!data||data.household_id!==HOUSE||!Array.isArray(data.members)||!Array.isArray(data.teachers)||!Array.isArray(data.pending_invites))
    throw Error('Access information could not be verified.');
+  const canManage=data.can_manage===true;
+  controls.hidden=!canManage;
+  const action=(type,label,attrs='')=>'<button type="button" data-access-action="'+type+'" '+attrs+'>'+label+'</button>';
   const membersHtml=data.members.map(m=>{
-   const self=m.id===user.id;
-   const name=(m.name||m.email||'Household member').trim();
-   return '<div class="access-person"><strong>'+esc(name)+(self?' (you)':'')+'</strong><span class="access-email">'+esc(m.email||'Email unavailable')+'</span><small class="access-scope">Household member · Full household access</small></div>';
+   const self=m.id===user.id,name=(m.name||m.email||'Household member').trim();
+   const role=m.role==='owner'?'Owner':'Household member';
+   const remove=canManage&&!self&&m.role!=='owner'
+    ?action('remove-member','Remove','data-id="'+esc(m.id)+'" data-label="'+esc(name)+'"'):'';
+   return '<div class="access-person"><div class="access-details"><strong>'+esc(name)+(self?' (you)':'')+'</strong>'
+    +'<span class="access-email">'+esc(m.email||'Email unavailable')+'</span>'
+    +'<small class="access-scope">'+role+' · Full household access</small></div>'
+    +(remove?'<div class="access-actions">'+remove+'</div>':'')+'</div>';
   }).join('');
   const teachersHtml=data.teachers.map(t=>{
    const email=(t.email||'Email unavailable').trim(),count=Number(t.assigned_lessons)||0;
-   return '<div class="access-person"><strong>'+esc(email)+'</strong><small class="access-scope">Teacher · '+count+' assigned weekly '+(count===1?'lesson':'lessons')+' only</small></div>';
+   const remove=canManage?action('remove-teacher','Remove','data-id="'+esc(t.id)+'" data-label="'+esc(email)+'"'):'';
+   return '<div class="access-person"><div class="access-details"><strong>'+esc(email)+'</strong>'
+    +'<small class="access-scope">Teacher · '+count+' assigned weekly '+(count===1?'lesson':'lessons')+' only</small></div>'
+    +(remove?'<div class="access-actions">'+remove+'</div>':'')+'</div>';
   }).join('');
+  const invitesHtml=canManage?data.pending_invites.map(i=>{
+   const email=String(i.email||'');
+   return '<div class="access-person"><div class="access-details"><strong>'+esc(email)+'</strong>'
+    +'<small class="access-scope">Pending · Not yet joined this household</small></div>'
+    +'<div class="access-actions">'+action('copy-invite','Copy invite','data-email="'+esc(email)+'"')
+    +action('revoke-invite','Cancel','data-email="'+esc(email)+'"')+'</div></div>';
+  }).join(''):'';
   el.innerHTML='<div class="access-group-heading">Household members ('+data.members.length+')</div>'
-    +(membersHtml||'<p class="muted">No members found.</p>')
-    +'<div class="access-group-heading">Teachers ('+data.teachers.length+')</div>'
-    +(teachersHtml||'<p class="muted">No teachers assigned.</p>');
- }catch(err){
-  el.textContent='Access list unavailable: '+(err?.message||String(err));
- }finally{button.disabled=false}
+   +(membersHtml||'<p class="muted">No household members.</p>')
+   +'<div class="access-group-heading">Teachers ('+data.teachers.length+')</div>'
+   +(teachersHtml||'<p class="muted">No teachers assigned.</p>')
+   +(canManage?'<div class="access-group-heading">Pending invitations ('+data.pending_invites.length+')</div>'
+    +(invitesHtml||'<p class="muted">No pending invitations.</p>'):'');
+ }catch(err){el.textContent='Access list unavailable: '+(err?.message||String(err));}
+ finally{button.disabled=false}
 }
+function householdInviteText(email){
+ return "You're invited to join "+(householdProfile?.name||'a household')+" on Household Lite.\n"
+  +"Open: https://theplds.github.io/plds-household/\n"
+  +"Use this email address: "+email+"\n"
+  +"If you are new, create an invited account using a password of at least 8 characters and your name."
+  +" Confirm your email if requested, then sign in. Your account will join the household.\n"
+  +"Please use fictional information while we're testing the security of this beta.";
+}
+$('inviteAccessMember').onclick=async()=>{
+ const btn=$('inviteAccessMember'),status=$('accessInviteStatus');
+ const email=$('accessInviteEmail').value.trim().toLowerCase();
+ if(!email||!$('accessInviteEmail').checkValidity()){status.textContent='Enter a valid email address.';return;}
+ btn.disabled=true;status.textContent='Creating invitation…';
+ try{
+  const r=await db.rpc('invite_household_member',{p_email:email});
+  if(r.error)throw r.error;
+  await refreshHouseholdAccess();
+  status.textContent='Invitation pending for '+email+'. Choose Copy invite above and send the message privately.';
+  $('accessInviteEmail').value='';
+ }catch(err){status.textContent='Could not invite: '+(err?.message||String(err))}
+ finally{btn.disabled=false}
+};
+$('accessRoster').addEventListener('click',async e=>{
+ const btn=e.target.closest('button[data-access-action]');
+ if(!btn)return;
+ const type=btn.dataset.accessAction,id=btn.dataset.id,email=btn.dataset.email;
+ if(type==='copy-invite'){
+  const message=householdInviteText(email);
+  try{await navigator.clipboard.writeText(message);$('accessInviteStatus').textContent='Invitation copied for '+email+'. Send it privately.';}
+  catch(err){window.prompt('Copy invitation message',message)}
+  return;
+ }
+ const label=btn.dataset.label||email||'this account';
+ const question=type==='revoke-invite'?'Cancel the pending invitation for '+label+'?':
+  type==='remove-teacher'?'Remove '+label+' from all lessons in this household?':
+  'Remove '+label+" from this household? Their access will be revoked, including notifications.";
+ if(!window.confirm(question))return;
+ btn.disabled=true;
+ try{
+  const args=type==='remove-member'?['remove_household_member',{p_user_id:id}]:
+   type==='remove-teacher'?['remove_household_teacher',{p_teacher_id:id}]:
+   ['revoke_household_invite',{p_email:email}];
+  const r=await db.rpc(args[0],args[1]);
+  if(r.error)throw r.error;
+  if(type==='remove-member'&&r.data!==true)throw Error('Member was not removed.');
+  if(type==='revoke-invite'&&r.data!==true)throw Error('Invitation was already unavailable.');
+  if(type==='remove-teacher'&&Number(r.data)<1)throw Error('Teacher assignment was already unavailable.');
+  $('accessInviteStatus').textContent='Access updated.';
+  await refreshHouseholdAccess();
+  await load();
+ }catch(err){$('accessInviteStatus').textContent='Access change failed: '+(err?.message||String(err))}
+ finally{btn.disabled=false}
+});
 $('refreshAccess').onclick=refreshHouseholdAccess;
 
 $('openSettings').onclick=async()=>{$('headerMoreMenu').open=false;await loadPreferences();$('settingsName').value=members.find(m=>m.user_id===user?.id)?.display_name||'';$('dailyReminderEnabled').checked=!!userPreferences?.daily_schedule_enabled;$('dailyReminderTime').value=String(userPreferences?.daily_schedule_time||'08:00').slice(0,5);$('settingsStatus').textContent='';$('settingsDialog').showModal();$('settingsHeading').focus({preventScroll:true});refreshHouseholdAccess().catch(e=>console.warn('Access roster:',e.message))};
@@ -957,7 +1028,14 @@ async function resolveHousehold(){
  const r=await db.from('household_members').select('household_id').eq('user_id',user.id);
  if(r.error)throw r.error;
  const ids=[...new Set((r.data||[]).map(x=>x.household_id).filter(Boolean))];
- if(!ids.length){await claimInvitedHousehold();return resolveHousehold();}
+ if(!ids.length){
+  const memberClaim=await db.rpc('claim_household_member_invite',{p_name:($('betaName')?.value||user?.user_metadata?.display_name||user?.email?.split('@')[0]||'Member').trim()});
+  if(memberClaim.error){
+    if(memberClaim.error.code!=='P0002')throw memberClaim.error;
+    await claimInvitedHousehold();
+  }
+  return resolveHousehold();
+ }
  if(ids.length!==1)throw Error('Multiple households found; household selection is not available yet.');
  HOUSE=ids[0];
 }
