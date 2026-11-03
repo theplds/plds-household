@@ -3,8 +3,8 @@ import {readFileSync} from 'node:fs';
 import {Script,createContext,runInContext} from 'node:vm';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.130/);
-assert.ok(!html.includes('v0.3.129'),'The deployed version must be updated consistently');
+assert.match(html,/PLDS Household v0\.3\.131/);
+assert.ok(!html.includes('v0.3.130'),'The deployed version must be updated consistently');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.ok(scripts.length>=1,'No embedded app scripts found');
 for(const [,code] of scripts)new Script(code);
@@ -147,4 +147,9 @@ for(const mode of ['monthview','sessions','budget','activities','payments','chil
 assert.match(html,/#content\[hidden\]\{display:none!important\}/);
 assert.ok(!html.includes('content:"⌄"'),'Replace the legacy Options dropdown glyph');
 assert.match(html,/border-right:2px solid currentColor/);
-console.log('PASS: finance, navigation exclusivity, Options closed by default, centered three dots, relocated Children and modern chevrons.');
+// Options section surfaces contrast against dialog backgrounds in both themes.
+assert.match(html,/\.options-section\{[^}]*background:#263a55\}/);
+assert.match(html,/\.options-section\[open\]>summary\{background:#304765\}/);
+assert.match(html,/:root\[data-theme="light"\] \.options-section>summary\{background:#eaf1fa\}/);
+assert.match(html,/:root\[data-theme="light"\] \.options-section\[open\]>summary\{background:#dae8f7\}/);
+console.log('PASS: finance, navigation, grouped Options, centered menu icon, and light/dark section contrast.');
