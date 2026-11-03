@@ -3,8 +3,8 @@ import {readFileSync} from 'node:fs';
 import {Script,createContext,runInContext} from 'node:vm';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.132/);
-assert.ok(!html.includes('v0.3.131'),'The deployed version must be updated consistently');
+assert.match(html,/PLDS Household v0\.3\.133/);
+assert.ok(!html.includes('v0.3.132'),'The deployed version must be updated consistently');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.ok(scripts.length>=1,'No embedded app scripts found');
 for(const [,code] of scripts)new Script(code);
@@ -55,6 +55,40 @@ assert.equal(october.find(x=>x.d.date==='2026-10-29').charge,0);
 
 ctx.activityPrices=[];
 assert.throws(()=>runInContext('priceAt(activities[0],"2026-10-29")',ctx),/Price history is unavailable/);
+
+// Fixed monthly cost: one charge per calendar month regardless of number of sessions.
+ctx.activityPrices=[
+ {activity_id:'A',effective_from:'0001-01-01',price:30,billing_period:'session'},
+ {activity_id:'A',effective_from:'2026-11-01',price:180,billing_period:'monthly'},
+ {activity_id:'A',effective_from:'2026-12-01',price:190,billing_period:'monthly'}
+];
+ctx.overrides=[];
+ctx.activities[0].created_at='2026-10-05T12:00:00Z';
+const priceMode=expr=>runInContext(expr,ctx);
+const octoberSessions=priceMode('sessions("2026-10")');
+const novemberSessions=priceMode('sessions("2026-11")');
+assert.ok(octoberSessions.some(x=>x.charge===30),'Old per-session charges should remain intact');
+assert.ok(novemberSessions.length>0,'Schedule should remain in the calendar');
+assert.ok(novemberSessions.every(x=>x.charge===0),'Monthly billing must not charge each lesson');
+assert.equal(priceMode('monthlyActivityFee(activities[0],"2026-10")'),0);
+assert.equal(priceMode('monthlyActivityFee(activities[0],"2026-11")'),180);
+assert.equal(priceMode('monthlyActivityFee(activities[0],"2026-12")'),190);
+assert.equal(priceMode('activityMonthTotal(activities[0],"2026-11",sessions("2026-11"))'),180);
+ctx.overrides=[{schedule_id:'S',session_date:'2026-11-05',status:'rescheduled',new_date:'2026-12-03',new_time:'15:00'}];
+assert.equal(priceMode('sessions("2026-12").find(x=>x.replacement).charge'),0,'Moving a monthly lesson must not bill twice');
+assert.equal(priceMode('activityMonthTotal(activities[0],"2026-12",sessions("2026-12"))'),190);
+ctx.overrides=[];
+ctx.schedules=[];
+ctx.activities[0].created_at='2026-11-04T22:50:00Z'; // Already November 5th in Athens.
+ctx.activityPrices=[{activity_id:'A',effective_from:'0001-01-01',price:95,billing_period:'monthly'}];
+assert.equal(priceMode('activityCreatedMonth(activities[0])'),'2026-11');
+assert.equal(priceMode('monthlyActivityFee(activities[0],"2026-10")'),0,'Never back-bill before creation');
+assert.equal(priceMode('monthlyActivityFee(activities[0],"2026-11")'),95,'New monthly activity bills this month without sessions');
+assert.equal(priceMode('activityMonthTotal(activities[0],"2026-11",sessions("2026-11"))'),95);
+assert.match(html,/id="abilling"/);
+assert.match(html,/id="setupActivityBilling"/);
+assert.match(html,/Fixed monthly fee/);
+
 assert.ok(!html.includes('Changing an activity price can recalculate historical charges'),'Old report disclaimer must be corrected');
 assert.match(html,/monthlyReportCsv/);
 // The 3-dot menu offers navigation, not financial or destructive actions.
@@ -84,7 +118,7 @@ assert.match(html,/\$\('optionsProfile'\)\.open=false/);
 assert.match(html,/\$\('manageChildren'\)\.onclick=\(\)=>\{\$\('settingsDialog'\)\.close\(\);tab='children';render\(\)\}/);
 assert.ok(options.indexOf('id="manageChildren"')>options.indexOf('id="optionsHousehold"'),'Children action should be within Household section');
 assert.ok(options.indexOf('id="manageChildren"')<options.indexOf('</details>',options.indexOf('id="optionsHousehold"')),'Children action must be inside Household accordion');
-assert.match(html,/Price changes apply from today/);
+assert.match(html,/Session-rate changes apply today/);
 assert.match(html,/password of at least 12 characters and your name/);
 assert.ok(!html.includes('Changing an activity price affects past months too'),'Stale pricing guidance');
 // Navigation state machine: all five visible destinations must stay exclusive.
