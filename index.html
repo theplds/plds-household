@@ -1599,26 +1599,48 @@ function showImportedEvent(id){
  openImportedEventId=id;
  $('calendarEventHeading').textContent=e.title;
  const when=e.all_day?'All-day event':(String(e.start_time||'').slice(0,5)+(e.end_time?'–'+String(e.end_time).slice(0,5):''));
- const kid=e.child_id?children.find(c=>c.id===e.child_id)?.name||'Assigned child':'Unassigned';
  $('calendarEventDetails').innerHTML='<p><strong>'+esc(displayDateDMY(e.event_date))+'</strong> · '+esc(when)+'</p>'
-   +(e.location?'<p><strong>Location:</strong> '+esc(e.location)+'</p>':'')
-   +(e.details?'<p style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(e.details)+'</p>':'')
-   +'<p class="muted">Child: '+esc(kid)+' · Imported from an .ics file. This event does not create an activity or any charge.</p>';
+  +(e.location?'<p><strong>Location:</strong> '+esc(e.location)+'</p>':'')
+  +(e.details?'<p style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(e.details)+'</p>':'')
+  +'<p class="muted">'+(e.source_id?'Read-only synced calendar event':'One-time .ics import')+'. The linked activity is informational, with no extra charge.</p>';
+ $('calendarEventChild').innerHTML='<option value="">Unassigned / everyone</option>'+children.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('');
+ $('calendarEventActivity').innerHTML='<option value="">No linked activity</option>'+activities.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.name)+'</option>').join('');
+ $('calendarEventChild').value=e.child_id||'';
+ $('calendarEventActivity').value=e.activity_id||'';
+ $('calendarEventStatus').textContent='';
+ $('calendarEventRemove').textContent=e.source_id?'Hide this event':'Remove event';
  $('calendarEventDialog').showModal();
 }
 $('calendarEventClose').onclick=()=>$('calendarEventDialog').close();
+$('calendarEventSave').onclick=async()=>{
+ const e=importedEvents.find(x=>x.id===openImportedEventId);if(!e||!user||!HOUSE)return;
+ const child_id=$('calendarEventChild').value||null,activity_id=$('calendarEventActivity').value||null;
+ if(child_id&&!children.some(c=>c.id===child_id))return $('calendarEventStatus').textContent='Invalid child selection.';
+ if(activity_id&&!activities.some(a=>a.id===activity_id))return $('calendarEventStatus').textContent='Invalid activity selection.';
+ const button=$('calendarEventSave');button.disabled=true;
+ try{
+  const result=await db.from('calendar_import_events').update({child_id,activity_id}).eq('id',e.id).eq('household_id',HOUSE);
+  if(result.error)throw result.error;
+  $('calendarEventDialog').close();
+  await load();
+  msg('Event assignment saved. No lessons or charges were created.');
+ }catch(err){$('calendarEventStatus').textContent='Could not save assignment: '+(err.message||String(err))}
+ finally{button.disabled=false}
+};
 $('calendarEventRemove').onclick=async()=>{
- const e=importedEvents.find(x=>x.id===openImportedEventId);
- if(!e||!confirm('Remove this imported calendar event? This will not affect lessons, payments or any external calendar.'))return;
+ const e=importedEvents.find(x=>x.id===openImportedEventId);if(!e)return;
+ const label=e.source_id?'Hide this synced event from Household? It will remain hidden when the calendar refreshes.':'Remove this imported event? This will not affect lessons, payments or any external calendar.';
+ if(!confirm(label))return;
  const b=$('calendarEventRemove');b.disabled=true;
  try{
-  const result=await db.from('calendar_import_events').delete().eq('id',e.id).eq('household_id',HOUSE);
+  const result=e.source_id
+   ?await db.from('calendar_import_events').update({hidden:true}).eq('id',e.id).eq('household_id',HOUSE)
+   :await db.from('calendar_import_events').delete().eq('id',e.id).eq('household_id',HOUSE);
   if(result.error)throw result.error;
-  $('calendarEventDialog').close();await load();msg('Imported calendar event removed.');
+  $('calendarEventDialog').close();await load();msg(e.source_id?'Synced event hidden from Household.':'Imported calendar event removed.');
  }catch(err){msg('Could not remove imported event: '+err.message)}
  finally{b.disabled=false}
 };
-
 $('content').onclick=async e=>{let b=e.target.closest('button');if(!b)return;
  if(b.dataset.importEvent){showImportedEvent(b.dataset.importEvent);return;}
  if(b.dataset.activityNotes){openActivityNotes(b.dataset.activityNotes);return;}
