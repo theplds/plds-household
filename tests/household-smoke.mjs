@@ -3,8 +3,8 @@ import {readFileSync} from 'node:fs';
 import {Script,createContext,runInContext} from 'node:vm';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.134/);
-assert.ok(!html.includes('v0.3.133'),'The deployed version must be updated consistently');
+assert.match(html,/PLDS Household v0\.3\.135/);
+assert.ok(!html.includes('v0.3.134'),'The deployed version must be updated consistently');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.ok(scripts.length>=1,'No embedded app scripts found');
 for(const [,code] of scripts)new Script(code);
@@ -225,4 +225,50 @@ await runInContext('markNoticeSeen(unreadNotices()[0])',noteContext);
 assert.equal(runInContext('unreadNotices().length',noteContext),2,'Opening an alert clears only that alert');
 assert.match(panel.innerHTML,/2 unread/);
 assert.equal(runInContext('noticeItems().find(n=>n.kind==="activity").key',noteContext),'activity:N');
-console.log('PASS: pricing, monthly overrides, unread banners, calendar note markers, and existing navigation.');
+
+// One-time ICS import: parse locally, preview, and keep external events outside paid schedules.
+const parserSource=readFileSync(new URL('../calendar-import.js',import.meta.url),'utf8');
+new Script(parserSource);
+const icsCtx=createContext({Intl,Date,Error,Math,Set,Map,Number,String,RegExp});
+runInContext(parserSource,icsCtx);
+const parseICS=(source,opts={windowStart:'2026-10-01',windowEnd:'2027-05-31'})=>icsCtx.HouseholdICS.parse(source,opts);
+const icsEvent=(uid,start,end,extras='')=>['BEGIN:VEVENT','UID:'+uid,'DTSTART:'+start,'DTEND:'+end,'SUMMARY:Test event',extras,'END:VEVENT'].filter(Boolean).join('\r\n');
+const icsFile=events=>'BEGIN:VCALENDAR\r\nVERSION:2.0\r\n'+events.join('\r\n')+'\r\nEND:VCALENDAR';
+const one=parseICS(icsFile([icsEvent('utc-test','20261105T150000Z','20261105T160000Z','LOCATION:New court')]));
+assert.equal(one.events.length,1);
+assert.equal(one.events[0].event_date,'2026-11-05');
+assert.equal(one.events[0].start_time,'17:00:00','UTC must display in Athens time');
+assert.equal(one.events[0].end_time,'18:00:00');
+assert.equal(one.events[0].location,'New court');
+const recurring=parseICS(icsFile([icsEvent('weekly','20261105T170000','20261105T180000',
+ 'RRULE:FREQ=WEEKLY;BYDAY=TU,TH;COUNT=4\r\nEXDATE:20261110T170000')]));
+assert.equal(recurring.events.length,3,'Weekly recurrence must respect COUNT and EXDATE');
+assert.equal(recurring.events[0].event_date,'2026-11-05');
+assert.equal(recurring.events[1].event_date,'2026-11-12');
+const duplicated=parseICS(icsFile([icsEvent('same','20261105T170000','20261105T180000'),icsEvent('same','20261105T170000','20261105T180000')]));
+assert.equal(duplicated.events.length,1,'UID plus occurrence must deduplicate');
+const allDay=parseICS(icsFile([icsEvent('holiday','20261225','20261226')]));
+assert.equal(allDay.events[0].all_day,true);
+assert.equal(allDay.events[0].start_time,null);
+const complex=parseICS(icsFile([icsEvent('unknown-recurrence','20261105T170000','20261105T180000','RRULE:FREQ=MONTHLY;BYSETPOS=1;BYDAY=MO')]));
+assert.equal(complex.events.length,0,'Never silently import a complex recurrence incorrectly');
+assert.ok(complex.warnings.length>0);
+const cancelled=parseICS(icsFile([
+ icsEvent('series','20261105T170000','20261105T180000','RRULE:FREQ=DAILY;COUNT=3'),
+ icsEvent('series','20261106T170000','20261106T180000','RECURRENCE-ID:20261106T170000\r\nSTATUS:CANCELLED')
+]));
+assert.equal(cancelled.events.length,2,'RECURRENCE-ID cancellations must be removed');
+const zone=parseICS(icsFile([icsEvent('london','20261105T150000','20261105T160000','')]).replaceAll('DTSTART:','DTSTART;TZID=Europe/London:').replaceAll('DTEND:','DTEND;TZID=Europe/London:'));
+assert.equal(zone.events[0].start_time,'17:00:00','London TZID must map to Athens');
+assert.match(html,/<script src="calendar-import\.js"><\/script>/);
+for(const id of ['calendarImportDialog','calendarImportFile','calendarImportPreview','calendarImportSave','calendarImportChild','calendarEventDialog','openCalendarImporter']){
+ assert.equal(html.split('id="'+id+'"').length-1,1,'Missing or repeated calendar import control '+id);
+}
+assert.match(html,/id="setupImportCalendar"/);
+assert.match(html,/data-import-event/);
+assert.match(html,/db\.from\('calendar_import_events'\)/);
+assert.match(html,/ignoreDuplicates:true,returning:true/);
+assert.match(html,/importedEvents\.filter/);
+assert.ok(!lessonCode.includes('importedEvents'), 'Imported events must remain outside the financial lesson model');
+
+console.log('PASS: pricing, notes, navigation, calendar import recurrences, timezone, duplicate and no-charge handling.');
