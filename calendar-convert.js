@@ -87,8 +87,13 @@ function renderCalendarConvertGroups(){
     '<label>Price per session (€)<input class="calendar-convert-price" type="number" min="0" max="10000" step="0.01" value="0"></label>'+
     '<label>Assign sessions<select class="calendar-convert-child"><option value="">Preserve imported child assignments</option>'+
       children.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('')+'</select></label>'+
-    '<label>New activity color<select class="calendar-convert-color">'+palette.map(c=>
-       '<option value="'+esc(c)+'" '+(c===defaultColor?'selected':'')+'>'+esc(c.toUpperCase())+'</option>').join('')+'</select></label>'+
+    '<fieldset class="calendar-convert-color-field"><legend>New activity color</legend>'+
+      '<div class="calendar-convert-palette color-palette" role="radiogroup" aria-label="Choose activity color for '+esc(group.name)+'">'+
+       palette.map(c=>'<label class="color-option" title="'+esc(c.toUpperCase())+'">'+
+        '<input class="calendar-convert-color" type="radio" name="calendarConvertColor'+i+'" value="'+esc(c)+'" '+
+        (c===defaultColor?'checked':'')+' aria-label="'+esc(c.toUpperCase())+'">'+
+        '<span class="color-swatch" style="background:'+esc(c)+'"></span></label>').join('')+
+      '</div><small class="calendar-convert-color-hint muted" hidden>Existing activity keeps its current color.</small></fieldset>'+
    '</div>'+
    '<details class="calendar-convert-dates"><summary>Review and select individual dates ('+group.events.length+')</summary>'+
      occurrences.map(event=>{
@@ -110,9 +115,11 @@ function renderCalendarConvertGroups(){
   function syncExisting(){
    const existing=activities.find(a=>a.id===select.value);
    const price=groupEl.querySelector('.calendar-convert-price');
-   const color=groupEl.querySelector('.calendar-convert-color');
-   if(existing){price.value=String(existing.price);price.disabled=true;color.disabled=true;}
-   else {price.disabled=false;color.disabled=false;price.value='0';}
+   const colors=[...groupEl.querySelectorAll('.calendar-convert-color')];
+   colors.forEach(color=>{color.disabled=Boolean(existing)});
+   groupEl.querySelector('.calendar-convert-color-hint').hidden=!existing;
+   if(existing){price.value=String(existing.price);price.disabled=true;}
+   else {price.disabled=false;price.value='0';}
    calendarConvertPreviewTotals();
   }
   select.addEventListener('change',syncExisting);syncExisting();
@@ -182,7 +189,7 @@ calendarConvertEl('calendarConvertConfirm').onclick=async()=>{
   if((existing?Number(existing.price):price)>0)positive+=selected.length;
   groups.push({
    name,price,existing_activity_id:existingId,child_id:childId,
-   color:el.querySelector('.calendar-convert-color').value,
+   color:el.querySelector('.calendar-convert-color:checked')?.value||'',
    event_ids:selected.map(e=>e.id)
   });
  }
