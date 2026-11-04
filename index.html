@@ -1674,7 +1674,7 @@ $('signupForm').addEventListener('submit',async event=>{
   confirmPassword=$('signupPasswordConfirm').value,name=$('signupName').value.trim(),
   status=$('signupStatus'),button=$('signupSubmit');
  status.textContent='';
- if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)){status.textContent='Enter the exact email address from your invitation.';$('signupEmail').focus();return}
+ if(!/^[^ @]+@[^ @]+[.][^ @]+$/.test(email)){status.textContent='Enter the exact email address from your invitation.';$('signupEmail').focus();return}
  if(!name||name.length>60){status.textContent='Enter your name (up to 60 characters).';$('signupName').focus();return}
  if(password.length<12){status.textContent='Choose a password with at least 12 characters.';$('signupPassword').focus();return}
  if(password!==confirmPassword){status.textContent='Passwords do not match.';$('signupPasswordConfirm').focus();return}
