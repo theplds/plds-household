@@ -27,8 +27,30 @@ async function getGoogle(path:string,accessToken:string):Promise<any>{
  const response=await fetch("https://www.googleapis.com"+path,{headers:{Authorization:"Bearer "+accessToken},
   signal:AbortSignal.timeout(18000)});
  if(!response.ok){
-  if(response.status===401)throw Error("Google permission expired. Reconnect the calendar.");
-  if(response.status===403)throw Error("Google Calendar API is disabled or permission was denied.");
+  // Google includes a precise reason in its API error JSON. Distinguish
+  // disabled API from missing OAuth permissions; do not expose token data.
+  const payload=await response.json().catch(()=>null);
+  const error=payload?.error||{};
+  const details=Array.isArray(error.details)?error.details:[];
+  const reasons=[
+   ...details.map((item:any)=>String(item?.reason||"")),
+   ...(Array.isArray(error.errors)?error.errors.map((item:any)=>String(item?.reason||"")):[])
+  ];
+  const reason=reasons.join(" ").toUpperCase();
+  const description=String(error.message||"");
+  if(response.status===401)throw Error("Google calendar permission expired. Select your Google account again.");
+  if(response.status===403){
+   if(reason.includes("SERVICE_DISABLED")||reason.includes("ACCESSNOTCONFIGURED")||
+      /(?:calendar api).*(?:not been used|disabled)|service has not been used/i.test(description))
+    throw Error("Google Calendar API is disabled for the Google Cloud project. Enable Google Calendar API in that project's APIs & Services, then try again.");
+   if(reason.includes("ACCESS_TOKEN_SCOPE_INSUFFICIENT")||reason.includes("INSUFFICIENTPERMISSIONS")||
+      /insufficient authentication scopes|insufficient permission/i.test(description))
+    throw Error("Google denied the calendar.readonly permission. Reauthorize and allow calendar read access.");
+   if(reason.includes("RATE_LIMIT")||reason.includes("RATELIMIT")||
+      reason.includes("QUOTA")||/rate limit|quota exceeded/i.test(description))
+    throw Error("Google Calendar request limit reached. Try again later.");
+   throw Error("Google Calendar access was denied (403). Verify that Calendar API is enabled for the correct project and read-only calendar permission was granted.");
+  }
   throw Error("Google Calendar returned HTTP "+response.status);
  }
  return await response.json();
