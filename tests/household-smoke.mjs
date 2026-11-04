@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {Script,createContext,runInContext} from 'node:vm';
+import {URL as NodeURL} from 'node:url';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.137/);
-assert.ok(!html.includes('v0.3.136'),'The deployed version must be updated consistently');
+assert.match(html,/PLDS Household v0\.3\.138/);
+assert.ok(!html.includes('v0.3.137'),'The deployed version must be updated consistently');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.ok(scripts.length>=1,'No embedded app scripts found');
 for(const [,code] of scripts)new Script(code);
@@ -311,7 +312,7 @@ assert.match(html,/openHouseholdSetup\(true\)/);
 assert.match(html,/qaMode=false;HOUSE=null/);
 
 // Signup must visibly open a stand-alone registration form, not reuse hidden login fields.
-for(const id of ['signupDialog','signupForm','signupEmail','signupName','signupPassword','signupPasswordConfirm','signupSubmit','signupCancel','signupStatus']){
+for(const id of ['signupDialog','signupForm','signupEmail','signupName','signupPassword','signupPasswordConfirm','showSignupPassword','showSignupPasswordConfirm','signupSubmit','signupCancel','signupStatus']){
  assert.equal(html.split('id="'+id+'"').length-1,1,'Missing or duplicated signup control '+id);
 }
 assert.match(html,/id="betaSignup" aria-haspopup="dialog" aria-controls="signupDialog"/);
@@ -321,9 +322,9 @@ const signBegin=html.indexOf("$('betaSignup').onclick=()=>{");
 const signEnd=html.indexOf("$('revealPassword').onclick=",signBegin);
 assert.ok(signBegin>0&&signEnd>signBegin,'Invited signup interaction handlers missing');
 const signupElements=Object.fromEntries(['signupDialog','signupForm','signupEmail','signupName',
- 'signupPassword','signupPasswordConfirm','signupStatus','signupSubmit','signupCancel',
- 'betaSignup','betaStatus','email'].map(id=>[id,{value:'',textContent:'',disabled:false,
-  focus(){this.focused=true}}]));
+ 'signupPassword','signupPasswordConfirm','showSignupPassword','showSignupPasswordConfirm','signupStatus','signupSubmit','signupCancel',
+ 'betaSignup','betaStatus','email'].map(id=>[id,{value:'',textContent:'',disabled:false,type:'password',attrs:{},
+  setAttribute(key,value){this.attrs[key]=String(value)},focus(){this.focused=true}}]));
 signupElements.signupDialog.showModal=function(){this.open=true};
 signupElements.signupDialog.close=function(){this.open=false};
 let signupSubmit,signupRequests=[];
@@ -331,7 +332,8 @@ signupElements.signupForm.addEventListener=function(name,handler){if(name==='sub
 const signupCtx=createContext({
  $:id=>{assert.ok(signupElements[id],'Unexpected signup DOM reference '+id);return signupElements[id]},
  requestJson:async(path,opts)=>{signupRequests.push({path,opts});return {user:{id:'new-user'}}},
- saveSession:()=>{},start:async()=>{},HOUSE:null
+ saveSession:()=>{},start:async()=>{},HOUSE:null,
+ globalThis:{URL:NodeURL},location:{href:'https://theplds.github.io/plds-household/'}
 });
 runInContext(html.slice(signBegin,signEnd),signupCtx);
 signupElements.email.value='mpoulidis+household-qa@gmail.com';
@@ -339,6 +341,20 @@ signupElements.betaSignup.onclick();
 assert.equal(signupElements.signupDialog.open,true,'Clicking Create invited account must open signup form');
 assert.equal(signupElements.signupEmail.value,'mpoulidis+household-qa@gmail.com');
 assert.equal(signupElements.signupEmail.focused,true);
+signupElements.signupPassword.value='password-must-be-preserved';
+signupElements.showSignupPassword.onclick();
+assert.equal(signupElements.signupPassword.type,'text','Show reveals signup password');
+assert.equal(signupElements.showSignupPassword.textContent,'Hide');
+assert.equal(signupElements.showSignupPassword.attrs['aria-pressed'],'true');
+assert.equal(signupElements.signupPassword.value,'password-must-be-preserved','Show preserves input');
+assert.equal(signupElements.signupPasswordConfirm.type,'password','New password toggle should not expose confirmation');
+signupElements.showSignupPasswordConfirm.onclick();
+assert.equal(signupElements.signupPasswordConfirm.type,'text','Confirmation password can be revealed');
+signupElements.showSignupPassword.onclick();
+assert.equal(signupElements.signupPassword.type,'password','Hide masks password');
+signupElements.betaSignup.onclick();
+assert.equal(signupElements.signupPassword.type,'password','Reopen signup resets visibility');
+assert.equal(signupElements.signupPasswordConfirm.type,'password','Confirmation should reset to hidden');
 assert.equal(typeof signupSubmit,'function');
 const submitEvent={preventDefault(){this.prevented=true}};
 await signupSubmit(submitEvent);
@@ -354,15 +370,27 @@ assert.match(signupElements.signupStatus.textContent,/do not match/);
 signupElements.signupPasswordConfirm.value=signupElements.signupPassword.value;
 await signupSubmit({preventDefault(){}});
 assert.equal(signupRequests.length,1,'Valid registration submits exactly once');
-assert.equal(signupRequests[0].path,'/auth/v1/signup');
+assert.ok(signupRequests[0].path.startsWith('/auth/v1/signup?redirect_to='));
+assert.equal(new NodeURL('https://example.invalid'+signupRequests[0].path).searchParams.get('redirect_to'),'https://theplds.github.io/plds-household/');
 const signupPayload=JSON.parse(signupRequests[0].opts.body);
 assert.equal(signupPayload.email,'mpoulidis+household-qa@gmail.com');
 assert.equal(signupPayload.data.display_name,'QA Tester');
 assert.equal(signupPayload.password,'twelve-letters-1234');
+assert.equal(signupPayload.email_redirect_to,'https://theplds.github.io/plds-household/');
 assert.match(signupElements.signupStatus.textContent,/Check mpoulidis\+household-qa@gmail\.com for a confirmation link/);
 assert.equal(signupElements.signupSubmit.disabled,false,'Submit must reactivate when server completes');
 assert.equal(signupElements.signupDialog.open,true,'Keep confirmation instructions visible');
 signupElements.signupCancel.onclick();
 assert.equal(signupElements.signupDialog.open,false);
 
-console.log('PASS: pricing, calendar import, QA reset, and functional invited signup dialog.');
+// Sign out has one entry, inside the three-dot menu, not inside Options.
+const headerMenu=html.slice(html.indexOf('<div class="header-more-options">'),html.indexOf('</div></details>',html.indexOf('<div class="header-more-options">')));
+const optionsAccount=html.slice(html.indexOf('id="optionsAccount"'),html.indexOf('id="settingsStatus"',html.indexOf('id="optionsAccount"')));
+assert.match(headerMenu,/id="logout" type="button">Sign out<\/button>/);
+assert.ok(!optionsAccount.includes('id="logout"'),'Options must not also contain Sign out');
+assert.equal(html.split('id="logout"').length-1,1,'Sign out must be unique');
+assert.match(html,/\$\('logout'\)\.onclick=async\(\)=>\{\$\('headerMoreMenu'\)\.open=false/);
+assert.match(html,/async function handleRecoveryLink\(\)/);
+assert.match(html,/\['recovery','signup','invite','email'\]/);
+assert.match(html,/history\.replaceState\(null,'',location\.pathname\)/);
+console.log('PASS: signup Show-Hide, confirmation redirect, menu Sign out, and prior financial/calendar tests.');
