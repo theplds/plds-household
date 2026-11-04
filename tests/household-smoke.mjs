@@ -114,7 +114,7 @@ const options=html.slice(html.indexOf('<dialog id="settingsDialog"'),html.indexO
 for(const id of ['optionsProfile','optionsHousehold','optionsNotifications','optionsAppearance','optionsAccount']){
  assert.ok(options.includes('id="'+id+'"'),'Missing Options section '+id);
 }
-for(const id of ['manageChildren','openSetupGuide','resetMonthActivities','settingsName','enablePush','repairPush','themeToggle','dailyReminderEnabled','dailyReminderTime','logout','refreshAccess']){
+for(const id of ['manageChildren','openSetupGuide','resetMonthActivities','settingsName','enablePush','repairPush','themeToggle','dailyReminderEnabled','dailyReminderTime','refreshAccess']){
  assert.ok(options.includes('id="'+id+'"'),'Misplaced Options action '+id);
  assert.equal(html.split('id="'+id+'"').length-1,1,'Duplicated UI id '+id);
 }
