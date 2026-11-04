@@ -1270,7 +1270,13 @@ function render(){
  $('childFilter').value=childFilter;
  const visibleSs=filteredLessons(ss);
  const importedEventChildIds=e=>e.child_id?[e.child_id]:e.activity_id?activityChildren.filter(ac=>ac.activity_id===e.activity_id).map(ac=>ac.child_id):[];
- const visibleImported=importedEvents.filter(e=>!e.hidden&&!e.removed_from_source&&e.event_date.startsWith(month)&&(childFilter==='all'||(childFilter==='unassigned'?!importedEventChildIds(e).length:importedEventChildIds(e).includes(childFilter))));
+ const visibleImported=importedEvents.filter(e=>!e.hidden&&!e.removed_from_source&&(childFilter==='all'||(childFilter==='unassigned'?!importedEventChildIds(e).length:importedEventChildIds(e).includes(childFilter)))).flatMap(e=>{
+  const entries=[];
+  if(e.event_date.startsWith(month))entries.push({e,date:e.event_date,isReplacement:false});
+  if(e.event_status==='rescheduled'&&e.replacement_date?.startsWith(month))
+   entries.push({e,date:e.replacement_date,isReplacement:true});
+  return entries;
+ });
  const owed=ss.reduce((sum,x)=>sum+x.charge,0)+activities.reduce((sum,a)=>sum+monthlyActivityFee(a,month),0),paid=monthlyPayments.reduce((sum,p)=>sum+Number(p.amount),0);
  const runningBalances=window.householdRunningBalances||[];
  $('owed').textContent=euro(owed);$('remaining').textContent=euro(owed-paid);
@@ -1309,12 +1315,16 @@ function render(){
     const noteDate=x.replacement?(x.o?.new_date||x.d.date):x.d.date;const hasTeacherNote=teacherNotes.some(n=>n.schedule_id===x.s.id&&n.lesson_date===noteDate&&String(n.note||'').trim())||activityUpdates.some(n=>n.activity_id===x.a.id&&n.session_date===noteDate);const hasHomework=lessonHomework.some(h=>h.schedule_id===x.s.id&&h.lesson_date===noteDate&&(String(h.description||'').trim()||(Array.isArray(h.files)&&h.files.length)));
     html+=`<button class="calendar-event ${sc}${hasTeacherNote?' has-teacher-note':''}${hasHomework?' has-homework':''}" data-activity="${esc(x.a.name)}" data-palette="${chosenPalette(x.a)}" style="${colorStyle(x.a)}" data-session="${esc(sessionButtonKey(x))}" title="${esc(x.a.name)} ${time} · ${esc(lessonKids(x))} · ${esc(label)} · ${euro(x.charge)}" aria-label="${esc(x.a.name)} ${time} ${esc(lessonKids(x))} ${esc(label)} ${euro(x.charge)}"><span class="calendar-event-time">${esc(time)}–${esc(x.s.end_time.slice(0,5))}</span> <span class="full-label">${esc(x.a.name)}</span><span class="short-label">${esc(short)}</span>${symbol}${shortLessonKids(x)?`<span class="assignment-inline">${esc(shortLessonKids(x))}</span>`:""}</button>`;
    }
-   for(const e of visibleImported.filter(e=>e.event_date===date)){
-    const time=e.all_day?'All day':String(e.start_time||'').slice(0,5);
-    const linkedActivity=activities.find(a=>a.id===e.activity_id);
-    const eventSource=e.source_id?'Live subscription':String(e.source_key||'').startsWith('google-copy:')?'Google import':String(e.source_key||'').startsWith('household:')?'Household event':'Calendar import';
+   for(const item of visibleImported.filter(item=>item.date===date)){
+    const e=item.e,linkedActivity=activities.find(a=>a.id===e.activity_id);
+    const cancelled=e.event_status==='cancelled',moved=e.event_status==='rescheduled';
+    const cls=item.isReplacement?'is-replacement':cancelled?'is-cancelled':moved?'is-rescheduled':'';
+    const shownTime=item.isReplacement?e.replacement_start_time:e.start_time;
+    const time=e.all_day?'All day':String(shownTime||'').slice(0,5);
+    const state=item.isReplacement?'Rescheduled':cancelled?'Cancelled':moved?'Rescheduled':'';
+    const source=e.source_id?'Live subscription':String(e.source_key||'').startsWith('google-copy:')?'Google import':'Household event';
     const childName=children.find(c=>c.id===e.child_id)?.name||'';
-    html+=`<button type="button" class="calendar-event imported-calendar-event" ${linkedActivity?'data-activity="'+esc(linkedActivity.name)+'" data-palette="'+chosenPalette(linkedActivity)+'" style="'+colorStyle(linkedActivity)+'"':''} data-import-event="${esc(e.id)}" title="${esc(e.title)} · ${esc(eventSource)} · No charge" aria-label="${esc(time+' '+e.title+(childName?' '+childName:'')+' · '+eventSource+', no charge')}"><span class="calendar-event-time">${esc(time)}</span> <span class="full-label">${esc(e.title)}</span><span class="short-label">${esc(e.title)}</span>${childName?'<span class="assignment-inline">'+esc(childName)+'</span>':''}</button>`;
+    html+=`<button type="button" class="calendar-event imported-calendar-event ${cls}" ${linkedActivity?'data-activity="'+esc(linkedActivity.name)+'" data-palette="'+chosenPalette(linkedActivity)+'" style="'+colorStyle(linkedActivity)+'"':''} data-import-event="${esc(e.id)}" title="${esc(e.title)} · ${esc(source)}${state?' · '+state:''} · No charge" aria-label="${esc(time+' '+e.title+(childName?' '+childName:'')+(state?' '+state:'')+' · '+source+', no charge')}"><span class="calendar-event-time">${esc(time)}</span> <span class="full-label">${esc(e.title)}</span><span class="short-label">${esc(e.title)}</span>${state?' <span class="calendar-event-state">'+esc(state)+'</span>':''}${childName?'<span class="assignment-inline">'+esc(childName)+'</span>':''}</button>`;
    }
    html+='</div>';
   }
@@ -1328,15 +1338,19 @@ function render(){
   html+=`<div class="list-week-nav"><button type="button" data-week-step="-1" aria-label="Previous week">‹</button><strong>${formatDay(chosenMonday)} – ${formatDay(chosenSunday)}</strong><button type="button" data-week-step="1" aria-label="Next week">›</button></div>`;
   const weekItems=[
    ...visibleSs.filter(x=>weekStart(x.d.date).toISOString().slice(0,10)===listWeek).map(x=>({type:'lesson',date:x.d.date,time:(x.replacement&&x.o?.new_time||x.s.start_time).slice(0,5),x})),
-   ...visibleImported.filter(e=>weekStart(e.event_date).toISOString().slice(0,10)===listWeek).map(e=>({type:'import',date:e.event_date,time:e.start_time||'',e}))
+   ...visibleImported.filter(item=>weekStart(item.date).toISOString().slice(0,10)===listWeek).map(item=>({type:'import',date:item.date,time:item.isReplacement?(item.e.replacement_start_time||''):(item.e.start_time||''),e:item.e,isReplacement:item.isReplacement}))
   ].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
   for(const item of weekItems){
    const day=item.date;
    if(day!==lastDate){lastDate=day;html+=`<div class="day">${new Date(day+'T12:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'})}</div>`}
    if(item.type==='import'){
-    const e=item.e,when=e.all_day?'All day':String(e.start_time||'').slice(0,5);
+    const e=item.e,when=e.all_day?'All day':String((item.isReplacement?e.replacement_start_time:e.start_time)||'').slice(0,5);
     const linkedActivity=activities.find(a=>a.id===e.activity_id),childName=children.find(c=>c.id===e.child_id)?.name||'';
-    html+=`<div class="line activity-box imported-event-row" ${linkedActivity?'data-activity="'+esc(linkedActivity.name)+'" data-palette="'+chosenPalette(linkedActivity)+'" style="'+colorStyle(linkedActivity)+'"':''}><div class="entry"><b>${esc(e.title)}</b> <small>${esc(when)}</small>${childName?'<div><small>'+esc(childName)+'</small></div>':''}${e.location?'<div><small>'+esc(e.location)+'</small></div>':''}</div><button type="button" data-import-event="${esc(e.id)}" aria-label="View ${esc(e.title)}, imported calendar event with no charge">View</button></div>`;
+    const cancelled=e.event_status==='cancelled',moved=e.event_status==='rescheduled';
+    const cls=item.isReplacement?'is-replacement':cancelled?'is-cancelled':moved?'is-rescheduled':'';
+    const status=item.isReplacement?'Rescheduled':cancelled?'Cancelled':moved?'Rescheduled':'';
+    const isInactive=cancelled||(moved&&!item.isReplacement);
+    html+=`<div class="line activity-box imported-event-row list-lesson ${cls} ${isInactive?'list-inactive-lesson':''}" ${linkedActivity?'data-activity="'+esc(linkedActivity.name)+'" data-palette="'+chosenPalette(linkedActivity)+'" style="'+colorStyle(linkedActivity)+'"':''}><div class="entry"><b>${esc(e.title)}</b> <small>${esc(when)}</small>${childName?'<div><small>'+esc(childName)+'</small></div>':''}${e.location?'<div><small>'+esc(e.location)+'</small></div>':''}</div><span class="list-lesson-status">${status}</span><button type="button" data-import-event="${esc(e.id)}" aria-label="View ${esc(e.title)}, Household calendar event no charge">View</button></div>`;
     continue;
    }
    const x=item.x;
