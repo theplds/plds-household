@@ -55,11 +55,11 @@ assert.match(bridge,/action:'import'/);
 // Imported entries should render as ordinary activity cards, with linked palette
 // when available and a solid default when not. Distinction is retained in the
 // tooltip/editor, never as cramped inline text or an invented billing charge.
-assert.match(html,/\.calendar-event\.imported-calendar-event:not\(\[data-activity\]\)\{background:#5065f5!important/);
-assert.match(html,/class="calendar-event imported-calendar-event"/);
+assert.match(html,/\.calendar-event\.imported-calendar-event:not\(\[data-activity\]\):not\(\.is-cancelled\):not\(\.is-rescheduled\):not\(\.is-replacement\)\{background:#5065f5!important/);
+assert.match(html,/class="calendar-event imported-calendar-event \$\{cls\}"/);
 assert.match(html,/const linkedActivity=activities\.find\(a=>a\.id===e\.activity_id\)/);
 assert.match(html,/data-palette=".*chosenPalette\(linkedActivity\)/);
-assert.match(html,/class="line activity-box imported-event-row"/);
+assert.match(html,/class="line activity-box imported-event-row list-lesson \$\{cls\}/);
 assert.doesNotMatch(html,/class="imported-event-label"/);
 assert.doesNotMatch(html,/border:1px dashed #8db1cf/);
 assert.match(html,/Imported calendar appointments are never billed/);
