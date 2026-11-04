@@ -1248,7 +1248,7 @@ function render(){
    }
    for(const e of visibleImported.filter(e=>e.event_date===date)){
     const time=e.all_day?'All day':String(e.start_time||'').slice(0,5);
-    html+=`<button type="button" class="calendar-event imported-calendar-event" data-import-event="${esc(e.id)}" title="${esc(e.title)}${e.location?' · '+esc(e.location):''} · Imported event, no charge"><span class="calendar-event-time">${esc(time)}</span> <span class="full-label">${esc(e.title)}</span><span class="short-label">${esc(e.title)}</span><span class="imported-event-label">Imported</span></button>`;
+    html+=`<button type="button" class="calendar-event imported-calendar-event" data-import-event="${esc(e.id)}" title="${esc(e.title)}${e.location?' · '+esc(e.location):''} · Imported event, no charge"><span class="calendar-event-time">${esc(time)}</span> <span class="full-label">${esc(e.title)}</span><span class="short-label">${esc(e.title)}</span><span class="imported-event-label">${e.source_id?'Synced':'Imported'}${e.activity_id?' · '+esc(activities.find(a=>a.id===e.activity_id)?.name||'Activity'):''}</span></button>`;
    }
    html+='</div>';
   }
@@ -1269,7 +1269,7 @@ function render(){
    if(day!==lastDate){lastDate=day;html+=`<div class="day">${new Date(day+'T12:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'})}</div>`}
    if(item.type==='import'){
     const e=item.e,when=e.all_day?'All day':String(e.start_time||'').slice(0,5);
-    html+=`<div class="line imported-event-row"><div class="entry"><b>${esc(e.title)}</b> <small>${esc(when)} · Imported, no charge</small>${e.location?'<div><small>'+esc(e.location)+'</small></div>':''}</div><button type="button" data-import-event="${esc(e.id)}">View</button></div>`;
+    html+=`<div class="line imported-event-row"><div class="entry"><b>${esc(e.title)}</b> <small>${esc(when)} · ${e.source_id?'Synced':'Imported'}, no charge${e.activity_id?' · '+esc(activities.find(a=>a.id===e.activity_id)?.name||'Activity'):''}</small>${e.location?'<div><small>'+esc(e.location)+'</small></div>':''}</div><button type="button" data-import-event="${esc(e.id)}">View</button></div>`;
     continue;
    }
    const x=item.x;
