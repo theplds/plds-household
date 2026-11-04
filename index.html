@@ -1737,52 +1737,99 @@ $('calendarImportSave').onclick=async()=>{
  }finally{calendarImportBusy=false;$('calendarImportClose').disabled=false;updateImportSelection()}
 };
 let openImportedEventId=null;
-function showImportedEvent(id){
- const e=importedEvents.find(x=>x.id===id);if(!e)return;
- openImportedEventId=id;
- $('calendarEventHeading').textContent=e.title;
- const when=e.all_day?'All-day event':(String(e.start_time||'').slice(0,5)+(e.end_time?'–'+String(e.end_time).slice(0,5):''));
- $('calendarEventDetails').innerHTML='<p><strong>'+esc(displayDateDMY(e.event_date))+'</strong> · '+esc(when)+'</p>'
-  +(e.location?'<p><strong>Location:</strong> '+esc(e.location)+'</p>':'')
-  +(e.details?'<p style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(e.details)+'</p>':'')
-  +'<p class="muted">'+(e.source_id?'Read-only synced calendar event':'One-time .ics import')+'. The linked activity is informational, with no extra charge.</p>';
- $('calendarEventChild').innerHTML='<option value="">Unassigned / everyone</option>'+children.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('');
- $('calendarEventActivity').innerHTML='<option value="">No linked activity</option>'+activities.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.name)+'</option>').join('');
- $('calendarEventChild').value=e.child_id||'';
- $('calendarEventActivity').value=e.activity_id||'';
+function showImportedEvent(id=null){
+ const event=id?importedEvents.find(x=>x.id===id):null;
+ if(id&&!event)return;
+ openImportedEventId=event?.id||null;
+ const readOnly=Boolean(event?.source_id);
+ $('calendarEventHeading').textContent=event?.title||'New Household event';
+ $('calendarEventDetails').innerHTML=readOnly
+  ?'<p class="muted">Live subscription event: you may assign it to a child or activity, but its title and time are controlled by the source calendar.</p>'
+  :'<p class="muted">This event belongs to Household. Changes are shared with its members and never sent to Google. No extra charges.</p>';
+ $('calendarEventEditFields').hidden=readOnly;
+ $('calendarEventTitle').value=event?.title||'';
+ $('calendarEventDate').value=event?.event_date||localDate(new Date());
+ $('calendarEventAllDay').checked=event?.all_day??false;
+ $('calendarEventStart').value=String(event?.start_time||'').slice(0,5)||'15:00';
+ $('calendarEventEnd').value=String(event?.end_time||'').slice(0,5)||'16:00';
+ $('calendarEventLocation').value=event?.location||'';
+ $('calendarEventNotes').value=event?.details||'';
+ $('calendarEventTimes').hidden=$('calendarEventAllDay').checked;
+ $('calendarEventChild').innerHTML='<option value="">Unassigned / everyone</option>'+
+  children.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('');
+ $('calendarEventActivity').innerHTML='<option value="">No linked activity</option>'+
+  activities.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.name)+'</option>').join('');
+ $('calendarEventChild').value=event?.child_id||(children.some(c=>c.id===childFilter)?childFilter:'');
+ $('calendarEventActivity').value=event?.activity_id||'';
  $('calendarEventStatus').textContent='';
- $('calendarEventRemove').textContent=e.source_id?'Hide this event':'Remove event';
+ $('calendarEventSave').textContent=readOnly?'Save assignment':event?'Save event':'Create event';
+ $('calendarEventRemove').hidden=!event;
+ $('calendarEventRemove').textContent=readOnly?'Hide event':'Delete event';
  $('calendarEventDialog').showModal();
 }
+$('addHouseholdEvent').onclick=()=>showImportedEvent();
+$('calendarEventAllDay').onchange=()=>{$('calendarEventTimes').hidden=$('calendarEventAllDay').checked};
 $('calendarEventClose').onclick=()=>$('calendarEventDialog').close();
 $('calendarEventSave').onclick=async()=>{
- const e=importedEvents.find(x=>x.id===openImportedEventId);if(!e||!user||!HOUSE)return;
+ const e=openImportedEventId?importedEvents.find(x=>x.id===openImportedEventId):null;
+ if(!user||!HOUSE)return;
+ const status=$('calendarEventStatus'),button=$('calendarEventSave');
  const child_id=$('calendarEventChild').value||null,activity_id=$('calendarEventActivity').value||null;
- if(child_id&&!children.some(c=>c.id===child_id))return $('calendarEventStatus').textContent='Invalid child selection.';
- if(activity_id&&!activities.some(a=>a.id===activity_id))return $('calendarEventStatus').textContent='Invalid activity selection.';
- const button=$('calendarEventSave');button.disabled=true;
+ if(child_id&&!children.some(c=>c.id===child_id)){status.textContent='Invalid child selection.';return}
+ if(activity_id&&!activities.some(a=>a.id===activity_id)){status.textContent='Invalid activity selection.';return}
+ let payload={child_id,activity_id};
+ if(!e?.source_id){
+  const title=$('calendarEventTitle').value.trim(),date=$('calendarEventDate').value;
+  const all_day=$('calendarEventAllDay').checked;
+  const start_time=all_day?null:$('calendarEventStart').value;
+  const end_time=all_day?null:($('calendarEventEnd').value||null);
+  const details=$('calendarEventNotes').value,location=$('calendarEventLocation').value.trim();
+  if(!title||title.length>250){status.textContent='Enter an event title (up to 250 characters).';return}
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date+'T12:00:00Z'))||
+   new Date(date+'T12:00:00Z').toISOString().slice(0,10)!==date){status.textContent='Choose a valid date.';return}
+  if(!all_day&&(!/^([01]\d|2[0-3]):[0-5]\d$/.test(start_time)||end_time&&
+   (!/^([01]\d|2[0-3]):[0-5]\d$/.test(end_time)||end_time<=start_time))){
+   status.textContent='Enter a valid start time and a later end time.';return
+  }
+  if(details.length>3000||location.length>300){status.textContent='Notes or location are too long.';return}
+  payload={...payload,title,event_date:date,all_day,start_time,end_time,details,location};
+ }
+ button.disabled=true;
  try{
-  const result=await db.from('calendar_import_events').update({child_id,activity_id}).eq('id',e.id).eq('household_id',HOUSE);
+  let result;
+  if(e){
+   result=await db.from('calendar_import_events').update(payload)
+    .eq('id',e.id).eq('household_id',HOUSE).eq('updated_at',e.updated_at).select('id');
+  }else{
+   result=await db.from('calendar_import_events').insert({...payload,household_id:HOUSE,
+    source_key:'household:'+crypto.randomUUID(),created_by:user.id}).select('id');
+  }
   if(result.error)throw result.error;
+  if(!result.data?.length)throw Error('Someone else updated this event. Reopen it to review their changes.');
   $('calendarEventDialog').close();
   await load();
-  msg('Event assignment saved. No lessons or charges were created.');
- }catch(err){$('calendarEventStatus').textContent='Could not save assignment: '+(err.message||String(err))}
+  msg('Household event saved. No lessons or charges were created.');
+ }catch(err){status.textContent='Could not save event: '+(err.message||String(err))}
  finally{button.disabled=false}
 };
 $('calendarEventRemove').onclick=async()=>{
  const e=importedEvents.find(x=>x.id===openImportedEventId);if(!e)return;
- const label=e.source_id?'Hide this synced event from Household? It will remain hidden when the calendar refreshes.':'Remove this imported event? This will not affect lessons, payments or any external calendar.';
- if(!confirm(label))return;
- const b=$('calendarEventRemove');b.disabled=true;
+ const readOnly=Boolean(e.source_id);
+ if(!confirm(readOnly?'Hide this live subscription event from Household?':
+  'Delete this Household event for all household members? This never changes Google Calendar.'))return;
+ const button=$('calendarEventRemove');button.disabled=true;
  try{
-  const result=e.source_id
-   ?await db.from('calendar_import_events').update({hidden:true}).eq('id',e.id).eq('household_id',HOUSE)
-   :await db.from('calendar_import_events').delete().eq('id',e.id).eq('household_id',HOUSE);
+  const q=readOnly
+   ?db.from('calendar_import_events').update({hidden:true})
+   :db.from('calendar_import_events').delete();
+  const result=await q.eq('id',e.id).eq('household_id',HOUSE)
+   .eq('updated_at',e.updated_at).select('id');
   if(result.error)throw result.error;
-  $('calendarEventDialog').close();await load();msg(e.source_id?'Synced event hidden from Household.':'Imported calendar event removed.');
- }catch(err){msg('Could not remove imported event: '+err.message)}
- finally{b.disabled=false}
+  if(!result.data?.length)throw Error('Someone else changed this event. Reopen it to review.');
+  $('calendarEventDialog').close();await load();
+  msg(readOnly?'Subscription event hidden from Household.':'Household event deleted.');
+ }catch(err){$('calendarEventStatus').textContent='Could not remove event: '+(err.message||String(err))}
+ finally{button.disabled=false}
 };
 $('content').onclick=async e=>{let b=e.target.closest('button');if(!b)return;
  if(b.dataset.importEvent){showImportedEvent(b.dataset.importEvent);return;}
