@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- PLDS Household v0.3.134 | 2026-10-28 | Supabase live + v0.3.4 demo design --><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><title>PLDS Household v0.3.134</title><link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="shortcut icon" href="./icon.svg"><link rel="manifest" href="./manifest.webmanifest?v=2"><meta name="mobile-web-app-capable" content="yes"><style>
+<!-- PLDS Household v0.3.135 | 2026-10-28 | Supabase live + v0.3.4 demo design --><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><title>PLDS Household v0.3.135</title><link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="shortcut icon" href="./icon.svg"><link rel="manifest" href="./manifest.webmanifest?v=2"><meta name="mobile-web-app-capable" content="yes"><style>
 :root{font-family:system-ui,-apple-system,Arial;background:#0d1420;color:#edf3ff}*{box-sizing:border-box}body{margin:0}main{max-width:920px;margin:auto;padding:18px}header{display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:24px;margin:6px 0}h2{font-size:18px}small,.muted{color:#a8b7ce}button,input,select{font:inherit;border-radius:10px;padding:11px;border:1px solid #384760}button{background:#273d65;color:white;cursor:pointer}button.primary{background:#3477ec;border-color:#3477ec}button:disabled{opacity:.5}input,select{background:#141f32;color:white;max-width:100%}.panel{background:#172337;border:1px solid #2c3d56;border-radius:16px;padding:16px;margin:14px 0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#172337;border-radius:14px;padding:14px}.stat b{display:block;font-size:23px;margin-top:6px}.toolbar,.line{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.line{justify-content:space-between;padding:12px 0;border-bottom:1px solid #2a3a52}.line:last-child{border:0}.pill{border-radius:20px;padding:4px 9px;background:#283b56;font-size:12px}.day{margin:16px 0 5px;font-weight:700;color:#b6c9eb}.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px}#message{color:#ffca83;min-height:20px}.hidden{display:none}dialog{border:1px solid #415678;background:#172337;color:#fff;border-radius:16px;width:min(94vw,460px)}dialog::backdrop{background:#000a}label{display:block;margin:12px 0 5px}.wide{width:100%}.tab{margin:8px 4px 8px 0} .entry{font-size:14px}.entry b{font-size:15px}@media(max-width:540px){.stats{grid-template-columns:repeat(2,1fr)}main{padding:12px}.stat b{font-size:20px}}
 .activity-box{border:0!important;border-radius:12px;margin:9px 0;padding:14px!important;color:white;box-shadow:0 2px 10px #0003}.activity-box small{color:#fff!important;opacity:.92}.activity-box b{color:#fff;font-weight:500}.activity-box strong{font-weight:500}.activity-box .entry{min-width:0}.activity-box[data-activity="speech therapy"],.activity-box[data-activity="speech therapy"] small,.activity-box[data-activity="speech therapy"] b{color:#1a1408!important}.password-row{display:flex;align-items:stretch;gap:8px}.password-row input{flex:1;min-width:0}.password-row button{flex:0 0 auto}#passwordDialog{max-width:460px}#loginForm button.primary{margin-top:6px}#loginStatus{color:#c5d7f8;font-size:13px;min-height:20px}#loginStatus.bad{color:#ffbcac}#loginStatus.good{color:#b0f0c7}
 /* Demo v0.3.4 styles */
@@ -127,7 +127,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @media(max-width:540px){.header-actions{width:100%;justify-content:space-between}.stats .stat{min-width:0}.calendar-cell{min-height:83px}.calendar-event{overflow-wrap:anywhere}}
 
 
-/* v0.3.134: compact one-centimeter color-only swatches */
+/* v0.3.135: compact one-centimeter color-only swatches */
 .color-palette{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 18px}
 .color-option{position:relative;display:flex;align-items:center;justify-content:center;width:1cm;height:1cm;flex:0 0 1cm;margin:0;padding:3px;border:1px solid #536884;border-radius:6px;background:transparent;cursor:pointer}
 .color-option input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
@@ -153,7 +153,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  color:var(--chosen-ink)!important;text-shadow:none!important
 }
 
-/* v0.3.134: new official activity colors, always white lettering for scheduled lessons.
+/* v0.3.135: new official activity colors, always white lettering for scheduled lessons.
    Selected swatches retain the exact palette hex; shaded text gives contrast on light colors.
    The cancelled/rescheduled status palettes remain completely unaffected. */
 :root[data-theme] .calendar-event[data-palette="true"][data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement),
@@ -172,7 +172,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  text-shadow:0 1px 2px rgba(0,0,0,.85),0 0 3px rgba(0,0,0,.65)!important;
 }
 
-/* v0.3.134 — household children, shared assignments and child filters */
+/* v0.3.135 — household children, shared assignments and child filters */
 .child-filter-toolbar{margin-top:13px;align-items:center}
 .child-filter-label{display:inline;margin:0;font-weight:650;font-size:14px}
 #childFilter{min-width:150px;max-width:100%;padding:9px 12px}
@@ -253,7 +253,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 #replacementDateWrap{position:relative;margin-top:10px}#replacementDateWrap .new-date-label{display:block;margin-bottom:7px;font-weight:500}
 #replacementDateWrap{margin-top:10px;position:relative}#replacementDateWrap .new-date-label{position:absolute;left:34px;top:50%;transform:translateY(-50%);margin:0;pointer-events:none;font-weight:400;z-index:1}#replacementDateWrap.has-date .new-date-label,#replacementDateWrap:focus-within .new-date-label{display:none}#replacementDateWrap.no-date:not(:focus-within) #newdate{color:transparent}#replacementDateWrap #newdate{min-height:50px;padding-left:34px}#replacementDateWrap.no-date:not(:focus-within) #newdate::-webkit-datetime-edit{color:transparent}#replacementDateWrap.no-date:not(:focus-within) #newdate::-webkit-calendar-picker-indicator{opacity:.75}
 
-/* v0.3.134: keep New date visible until a date is actually selected */
+/* v0.3.135: keep New date visible until a date is actually selected */
 #replacementDateWrap.no-date .new-date-label{display:block!important;color:#edf3ff!important;z-index:3;left:34px;top:50%;transform:translateY(-50%);pointer-events:none}
 #replacementDateWrap.has-date .new-date-label{display:none!important}
 #replacementDateWrap.no-date #newdate,#replacementDateWrap.no-date #newdate:focus{color:transparent!important}
@@ -261,10 +261,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 #replacementDateWrap #newdate:focus,#replacementDateWrap #newdate:focus-visible{outline:none!important;box-shadow:none!important;border-color:#536884!important}
 :root[data-theme="light"] #replacementDateWrap.no-date .new-date-label{color:#182438!important}
 
-/* v0.3.134: matching leading arrow in date selector */
+/* v0.3.135: matching leading arrow in date selector */
 #replacementDateWrap::before{content:"▸";position:absolute;left:15px;top:50%;transform:translateY(-50%);z-index:4;pointer-events:none;color:inherit;font-size:16px;font-weight:700}
 #lessonStatusSelect.reschedule-active{border:1px solid #536884!important;background-color:rgba(130,166,207,.18)!important;box-shadow:none!important}\n#replacementDateWrap:not([hidden]) #newdate{border:2px solid #8ec6ff!important;box-shadow:0 0 0 2px rgba(142,198,255,.18)!important}\n#replacementDateWrap:not([hidden]) #newdate:focus,#replacementDateWrap:not([hidden]) #newdate:focus-visible{border-color:#8ec6ff!important;box-shadow:0 0 0 2px rgba(142,198,255,.18)!important}\n#replacementDateWrap{position:relative}\n#replacementDateWrap #newdateFormatted{position:absolute;left:34px;top:50%;transform:translateY(-50%);pointer-events:none;z-index:3;font:inherit;color:inherit}\n#replacementDateWrap #newdate::-webkit-datetime-edit{color:transparent!important}\n#replacementDateWrap #newdate::-webkit-datetime-edit-text,#replacementDateWrap #newdate::-webkit-datetime-edit-day-field,#replacementDateWrap #newdate::-webkit-datetime-edit-month-field,#replacementDateWrap #newdate::-webkit-datetime-edit-year-field{color:transparent!important}\n#replacementDateWrap.no-date #newdateFormatted{display:none}\n
-/* v0.3.134: one visible date, while native date picker remains tappable */
+/* v0.3.135: one visible date, while native date picker remains tappable */
 #replacementDateWrap{position:relative}
 #replacementDateWrap #newdate{position:relative;z-index:2;color:transparent!important;-webkit-text-fill-color:transparent!important}
 #replacementDateWrap #newdate::-webkit-datetime-edit{opacity:0!important}
@@ -418,7 +418,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  #monthlyReportDialog .report-footnote{color:#374151!important}
 }
 
-/* v0.3.134 — Progressive-disclosure Options and contextual financial reports */
+/* v0.3.135 — Progressive-disclosure Options and contextual financial reports */
 .settings-dialog{width:min(500px,calc(100vw - 24px));max-width:500px;max-height:90dvh;overflow-y:auto;padding:20px}
 .settings-dialog #settingsHeading{margin:0 0 5px}
 .options-intro{font-size:13px;margin:0 0 15px}
@@ -468,7 +468,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 :root[data-theme="light"] .options-danger-zone{border-color:#dfa7a7}
 @media(max-width:480px){.settings-dialog{padding:14px}.options-footer{bottom:-14px;margin:14px -14px -14px;padding:12px 14px}.budget-quick-actions button{width:100%}}
 
-/* v0.3.134 — actionable unread notice strip, activity updates, and manual fee adjustments */
+/* v0.3.135 — actionable unread notice strip, activity updates, and manual fee adjustments */
 .notice-strip{margin:2px 0 12px;border:1px solid #79a8e0;border-radius:10px;background:#254367;overflow:hidden}
 .notice-strip[hidden]{display:none!important}
 .notice-action{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;width:100%;padding:11px 14px;border:0;background:transparent;color:#f7fbff;cursor:pointer}
@@ -494,7 +494,32 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 :root[data-theme="light"] .notice-count{background:#a8cff8;color:#163655}
 :root[data-theme="light"] .activity-note-card{background:#eef5fe;border-color:#c0d4ed}
 :root[data-theme="light"] .activity-note-card small{color:#506481}
-</style></head><body><main><header><div><small>SHARED HOUSEHOLD</small><h1><span id="householdTitle">PLDS Household</span> <span class="title-build-version" aria-label="App version">v0.3.134</span></h1></div><div class="header-actions"><div id="identity" class="muted"></div><div id="headerAccountActions" class="header-account-actions"><details id="headerMoreMenu" class="header-more-menu"><summary aria-label="More options" title="More options"><span class="header-menu-dots" aria-hidden="true"></span></summary><div class="header-more-options"><button type="button" data-menu-tab="history">History</button><button id="openSettings" type="button">Options</button></div></details></div></div></header><p id="message"></p><section id="login" class="panel"><h2>Welcome home</h2><p class="muted">Sign in with your household email and password. Your session stays signed in on this device.</p><form id="loginForm" novalidate><label for="email">Email address</label><input id="email" name="email" type="email" inputmode="email" autocomplete="username" class="wide" placeholder="Your household email" required><label for="password">Password</label><div class="password-row"><input id="password" name="password" type="password" autocomplete="current-password" class="wide" placeholder="Password" required><button id="revealPassword" type="button" aria-label="Show or hide password" title="Show password">Show</button></div><p><button class="primary wide" type="submit" id="send">Sign in</button></p><p id="loginStatus" role="status" aria-live="polite">Checking app readiness…</p></form><div class="panel" style="margin-top:12px"><strong>Invited beta household?</strong><p class="muted">Use the email address that received the invitation. New accounts may require email confirmation.</p><input id="betaName" class="wide" placeholder="Your name / household administrator" autocomplete="name"><button type="button" id="betaSignup">Create invited account</button><p id="betaStatus" role="status"></p></div><button type="button" id="changePassword" class="login-password-action">Change / reset password</button><p class="muted" style="font-size:13px">First time here? Your household account needs a password set by its administrator. No email links required.</p></section><section id="app" class="hidden">
+
+/* v0.3.135 — one-time iCalendar import, visually separate from paid lessons */
+.calendar-event.imported-calendar-event{background:#30485a!important;border:1px dashed #8db1cf!important;color:#f4faff!important}
+.imported-calendar-event .calendar-event-time{color:#dcecff}
+.imported-event-row{border:1px dashed #7899b3;border-radius:9px;background:#273b50;padding:9px 12px;margin:7px 0}
+.imported-event-row .entry{flex:1;min-width:0}
+.calendar-import-dialog{width:min(92vw,670px);max-height:90dvh;overflow:auto;padding:18px}
+.calendar-import-dialog h2{margin:0 0 10px}
+.calendar-import-dialog label{display:block;margin-top:13px}
+.calendar-import-dialog select,.calendar-import-dialog input[type=file]{width:100%}
+.calendar-import-preview{max-height:260px;overflow-y:auto;border:1px solid #5c718d;border-radius:10px;margin:12px 0}
+.calendar-import-item{display:flex;gap:11px;align-items:flex-start;padding:9px 11px;border-bottom:1px solid #435670;cursor:pointer;margin:0!important}
+.calendar-import-item:last-child{border:0}
+.calendar-import-item input{margin-top:4px}
+.calendar-import-item span{min-width:0}
+.calendar-import-item strong{display:block;font-size:13px}
+.calendar-import-item small{display:block;color:#abc5e5;font-size:12px;line-height:1.4}
+.calendar-import-warning{color:#ffce83}
+.calendar-import-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:14px}
+.imported-event-label{font-size:10px;opacity:.9;font-weight:650}
+:root[data-theme="light"] .calendar-event.imported-calendar-event{background:#e1eefb!important;border-color:#6f9bc6!important;color:#193955!important}
+:root[data-theme="light"] .imported-event-row{background:#f1f6fe;border-color:#9fb9d4}
+:root[data-theme="light"] .calendar-import-item{border-color:#cdd9e7}
+:root[data-theme="light"] .calendar-import-item small{color:#536984}
+@media(max-width:480px){.calendar-import-dialog{padding:12px}.calendar-import-preview{max-height:220px}}
+</style></head><body><main><header><div><small>SHARED HOUSEHOLD</small><h1><span id="householdTitle">PLDS Household</span> <span class="title-build-version" aria-label="App version">v0.3.135</span></h1></div><div class="header-actions"><div id="identity" class="muted"></div><div id="headerAccountActions" class="header-account-actions"><details id="headerMoreMenu" class="header-more-menu"><summary aria-label="More options" title="More options"><span class="header-menu-dots" aria-hidden="true"></span></summary><div class="header-more-options"><button type="button" data-menu-tab="history">History</button><button id="openSettings" type="button">Options</button></div></details></div></div></header><p id="message"></p><section id="login" class="panel"><h2>Welcome home</h2><p class="muted">Sign in with your household email and password. Your session stays signed in on this device.</p><form id="loginForm" novalidate><label for="email">Email address</label><input id="email" name="email" type="email" inputmode="email" autocomplete="username" class="wide" placeholder="Your household email" required><label for="password">Password</label><div class="password-row"><input id="password" name="password" type="password" autocomplete="current-password" class="wide" placeholder="Password" required><button id="revealPassword" type="button" aria-label="Show or hide password" title="Show password">Show</button></div><p><button class="primary wide" type="submit" id="send">Sign in</button></p><p id="loginStatus" role="status" aria-live="polite">Checking app readiness…</p></form><div class="panel" style="margin-top:12px"><strong>Invited beta household?</strong><p class="muted">Use the email address that received the invitation. New accounts may require email confirmation.</p><input id="betaName" class="wide" placeholder="Your name / household administrator" autocomplete="name"><button type="button" id="betaSignup">Create invited account</button><p id="betaStatus" role="status"></p></div><button type="button" id="changePassword" class="login-password-action">Change / reset password</button><p class="muted" style="font-size:13px">First time here? Your household account needs a password set by its administrator. No email links required.</p></section><section id="app" class="hidden">
   <div class="toolbar month-child-toolbar">
     <input type="month" id="month" aria-label="Selected month">
     <button id="retrySession" type="button" class="hidden">Retry connection</button>
@@ -519,7 +544,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <section class="panel" style="margin-top:14px"><h2>Budget by activity</h2><div id="activityBalances"></div></section>
   </div>
   <section class="panel" id="content" aria-live="polite"></section>
-</section><footer id="build-version" style="text-align:center;padding:18px 12px 28px;color:#a8b7ce;font:12px system-ui,sans-serif">PLDS Household · v0.3.134 · Live Supabase · Demo v0.3.4 design · 28 Oct 2026</footer></main><dialog id="activityNotesDialog" class="activity-notes-dialog" aria-labelledby="activityNotesHeading">
+</section><footer id="build-version" style="text-align:center;padding:18px 12px 28px;color:#a8b7ce;font:12px system-ui,sans-serif">PLDS Household · v0.3.135 · Live Supabase · Demo v0.3.4 design · 28 Oct 2026</footer></main><dialog id="activityNotesDialog" class="activity-notes-dialog" aria-labelledby="activityNotesHeading">
 <h2 id="activityNotesHeading">Activity notes</h2>
 <p class="muted">Practice announcements, locations and other activity updates. Notes do not change the calendar.</p>
 <div id="activityNoteItems"></div>
@@ -536,7 +561,23 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 </form></dialog>
 <dialog id="noteViewerDialog" class="activity-notes-dialog" aria-labelledby="noteViewerHeading">
 <h2 id="noteViewerHeading">Note</h2><div id="noteViewerBody"></div>
-<div class="activity-note-actions"><button type="button" id="noteViewerClose">Close</button></div></dialog><dialog id="monthlyReportDialog" aria-labelledby="monthlyReportHeading">
+<div class="activity-note-actions"><button type="button" id="noteViewerClose">Close</button></div></dialog><dialog id="calendarImportDialog" class="calendar-import-dialog" aria-labelledby="calendarImportHeading">
+<h2 id="calendarImportHeading">Import calendar</h2>
+<p class="muted">One-time import from Google, Apple or Outlook (.ics). Imported events are free, separate from lessons, and will not change the budget. Check the preview before importing.</p>
+<label for="calendarImportFile">Calendar file (.ics)</label><input id="calendarImportFile" type="file" accept=".ics,text/calendar">
+<p class="muted">Google Calendar exports all calendars as a ZIP: extract it and select an individual .ics file.</p>
+<label for="calendarImportChild">Assign imported events to</label>
+<select id="calendarImportChild"><option value="">Unassigned / everyone</option></select>
+<p id="calendarImportRange" class="muted"></p>
+<div id="calendarImportPreview" class="calendar-import-preview" hidden></div>
+<p id="calendarImportStatus" role="status" aria-live="polite"></p>
+<div class="calendar-import-actions"><button type="button" id="calendarImportClose">Close</button><button type="button" id="calendarImportSave" class="primary" disabled>Import selected events</button></div>
+</dialog>
+<dialog id="calendarEventDialog" class="calendar-import-dialog" aria-labelledby="calendarEventHeading">
+<h2 id="calendarEventHeading">Imported event</h2><div id="calendarEventDetails"></div>
+<div class="calendar-import-actions"><button type="button" id="calendarEventRemove">Remove event</button><button type="button" id="calendarEventClose">Close</button></div>
+</dialog>
+<dialog id="monthlyReportDialog" aria-labelledby="monthlyReportHeading">
  <div id="monthlyReportControls" class="report-controls">
   <div><h2 id="monthlyReportHeading" tabindex="-1">Monthly report</h2><p id="monthlyReportSubtitle" class="muted"></p></div>
   <div class="report-config">
@@ -577,6 +618,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
    <div class="options-section-body">
     <div class="settings-action-row"><span>Children's profiles</span><button id="manageChildren" type="button">Manage children</button></div>
     <div class="settings-action-row"><span>Household setup guide</span><button id="openSetupGuide" type="button">Open guide</button></div>
+    <div class="settings-action-row"><span>Import calendar (.ics)</span><button id="openCalendarImporter" type="button">Import</button></div>
     <section class="settings-access" aria-labelledby="accessHeading">
      <div class="settings-access-head"><h3 id="accessHeading">Who has access</h3><button id="refreshAccess" type="button">Refresh</button></div>
      <p class="muted settings-help">Accounts with access to this household.</p>
@@ -625,7 +667,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  </div>
  <p id="settingsStatus" role="status" aria-live="polite"></p>
  <div class="toolbar options-footer"><button type="button" id="closeSettings">Close</button><button type="submit" class="primary" id="saveSettings">Save changes</button></div>
-</form></dialog><dialog id="passwordDialog"><form id="passwordForm"><h2>Change password</h2><label for="newPassword">New password</label><input id="newPassword" type="password" autocomplete="new-password" minlength="12" required class="wide"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="12" required class="wide"><p id="passwordMessage" class="muted"></p><div class="toolbar"><button type="button" id="cancelPassword">Cancel</button><button type="submit" class="primary" id="savePassword">Save password</button></div></form></dialog><script>
+</form></dialog><dialog id="passwordDialog"><form id="passwordForm"><h2>Change password</h2><label for="newPassword">New password</label><input id="newPassword" type="password" autocomplete="new-password" minlength="12" required class="wide"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="12" required class="wide"><p id="passwordMessage" class="muted"></p><div class="toolbar"><button type="button" id="cancelPassword">Cancel</button><button type="submit" class="primary" id="savePassword">Save password</button></div></form></dialog><script src="calendar-import.js"></script><script>
 window.addEventListener('error',function(event){
  var m=document.getElementById('message'),s=document.getElementById('loginStatus');
  if(m)m.textContent='App error: '+String(event.message||'JavaScript failed');
@@ -740,7 +782,7 @@ const setTheme=t=>{
 let chosenTheme='dark';try{chosenTheme=localStorage.getItem('plds_household_theme')||'dark'}catch(_){}
 setTheme(chosenTheme==='light'?'light':'dark');
 document.getElementById('themeToggle').onclick=()=>{setTheme(document.documentElement.dataset.theme==='light'?'dark':'light');document.getElementById('headerMoreMenu').open=false};
-const $=id=>document.getElementById(id);const budgetToggle=document.getElementById('budgetToggle');budgetToggle.onclick=()=>navigateDashboard('budget');let pushReady=false,userPreferences=null,lastDailyReminderKey='';let user=null,activities=[],activityPrices=[],schedules=[],overrides=[],payments=[],members=[],logs=[],children=[],activityChildren=[],scheduleChildren=[],teacherNotes=[],lessonHomework=[],activityUpdates=[],noticeReads=[],monthlyAdjustments=[],noticeFeedStart=null,childFilter='all',tab='monthview',lastCalendarTab='monthview',month=localDate(new Date()).slice(0,7),listWeek='';/* v0.3.134: nine activity swatches with HSL saturation multiplied by 0.90. */
+const $=id=>document.getElementById(id);const budgetToggle=document.getElementById('budgetToggle');budgetToggle.onclick=()=>navigateDashboard('budget');let pushReady=false,userPreferences=null,lastDailyReminderKey='';let user=null,activities=[],activityPrices=[],schedules=[],overrides=[],payments=[],members=[],logs=[],children=[],activityChildren=[],scheduleChildren=[],teacherNotes=[],lessonHomework=[],activityUpdates=[],noticeReads=[],monthlyAdjustments=[],importedEvents=[],noticeFeedStart=null,childFilter='all',tab='monthview',lastCalendarTab='monthview',month=localDate(new Date()).slice(0,7),listWeek='';/* v0.3.135: nine activity swatches with HSL saturation multiplied by 0.90. */
 const ACTIVITY_PALETTE=["#e65b4f","#586bed","#9958ed","#ed58c3","#4ac1be","#91e15a","#315a96"];const ACTIVITY_COLORS={'greek':'#586bed','english':'#4ac1be','french':'#9958ed','piano':'#e8a85e','cleaning':'#ed58c3','speech therapy':'#e8c55e'};const activityColor=a=>/^#[0-9a-f]{6}$/i.test(String(a?.color||''))?a.color:(ACTIVITY_COLORS[String(a?.name||'').toLowerCase()]||'#64748b');const euro=n=>'€'+Number(n||0).toLocaleString('en-IE',{minimumFractionDigits:2,maximumFractionDigits:2});const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function msg(s){$('message').textContent=s||''}function localDate(d){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}async function addMonth(n){let [y,m]=month.split('-').map(Number);month=localDate(new Date(y,m-1+n,1)).slice(0,7);$('month').value=month;await refreshRunningBalances();render()}function dates(forMonth=month){let [y,m]=forMonth.split('-').map(Number),out=[];for(let d=new Date(y,m-1,1);d.getMonth()===m-1;d.setDate(d.getDate()+1))out.push({date:localDate(d),weekday:d.getDay()});return out}// Financial rates are effective-dated and owned by the database. Never infer old charges from activities.price.
 function priceAt(a,sessionDate){
  let first=null,rate=null;
@@ -937,7 +979,7 @@ async function checkHouseholdChanges(){
 setInterval(checkHouseholdChanges,30000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkHouseholdChanges()});
 window.addEventListener('focus',()=>checkHouseholdChanges());
-async function load(){try{if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(HOUSE||''))throw Error('Household is not initialized. Please sign in again.');let [a,s,o,p,m,l,k,ac,sc,tn,hw,priceRows,updates,reads,adjustments]=await Promise.all([db.from('activities').select('*').eq('household_id',HOUSE),db.from('schedules').select('*'),db.from('session_overrides').select('*'),db.from('payments').select('*,payment_allocations(billing_month,amount)'),db.from('household_members').select('*').eq('household_id',HOUSE),db.from('change_log').select('*').eq('household_id',HOUSE).order('changed_at',{ascending:false}).limit(100),db.from('children').select('*').eq('household_id',HOUSE).order('sort_order'),db.from('activity_children').select('*'),db.from('schedule_children').select('*'),loadTeacherNotes(),db.from('lesson_homework').select('*'),db.from('activity_price_history').select('activity_id,effective_from,price,billing_period'),db.from('activity_updates').select('*').eq('household_id',HOUSE).order('created_at',{ascending:false}),db.from('household_notice_reads').select('*').eq('household_id',HOUSE).eq('user_id',user.id),db.from('monthly_activity_adjustments').select('*')]);for(let r of [a,s,o,p,m,l,k,ac,sc,tn,hw,priceRows,updates,reads,adjustments])if(r.error)throw r.error;activities=a.data;activityPrices=priceRows.data.sort((x,y)=>x.effective_from.localeCompare(y.effective_from));schedules=s.data;overrides=o.data;payments=p.data;members=m.data;showWelcome();logs=l.data;lastSeenHouseholdChangeId=Math.max(lastSeenHouseholdChangeId,...logs.map(x=>Number(x.id)||0));children=k.data;activityChildren=ac.data;scheduleChildren=sc.data;teacherNotes=tn;lessonHomework=hw.data;activityUpdates=updates.data;noticeReads=reads.data;monthlyAdjustments=adjustments.data;await initializeNoticeFeed();await refreshRunningBalances();render();if($('message').textContent.startsWith('Signed in.'))msg('')}catch(e){msg('Sync error: '+e.message)}}function lessonTimeRange(x){const start=(x.replacement&&x.o?.new_time||x.s.start_time).slice(0,5);const a=x.s.start_time.slice(0,5).split(':').map(Number),b=x.s.end_time.slice(0,5).split(':').map(Number),duration=((b[0]*60+b[1])-(a[0]*60+a[1])+1440)%1440;const parts=start.split(':').map(Number),end=(parts[0]*60+parts[1]+duration)%1440;return start+'–'+String(Math.floor(end/60)).padStart(2,'0')+':'+String(end%60).padStart(2,'0')}
+async function load(){try{if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(HOUSE||''))throw Error('Household is not initialized. Please sign in again.');let [a,s,o,p,m,l,k,ac,sc,tn,hw,priceRows,updates,reads,adjustments,calEvents]=await Promise.all([db.from('activities').select('*').eq('household_id',HOUSE),db.from('schedules').select('*'),db.from('session_overrides').select('*'),db.from('payments').select('*,payment_allocations(billing_month,amount)'),db.from('household_members').select('*').eq('household_id',HOUSE),db.from('change_log').select('*').eq('household_id',HOUSE).order('changed_at',{ascending:false}).limit(100),db.from('children').select('*').eq('household_id',HOUSE).order('sort_order'),db.from('activity_children').select('*'),db.from('schedule_children').select('*'),loadTeacherNotes(),db.from('lesson_homework').select('*'),db.from('activity_price_history').select('activity_id,effective_from,price,billing_period'),db.from('activity_updates').select('*').eq('household_id',HOUSE).order('created_at',{ascending:false}),db.from('household_notice_reads').select('*').eq('household_id',HOUSE).eq('user_id',user.id),db.from('monthly_activity_adjustments').select('*'),db.from('calendar_import_events').select('*').eq('household_id',HOUSE).limit(1000)]);for(let r of [a,s,o,p,m,l,k,ac,sc,tn,hw,priceRows,updates,reads,adjustments,calEvents])if(r.error)throw r.error;activities=a.data;activityPrices=priceRows.data.sort((x,y)=>x.effective_from.localeCompare(y.effective_from));schedules=s.data;overrides=o.data;payments=p.data;members=m.data;showWelcome();logs=l.data;lastSeenHouseholdChangeId=Math.max(lastSeenHouseholdChangeId,...logs.map(x=>Number(x.id)||0));children=k.data;activityChildren=ac.data;scheduleChildren=sc.data;teacherNotes=tn;lessonHomework=hw.data;activityUpdates=updates.data;noticeReads=reads.data;monthlyAdjustments=adjustments.data;importedEvents=calEvents.data;await initializeNoticeFeed();await refreshRunningBalances();render();if($('message').textContent.startsWith('Signed in.'))msg('')}catch(e){msg('Sync error: '+e.message)}}function lessonTimeRange(x){const start=(x.replacement&&x.o?.new_time||x.s.start_time).slice(0,5);const a=x.s.start_time.slice(0,5).split(':').map(Number),b=x.s.end_time.slice(0,5).split(':').map(Number),duration=((b[0]*60+b[1])-(a[0]*60+a[1])+1440)%1440;const parts=start.split(':').map(Number),end=(parts[0]*60+parts[1]+duration)%1440;return start+'–'+String(Math.floor(end/60)).padStart(2,'0')+':'+String(end%60).padStart(2,'0')}
 function lessonClass(x){return x.replacement?'is-replacement':x.o?.status==='rescheduled'?'is-rescheduled':String(x.o?.status||'').startsWith('cancelled_')?'is-cancelled':''}
 function lessonLabel(x){if(x.replacement)return 'Rescheduled · new session';if(x.o?.status==='rescheduled')return 'Rescheduled · original';return (x.o?.status||'scheduled').replaceAll('_',' ')}
 function sessionButtonKey(x){return x.s.id+'|'+(x.replacement?x.o.session_date:x.d.date)}
@@ -1082,6 +1124,7 @@ function render(){
  $('childFilter').innerHTML='<option value="all">Everyone</option>'+children.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('')+'<option value="unassigned">Unassigned</option>';
  $('childFilter').value=childFilter;
  const visibleSs=filteredLessons(ss);
+ const visibleImported=importedEvents.filter(e=>e.event_date.startsWith(month)&&(childFilter==='all'||(childFilter==='unassigned'?!e.child_id:e.child_id===childFilter)));
  const owed=ss.reduce((sum,x)=>sum+x.charge,0)+activities.reduce((sum,a)=>sum+monthlyActivityFee(a,month),0),paid=monthlyPayments.reduce((sum,p)=>sum+Number(p.amount),0);
  const runningBalances=window.householdRunningBalances||[];
  $('owed').textContent=euro(owed);$('remaining').textContent=euro(owed-paid);
@@ -1119,9 +1162,13 @@ function render(){
     const noteDate=x.replacement?(x.o?.new_date||x.d.date):x.d.date;const hasTeacherNote=teacherNotes.some(n=>n.schedule_id===x.s.id&&n.lesson_date===noteDate&&String(n.note||'').trim())||activityUpdates.some(n=>n.activity_id===x.a.id&&n.session_date===noteDate);const hasHomework=lessonHomework.some(h=>h.schedule_id===x.s.id&&h.lesson_date===noteDate&&(String(h.description||'').trim()||(Array.isArray(h.files)&&h.files.length)));
     html+=`<button class="calendar-event ${sc}${hasTeacherNote?' has-teacher-note':''}${hasHomework?' has-homework':''}" data-activity="${esc(x.a.name)}" data-palette="${chosenPalette(x.a)}" style="${colorStyle(x.a)}" data-session="${esc(sessionButtonKey(x))}" title="${esc(x.a.name)} ${time} · ${esc(lessonKids(x))} · ${esc(label)} · ${euro(x.charge)}" aria-label="${esc(x.a.name)} ${time} ${esc(lessonKids(x))} ${esc(label)} ${euro(x.charge)}"><span class="calendar-event-time">${esc(time)}–${esc(x.s.end_time.slice(0,5))}</span> <span class="full-label">${esc(x.a.name)}</span><span class="short-label">${esc(short)}</span>${symbol}${shortLessonKids(x)?`<span class="assignment-inline">${esc(shortLessonKids(x))}</span>`:""}</button>`;
    }
+   for(const e of visibleImported.filter(e=>e.event_date===date)){
+    const time=e.all_day?'All day':String(e.start_time||'').slice(0,5);
+    html+=`<button type="button" class="calendar-event imported-calendar-event" data-import-event="${esc(e.id)}" title="${esc(e.title)}${e.location?' · '+esc(e.location):''} · Imported event, no charge"><span class="calendar-event-time">${esc(time)}</span> <span class="full-label">${esc(e.title)}</span><span class="short-label">${esc(e.title)}</span><span class="imported-event-label">Imported</span></button>`;
+   }
    html+='</div>';
   }
-  html+='</div><p class="muted" style="font-size:12px">Tap any lesson to cancel, reschedule, or change its attendance. Daily totals reflect payable amounts.</p>';
+  html+='</div><p class="muted" style="font-size:12px">Tap lessons to manage attendance. Dashed events are imported calendar entries and are never billed.</p>';
  }else if(tab==='sessions'){
   let lastDate='';
   const weekStart=date=>{const d=new Date(date+'T12:00:00');const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return d};
@@ -1129,17 +1176,26 @@ function render(){
   if(!listWeek){const today=new Date(),first=(month===today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0'))?today:new Date(month+'-01T12:00:00');listWeek=weekStart(first.toLocaleDateString('en-CA').match(/^\\d{4}-/) ? first.toLocaleDateString('en-CA') : first.getFullYear()+'-'+String(first.getMonth()+1).padStart(2,'0')+'-'+String(first.getDate()).padStart(2,'0')).toISOString().slice(0,10)}
   const chosenMonday=new Date(listWeek+'T12:00:00'),chosenSunday=new Date(chosenMonday);chosenSunday.setDate(chosenSunday.getDate()+6);
   html+=`<div class="list-week-nav"><button type="button" data-week-step="-1" aria-label="Previous week">‹</button><strong>${formatDay(chosenMonday)} – ${formatDay(chosenSunday)}</strong><button type="button" data-week-step="1" aria-label="Next week">›</button></div>`;
-  for(const x of visibleSs.filter(x=>weekStart(x.d.date).toISOString().slice(0,10)===listWeek)){
-   const monday=weekStart(x.d.date),weekKey=monday.toISOString().slice(0,10);
-
-   if(x.d.date!==lastDate){lastDate=x.d.date;html+=`<div class="day">${new Date(x.d.date+'T12:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'})}</div>`}
+  const weekItems=[
+   ...visibleSs.filter(x=>weekStart(x.d.date).toISOString().slice(0,10)===listWeek).map(x=>({type:'lesson',date:x.d.date,time:(x.replacement&&x.o?.new_time||x.s.start_time).slice(0,5),x})),
+   ...visibleImported.filter(e=>weekStart(e.event_date).toISOString().slice(0,10)===listWeek).map(e=>({type:'import',date:e.event_date,time:e.start_time||'',e}))
+  ].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  for(const item of weekItems){
+   const day=item.date;
+   if(day!==lastDate){lastDate=day;html+=`<div class="day">${new Date(day+'T12:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'})}</div>`}
+   if(item.type==='import'){
+    const e=item.e,when=e.all_day?'All day':String(e.start_time||'').slice(0,5);
+    html+=`<div class="line imported-event-row"><div class="entry"><b>${esc(e.title)}</b> <small>${esc(when)} · Imported, no charge</small>${e.location?'<div><small>'+esc(e.location)+'</small></div>':''}</div><button type="button" data-import-event="${esc(e.id)}">View</button></div>`;
+    continue;
+   }
+   const x=item.x;
    const inactive=x.o?.status==='rescheduled'||String(x.o?.status||'').startsWith('cancelled_');
    const noteDate=x.replacement?(x.o?.new_date||x.d.date):x.d.date;
    const hasNote=teacherNotes.some(n=>n.schedule_id===x.s.id&&n.lesson_date===noteDate&&String(n.note||'').trim())||activityUpdates.some(n=>n.activity_id===x.a.id&&n.session_date===noteDate);
    const hasHomework=lessonHomework.some(h=>h.schedule_id===x.s.id&&h.lesson_date===noteDate&&(String(h.description||'').trim()||(Array.isArray(h.files)&&h.files.length)));
    html+=`<div class="line activity-box list-lesson ${lessonClass(x)} ${inactive?'list-inactive-lesson':''} ${hasNote?'list-has-note':''} ${hasHomework?'list-has-homework':''}" data-activity="${esc(x.a.name)}" data-palette="${chosenPalette(x.a)}" style="${colorStyle(x.a)}"><div class="entry"><b>${esc(x.a.name)}</b> <small>${lessonTimeRange(x)}</small><div><small>${esc(lessonKids(x))}</small></div></div><span class="list-lesson-status">${inactive?(x.o?.status==='rescheduled'?'Rescheduled':'Cancelled'):''}</span><button data-session="${esc(sessionButtonKey(x))}">View</button></div>`;
   }
-  if(!visibleSs.some(x=>weekStart(x.d.date).toISOString().slice(0,10)===listWeek))html+='<p>No lessons this week.</p>';
+  if(!weekItems.length)html+='<p>No lessons or imported events this week.</p>';
  }else if(tab==='activities'){
   html='<button class="primary" id="newActivity">+ Add activity</button><p class="muted">Assign one or more children to each activity. You can give individual weekly slots different children below.</p>';
   for(const a of activities)html+=`<div class="line"><span><span class="dot" style="background:${activityColor(a)}"></span>${esc(a.name)} · ${euro(a.price)} / ${a.billing_period==='monthly'?'month':'session'} ${a.active?'':'(inactive)'}<small class="activity-child-label">${esc(activityKids(a))}${a.billing_period!==billingPeriodAt(a,month+'-01')?' · Billing change pending':''}</small></span><div class="activity-billing-actions"><button type="button" data-activity-notes="${a.id}">Notes${activityUpdates.filter(n=>n.activity_id===a.id).length?' ('+activityUpdates.filter(n=>n.activity_id===a.id).length+')':''}</button><button data-activity="${a.id}">Edit</button></div></div>`;
@@ -1587,7 +1643,7 @@ load=async function(){await originalLoad();await refreshTeacherRequests()};
 function renderHouseholdTitle(){
  const name=(user&&householdProfile&&householdProfile.name?householdProfile.name:'PLDS Household').trim();
  const title=$('householdTitle');if(title)title.textContent=name;
- document.title=name+' · v0.3.134';
+ document.title=name+' · v0.3.135';
 }
 async function loadHouseholdProfile(){
  if(!HOUSE||!user)throw Error('Sign in before loading household details.');
@@ -1658,8 +1714,10 @@ function renderHouseholdSetup(){
    +'<label for="setupScheduleStart">Start time</label><input id="setupScheduleStart" type="time" value="15:00">'
    +'<label for="setupScheduleEnd">End time</label><input id="setupScheduleEnd" type="time" value="16:00">'
    +'<label for="setupScheduleFrom">Effective from</label><input id="setupScheduleFrom" type="date" value="'+localDate(new Date())+'">'
-   +'<div class="setup-actions"><button type="button" id="setupAddSchedule">+ Add weekly lesson</button></div>':'<p class="muted">Add an activity on the previous step before creating weekly lessons.</p>');
+   +'<div class="setup-actions"><button type="button" id="setupAddSchedule">+ Add weekly lesson</button></div>':'<p class="muted">Add an activity on the previous step before creating weekly lessons.</p>')
+   +'<div class="setup-actions"><button type="button" id="setupImportCalendar">Import existing calendar (.ics)</button></div><p class="muted">Optional: bring in existing events as unpaid calendar entries. You can add activities and costs separately.</p>';
   if(activities.length)$('setupAddSchedule').onclick=()=>runSetupAction(async()=>{await setupAddSchedule();renderHouseholdSetup()});
+  $('setupImportCalendar').onclick=()=>openCalendarImporter(true);
  }else{
   content.innerHTML='<p>Review your household before entering the calendar.</p>'
    +'<div class="setup-list"><div><strong>'+esc(householdProfile?.name||'Household')+'</strong></div>'
