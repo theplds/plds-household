@@ -537,7 +537,7 @@ assert.match(html,/syncCalendarsInBackground\(\)/);
 assert.match(html,/15\*60\*1000/);
 assert.match(html,/const importedEventChildIds=/);
 assert.match(html,/!e\.hidden&&!e\.removed_from_source/);
-assert.match(html,/update\(\{child_id,activity_id\}\)/);
+assert.match(html,/let payload=\{child_id,activity_id\}/);
 assert.match(html,/update\(\{hidden:true\}\)/);
 assert.match(html,/activity_id:activityId,household_id:HOUSE/);
 assert.match(html,/Calendar events are shared with members of this household/);
