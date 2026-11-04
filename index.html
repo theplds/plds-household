@@ -563,7 +563,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <button class="tab" id="viewToggle" type="button" aria-label="Switch to list view">List view</button>
     <button class="tab" id="budgetToggle" type="button" aria-expanded="false" aria-controls="budgetDetails" aria-pressed="false">Budget</button>
     <button class="tab" data-tab="activities">Activities</button>
-    <button class="tab" data-tab="payments">Payments</button>
+    <button class="tab" data-tab="payments">Payments</button><button id="addHouseholdEvent" type="button">+ Event</button>
   </nav>
   <div id="budgetDetails" hidden>
     <div class="budget-quick-actions">
@@ -642,12 +642,20 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <div class="calendar-import-actions"><button type="button" id="calendarImportClose">Close</button></div>
 </dialog>
 <dialog id="calendarEventDialog" class="calendar-import-dialog" aria-labelledby="calendarEventHeading">
-<h2 id="calendarEventHeading">Imported event</h2><div id="calendarEventDetails"></div>
+<h2 id="calendarEventHeading">Household event</h2><div id="calendarEventDetails"></div>
+<div id="calendarEventEditFields">
+<label for="calendarEventTitle">Title</label><input id="calendarEventTitle" class="wide" maxlength="250" required>
+<label for="calendarEventDate">Date</label><input id="calendarEventDate" type="date" class="wide" required>
+<label for="calendarEventAllDay"><input id="calendarEventAllDay" type="checkbox"> All day</label>
+<div id="calendarEventTimes"><label for="calendarEventStart">Start <input id="calendarEventStart" type="time"></label><label for="calendarEventEnd">End <input id="calendarEventEnd" type="time"></label></div>
+<label for="calendarEventLocation">Location</label><input id="calendarEventLocation" class="wide" maxlength="300">
+<label for="calendarEventNotes">Notes</label><textarea id="calendarEventNotes" class="wide" rows="3" maxlength="3000"></textarea>
+</div>
 <label for="calendarEventChild">Assign to child</label><select id="calendarEventChild"><option value="">Unassigned / everyone</option></select>
 <label for="calendarEventActivity">Link to Household activity</label><select id="calendarEventActivity"><option value="">No linked activity</option></select>
 <p class="muted">Linking an event is informational: it does not create a lesson or an additional charge.</p>
 <p id="calendarEventStatus" role="status" aria-live="polite"></p>
-<div class="calendar-import-actions"><button type="button" id="calendarEventRemove">Remove event</button><button type="button" id="calendarEventClose">Close</button><button type="button" class="primary" id="calendarEventSave">Save assignment</button></div>
+<div class="calendar-import-actions"><button type="button" id="calendarEventRemove">Remove event</button><button type="button" id="calendarEventClose">Close</button><button type="button" class="primary" id="calendarEventSave">Save event</button></div>
 </dialog>
 <dialog id="monthlyReportDialog" aria-labelledby="monthlyReportHeading">
  <div id="monthlyReportControls" class="report-controls">
