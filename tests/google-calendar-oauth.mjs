@@ -39,9 +39,10 @@ const localEdits=readFileSync(new URL('migrations/20261104_household_calendar_lo
 assert.match(localEdits,/grant update \(title,details,location,event_date,start_time,end_time,all_day\)/);
 assert.match(localEdits,/old\.source_id is not null/);
 for(const id of ['calendarEventTitle','calendarEventDate','calendarEventAllDay','calendarEventStart','calendarEventEnd',
- 'calendarEventLocation','calendarEventNotes','addHouseholdEvent']){
+ 'calendarEventLocation','calendarEventNotes']){
  assert.equal(html.split('id="'+id+'"').length-1,1,id+' should appear exactly once');
 }
+assert.doesNotMatch(html,/id="addHouseholdEvent"/);
 assert.match(html,/source_key:'household:'\+crypto\.randomUUID\(\)/);
 assert.match(html,/\.eq\('updated_at',e\.updated_at\)/);
 assert.match(bridge,/google\.accounts\.oauth2\.initTokenClient|oauth\.initTokenClient/);
