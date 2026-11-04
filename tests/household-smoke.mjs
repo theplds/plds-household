@@ -4,8 +4,8 @@ import {Script,createContext,runInContext} from 'node:vm';
 import {URL as NodeURL} from 'node:url';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.138/);
-assert.ok(!html.includes('v0.3.137'),'The deployed version must be updated consistently');
+assert.match(html,/PLDS Household v0\.3\.139/);
+assert.ok(!html.includes('v0.3.138'),'The deployed version must be updated consistently');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.ok(scripts.length>=1,'No embedded app scripts found');
 for(const [,code] of scripts)new Script(code);
@@ -393,4 +393,104 @@ assert.match(html,/\$\('logout'\)\.onclick=async\(\)=>\{\$\('headerMoreMenu'\)\.
 assert.match(html,/async function handleRecoveryLink\(\)/);
 assert.match(html,/\['recovery','signup','invite','email'\]/);
 assert.match(html,/history\.replaceState\(null,'',location\.pathname\)/);
-console.log('PASS: signup Show-Hide, confirmation redirect, menu Sign out, and prior financial/calendar tests.');
+
+// Regression for verified beta accounts with no member invitation:
+// the API must preserve P0002 SQLSTATE so beta invitation fallback runs.
+const reqStart=html.indexOf('async function requestJson(');
+const reqEnd=html.indexOf('async function validSession()',reqStart);
+assert.ok(reqStart>=0&&reqEnd>reqStart,'JSON request error handling missing');
+const errorCtx=createContext({
+ URL:'https://test.example',KEY:'test',
+ AbortController:class{constructor(){this.signal={}}abort(){}},
+ setTimeout:()=>123,clearTimeout:()=>{},
+ fetch:async()=>({ok:false,status:404,text:async()=>JSON.stringify({
+  code:'P0002',message:'No active member invitation for this email',details:'Expected for beta accounts'
+ })})
+});
+runInContext(html.slice(reqStart,reqEnd),errorCtx);
+await assert.rejects(runInContext("requestJson('/rest/v1/rpc/claim_household_member_invite')",errorCtx),
+ err=>err.code==='P0002'&&err.status===404&&err.details==='Expected for beta accounts',
+ 'PostgREST error codes/details must be preserved across requestJson');
+const claimBegin=html.indexOf('async function claimInvitedHousehold(){');
+const claimEnd=html.indexOf("$('betaSignup').onclick=",claimBegin);
+assert.ok(claimBegin>=0&&claimEnd>claimBegin,'Invitation claim function unavailable');
+const claimCode=html.slice(claimBegin,claimEnd);
+let betaClaims=0,memberClaims=0,lookupCount=0,claimFinished=false;
+function membershipDb(memberError={code:'P0002'}){
+ return {
+  from:table=>{
+   assert.equal(table,'household_members');
+   return {select:()=>({eq:()=>{
+    lookupCount++;
+    return Promise.resolve({data:claimFinished?[{household_id:'qa-house-id'}]:[],error:null});
+   }})};
+  },
+  rpc:async(name,args)=>{
+   if(name==='claim_household_member_invite'){memberClaims++;return {data:null,error:memberError}}
+   if(name==='claim_household_beta_invite'){
+    betaClaims++;claimFinished=true;return {data:'qa-house-id',error:null}
+   }
+   throw Error('Unexpected invite RPC '+name);
+  }
+ };
+}
+const memberCtx=createContext({
+ user:{id:'new-verified-user',email:'qa@example.com',user_metadata:{display_name:'QA Tester'}},
+ HOUSE:null,$:()=>({value:''}),db:membershipDb()
+});
+runInContext(claimCode,memberCtx);
+await runInContext('resolveHousehold()',memberCtx);
+assert.equal(memberCtx.HOUSE,'qa-house-id','Beta fallback must initialize household');
+assert.equal(betaClaims,1);
+assert.equal(memberClaims,1);
+assert.equal(lookupCount,2,'Membership lookup must not recurse');
+betaClaims=0;memberClaims=0;lookupCount=0;claimFinished=false;
+const unexpectedCtx=createContext({
+ user:{id:'new-verified-user',email:'qa@example.com',user_metadata:{display_name:'QA Tester'}},
+ HOUSE:null,$:()=>({value:''}),db:membershipDb({code:'42501',message:'Not authorized'})
+});
+runInContext(claimCode,unexpectedCtx);
+await assert.rejects(runInContext('resolveHousehold()',unexpectedCtx),e=>e.code==='42501');
+assert.equal(betaClaims,0,'Authorization failures must not be masked as beta invites');
+
+// Startup is serialized and never exposes a dashboard without a household.
+const startupStart=html.indexOf('let startupPromise=null;');
+const startupEnd=html.indexOf('db.auth.onAuthStateChange(',startupStart);
+assert.ok(startupStart>=0&&startupEnd>startupStart,'Serialized startup missing');
+const nodes=Object.fromEntries(['login','app','identity','retrySession','retryLogin','loginStatus']
+ .map(id=>[id,{textContent:'',className:'',hidden:false,classes:new Set(['hidden'])}]));
+for(const node of Object.values(nodes)){
+ node.classList={
+  add:k=>node.classes.add(k),
+  remove:k=>node.classes.delete(k),
+  toggle:(k,value)=>{const add=value===undefined?!node.classes.has(k):value;if(add)node.classes.add(k);else node.classes.delete(k);return add}
+ };
+}
+let starts=0,loaded=0,guideOpens=0;
+const startupCtx=createContext({
+ user:null,HOUSE:null,householdProfile:null,qaMode:false,
+ currentSession:{refresh_token:'test-only',user:{email:'qa@example.com'}},
+ $:id=>{assert.ok(nodes[id],'Unexpected startup element '+id);return nodes[id]},
+ db:{auth:{getUser:async()=>({data:{user:{id:'test-user',email:'qa@example.com'}},error:null})}},
+ resolveHousehold:async()=>{starts++;await Promise.resolve();startupCtx.HOUSE='qa-house-id'},
+ loadHouseholdProfile:async()=>{startupCtx.householdProfile={onboarding_completed_at:null}},
+ renderHouseholdTitle:()=>{},load:async()=>{loaded++},loadPreferences:async()=>{},
+ showWelcome:()=>{},updatePushButton:()=>{},checkDailyReminder:()=>{},
+ openHouseholdSetup:()=>{guideOpens++},msg:()=>{}
+});
+runInContext(html.slice(startupStart,startupEnd),startupCtx);
+const firstStart=runInContext('start()',startupCtx),secondStart=runInContext('start()',startupCtx);
+assert.equal(firstStart,secondStart,'Concurrent startups must share same Promise');
+await firstStart;
+assert.equal(starts,1,'Membership initialization must occur once');
+assert.equal(loaded,1);
+assert.equal(guideOpens,1,'New QA household should open six-step guide');
+assert.equal(nodes.app.classes.has('hidden'),false,'Initialized app becomes visible');
+assert.equal(nodes.retryLogin.classes.has('hidden'),true);
+assert.match(html,/if\(!user\|\|!HOUSE\)return;try\{/);
+assert.match(html,/if\(user&&HOUSE&&!document\.hidden\)load\(\)/);
+assert.match(html,/if\(!document\.hidden&&user&&HOUSE\)load\(\)/);
+assert.match(html,/if\(!user\|\|!HOUSE\|\|document\.hidden\|\|householdPollBusy/);
+assert.equal(html.split('id="retryLogin"').length-1,1);
+
+console.log('PASS: invited account claim, recovery, startup, signup UX, and financial/calendar tests.');
