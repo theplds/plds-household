@@ -4,7 +4,10 @@ import {Script,createContext,runInContext} from 'node:vm';
 import {URL as NodeURL} from 'node:url';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.147/);
+assert.match(html,/PLDS Household v0\.3\.148/);
+assert.doesNotMatch(html,/addHouseholdEvent|\+ Event<\/button>/,'The calendar toolbar must not expose a standalone Add Event control');
+assert.match(html,/function showImportedEvent\(id=null\)/,'Existing imported event editing must remain available');
+assert.match(html,/data-import-event/,'Imported events must remain accessible from calendar');
 assert.ok(!html.includes('v0.3.141'),'The deployed version must be updated consistently');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.ok(scripts.length>=1,'No embedded app scripts found');
