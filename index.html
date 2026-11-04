@@ -504,6 +504,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .calendar-import-dialog h2{margin:0 0 10px}
 .calendar-import-dialog label{display:block;margin-top:13px}
 .calendar-import-dialog select,.calendar-import-dialog input[type=file]{width:100%}
+.calendar-import-range{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.calendar-import-range label{margin:0}
+.calendar-import-range input{width:100%}
 .calendar-import-preview{max-height:260px;overflow-y:auto;border:1px solid #5c718d;border-radius:10px;margin:12px 0}
 .calendar-import-item{display:flex;gap:11px;align-items:flex-start;padding:9px 11px;border-bottom:1px solid #435670;cursor:pointer;margin:0!important}
 .calendar-import-item:last-child{border:0}
@@ -563,12 +566,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <h2 id="noteViewerHeading">Note</h2><div id="noteViewerBody"></div>
 <div class="activity-note-actions"><button type="button" id="noteViewerClose">Close</button></div></dialog><dialog id="calendarImportDialog" class="calendar-import-dialog" aria-labelledby="calendarImportHeading">
 <h2 id="calendarImportHeading">Import calendar</h2>
-<p class="muted">One-time import from Google, Apple or Outlook (.ics). Imported events are free, separate from lessons, and will not change the budget. Check the preview before importing.</p>
+<p class="muted">One-time import from Google, Apple or Outlook (.ics). Imported events are free, separate from lessons, and will not change the budget. Check the preview before importing. Imported entries will be visible to <strong>everyone in this household</strong>, so avoid importing private work or personal calendars.</p>
 <label for="calendarImportFile">Calendar file (.ics)</label><input id="calendarImportFile" type="file" accept=".ics,text/calendar">
 <p class="muted">Google Calendar exports all calendars as a ZIP: extract it and select an individual .ics file.</p>
 <label for="calendarImportChild">Assign imported events to</label>
 <select id="calendarImportChild"><option value="">Unassigned / everyone</option></select>
-<p id="calendarImportRange" class="muted"></p>
+<div class="calendar-import-range"><label for="calendarImportFrom">From <input id="calendarImportFrom" type="date"></label><label for="calendarImportThrough">Through <input id="calendarImportThrough" type="date"></label></div><p id="calendarImportRange" class="muted"></p>
 <div id="calendarImportPreview" class="calendar-import-preview" hidden></div>
 <p id="calendarImportStatus" role="status" aria-live="polite"></p>
 <div class="calendar-import-actions"><button type="button" id="calendarImportClose">Close</button><button type="button" id="calendarImportSave" class="primary" disabled>Import selected events</button></div>
@@ -1390,10 +1393,11 @@ $('activityBalances').addEventListener('click',e=>{
 
 /* One-time calendar import: preview locally, store only explicitly selected items. */
 let calendarImportPreview=[],calendarImportFromSetup=false,calendarImportBusy=false;
-const importRange=()=>{
+const defaultImportRange=()=>{
  const now=new Date(),from=new Date(now.getFullYear(),now.getMonth()-6,1),through=new Date(now.getFullYear(),now.getMonth()+13,0);
  return {windowStart:localDate(from),windowEnd:localDate(through)};
 };
+const importRange=()=>({windowStart:$('calendarImportFrom').value,windowEnd:$('calendarImportThrough').value});
 function openCalendarImporter(fromSetup=false){
  if(!user||!HOUSE)return;
  calendarImportFromSetup=fromSetup;
@@ -1406,8 +1410,9 @@ function openCalendarImporter(fromSetup=false){
  $('calendarImportPreview').innerHTML='';$('calendarImportPreview').hidden=true;
  $('calendarImportSave').disabled=true;
  $('calendarImportStatus').textContent='Select a .ics file to preview your events. No information is uploaded until you confirm.';
- const bounds=importRange();
- $('calendarImportRange').textContent='Included dates: '+displayDateDMY(bounds.windowStart)+' – '+displayDateDMY(bounds.windowEnd)+'. A maximum of 400 occurrences per file. Recurring patterns that cannot be read safely will be skipped.';
+ const bounds=defaultImportRange();
+ $('calendarImportFrom').value=bounds.windowStart;$('calendarImportThrough').value=bounds.windowEnd;
+ $('calendarImportRange').textContent='Choose the dates to import (up to 800 days). A maximum of 400 occurrences per preview. To import more, repeat with another date range; duplicates are skipped.';
  $('calendarImportChild').innerHTML='<option value="">Unassigned / everyone</option>'+children.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('');
  dialog.showModal();
 }
@@ -1469,6 +1474,11 @@ $('calendarImportFile').onchange=async e=>{
  }catch(err){$('calendarImportStatus').textContent='Import preview unavailable: '+(err.message||String(err))}
 };
 function gCalendarParser(){return globalThis.HouseholdICS&&typeof globalThis.HouseholdICS.parse==='function'}
+for(const field of ['calendarImportFrom','calendarImportThrough']){
+ $(field).addEventListener('change',()=>{
+  if($('calendarImportFile').files?.length)$('calendarImportFile').onchange({target:$('calendarImportFile')});
+ });
+}
 $('calendarImportPreview').addEventListener('change',e=>{if(e.target.classList.contains('calendar-import-check'))updateImportSelection()});
 $('calendarImportSave').onclick=async()=>{
  if(calendarImportBusy||!user||!HOUSE)return;
@@ -1857,8 +1867,8 @@ function renderHouseholdSetup(){
   content.innerHTML='<p>Review your household before entering the calendar.</p>'
    +'<div class="setup-list"><div><strong>'+esc(householdProfile?.name||'Household')+'</strong></div>'
    +'<div>Children: '+children.length+'</div><div>Activities: '+activities.length+'</div>'
-   +'<div>Weekly lessons: '+schedules.length+'</div></div>'
-   +(!schedules.length?'<p class="muted">No weekly lessons have been added yet. The calendar will remain empty, but fixed monthly fees can still be due.</p>':'')
+   +'<div>Weekly lessons: '+schedules.length+'</div><div>Imported calendar entries: '+importedEvents.length+' (no charge)</div></div>'
+   +(!schedules.length&&!importedEvents.length?'<p class="muted">No weekly lessons or imported events have been added yet. Fixed monthly fees can still be due.</p>':'')
    +'<p class="muted">You can change all of these later in Household setup, Children, Activities and Options. Finishing saves the setup status for the whole household.</p>';
  }
 }
