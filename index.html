@@ -1435,7 +1435,7 @@ $('openCalendarImporter').onclick=()=>openCalendarImporter(false);
 $('calendarImportClose').onclick=()=>{if(!calendarImportBusy)$('calendarImportDialog').close()};
 $('calendarImportDialog').addEventListener('close',()=>{
  if(calendarImportFromSetup&&user&&HOUSE){
-  calendarImportFromSetup=false;setupStep=3;renderHouseholdSetup();
+  calendarImportFromSetup=false;setupStep=4;renderHouseholdSetup();
   if(!$('householdSetupDialog').open)$('householdSetupDialog').showModal();
  }
 });
@@ -1839,9 +1839,9 @@ function setupList(items,empty){
 function renderHouseholdSetup(){
  const content=$('setupContent'),next=$('setupNext');
  $('setupMessage').textContent='';
- $('setupProgress').textContent='Step '+(setupStep+1)+' of 5 · '+['Household & appearance','Children','Activities & costs','Weekly timetable','Finish'][setupStep];
+ $('setupProgress').textContent='Step '+(setupStep+1)+' of 6 · '+['Household & appearance','Children','Activities & costs','Weekly timetable','Calendar import','Finish'][setupStep];
  $('setupBack').hidden=setupStep===0;
- next.textContent=setupStep===4?'Finish setup':'Continue';
+ next.textContent=setupStep===5?'Finish setup':setupStep===4&&!importedEvents.length?'Skip for now':'Continue';
  if(setupStep===0){
   const currentName=householdProfile?.name||'';
   const myName=members.find(m=>m.user_id===user?.id)?.display_name||($('betaName')?.value||'');
@@ -1874,9 +1874,16 @@ function renderHouseholdSetup(){
    +'<label for="setupScheduleStart">Start time</label><input id="setupScheduleStart" type="time" value="15:00">'
    +'<label for="setupScheduleEnd">End time</label><input id="setupScheduleEnd" type="time" value="16:00">'
    +'<label for="setupScheduleFrom">Effective from</label><input id="setupScheduleFrom" type="date" value="'+localDate(new Date())+'">'
-   +'<div class="setup-actions"><button type="button" id="setupAddSchedule">+ Add weekly lesson</button></div>':'<p class="muted">Add an activity on the previous step before creating weekly lessons.</p>')
-   +'<div class="setup-actions"><button type="button" id="setupImportCalendar">Import existing calendar (.ics)</button></div><p class="muted">Optional: bring in existing events as unpaid calendar entries. You can add activities and costs separately.</p>';
+   +'<div class="setup-actions"><button type="button" id="setupAddSchedule">+ Add weekly lesson</button></div>':'<p class="muted">Add an activity on the previous step before creating weekly lessons.</p>');
   if(activities.length)$('setupAddSchedule').onclick=()=>runSetupAction(async()=>{await setupAddSchedule();renderHouseholdSetup()});
+ }else if(setupStep===4){
+  content.innerHTML='<p>Already have a family calendar? Import appointments, practices, school events and other commitments from a <strong>.ics</strong> file exported by Google Calendar, Apple Calendar, or Outlook.</p>'
+   +'<div class="setup-list"><div><strong>Optional — no calendar file required</strong></div>'
+   +'<div>Imported events: '+importedEvents.length+'</div>'
+   +'<div>Imported entries are free calendar events, not paid activities or lessons.</div>'
+   +'<div>Events are shared with everyone in this household. Avoid private personal or work calendars.</div></div>'
+   +'<div class="setup-actions"><button type="button" id="setupImportCalendar">Choose calendar file (.ics)</button></div>'
+   +'<p class="muted">Preview all entries, choose a child (optional), and import only what you select. Existing events are not duplicated. You can also import later from Options → Household & access.</p>';
   $('setupImportCalendar').onclick=()=>openCalendarImporter(true);
  }else{
   content.innerHTML='<p>Review your household before entering the calendar.</p>'
@@ -1953,7 +1960,7 @@ $('setupNext').onclick=()=>runSetupAction(async()=>{
   await setupAddChild();
  }else if(setupStep===2&&$('setupActivityName')?.value.trim()){
   await setupAddActivity();
- }else if(setupStep===4){
+ }else if(setupStep===5){
   await saveHouseholdProfile(householdProfile.name,true);
   $('householdSetupDialog').close();
   await load();
