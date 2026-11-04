@@ -1530,7 +1530,7 @@ $('calendarConnectForm').addEventListener('submit',async e=>{
  e.preventDefault();
  if(!user||!HOUSE)return;
  const provider=$('calendarConnectProvider').value,
-  label=$('calendarConnectLabel').value.trim(),url=$('calendarConnectUrl').value.trim(),
+  label=$('calendarConnectLabel').value.trim(),url=$('calendarConnectUrl').value.trim().replace(/^webcal:\/\//i,'https://'),
   button=$('calendarConnectSave'),status=$('calendarConnectStatus');
  if(!label||label.length>80){status.textContent='Enter a calendar name up to 80 characters.';return}
  if(!/^https:\/\//i.test(url)){status.textContent='Paste the HTTPS calendar subscription link from your calendar provider.';return}
