@@ -1472,6 +1472,113 @@ $('activityBalances').addEventListener('click',e=>{
 });
 
 
+/* Connected calendars: private links live in Supabase Vault, not the browser's saved state. */
+function renderConnectedCalendarSources(){
+ const container=$('calendarConnectedSources');if(!container)return;
+ container.innerHTML=calendarSources.length
+ ?'<h3>Connected calendars</h3>'+calendarSources.map(source=>{
+  const last=source.last_synced_at?new Date(source.last_synced_at).toLocaleString('en-GB'):'Never';
+  return '<div class="calendar-source-item"><strong>'+esc(source.label)+'</strong>'
+   +'<small>'+esc(source.provider)+' · Last updated: '+esc(last)
+   +(source.last_event_count==null?'':' · '+Number(source.last_event_count)+' events')+'</small>'
+   +(source.last_error?'<small class="calendar-source-error">Sync issue: '+esc(source.last_error)+'</small>':'')
+   +'<div class="calendar-source-actions"><button type="button" data-calendar-refresh="'+esc(source.id)+'">Sync now</button>'
+   +'<button type="button" data-calendar-disconnect="'+esc(source.id)+'">Disconnect</button></div></div>'
+ }).join('')
+ :'<p class="muted">No calendar subscriptions connected yet. File imports remain available below.</p>';
+}
+const calendarConnectionHints={
+ google:'Google Calendar → Settings → Settings for my calendars → select calendar → Integrate calendar → Secret address in iCal format.',
+ outlook:'Outlook on the web → Settings → Calendar → Shared calendars → Publish a calendar → copy the ICS subscription link.',
+ apple:'Apple Calendar → Calendar sharing → Public Calendar → Copy Link. Publishing makes events accessible to anyone with the link.'
+};
+$('calendarConnectProvider').onchange=()=>{
+ $('calendarConnectHelp').textContent=calendarConnectionHints[$('calendarConnectProvider').value]||'Use an approved private read-only subscription link.';
+};
+async function syncConnectedCalendar(sourceId,force=false){
+ if(!user||!HOUSE)throw Error('Sign in to your household first');
+ const session=await validSession();if(!session?.access_token)throw Error('Your session expired. Sign in again.');
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
+ try{
+  const response=await fetch(URL+'/functions/v1/calendar-feed-sync',{
+   method:'POST',signal:controller.signal,
+   headers:{'apikey':KEY,'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json'},
+   body:JSON.stringify({source_id:sourceId,force})
+  });
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok||data.ok!==true)throw Error(data.error||'Calendar update failed ('+response.status+')');
+  return data;
+ }catch(err){if(err.name==='AbortError')throw Error('Calendar provider did not respond within 45 seconds.');throw err}
+ finally{clearTimeout(timer)}
+}
+async function syncCalendarsInBackground(){
+ if(calendarAutoSyncBusy||!user||!HOUSE||!calendarSources.length)return;
+ calendarAutoSyncBusy=true;let changed=false;
+ try{
+  for(const source of calendarSources){
+   if(!source.active||source.last_synced_at&&Date.now()-Date.parse(source.last_synced_at)<15*60000)continue;
+   try{
+    const result=await syncConnectedCalendar(source.id);
+    if(!result.skipped)changed=true;
+   }catch(err){console.warn('Calendar subscription update:',err.message);changed=true}
+  }
+  if(changed&&user&&HOUSE)await load();
+  if($('calendarImportDialog').open)renderConnectedCalendarSources();
+ }finally{calendarAutoSyncBusy=false}
+}
+$('calendarConnectForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ if(!user||!HOUSE)return;
+ const provider=$('calendarConnectProvider').value,
+  label=$('calendarConnectLabel').value.trim(),url=$('calendarConnectUrl').value.trim(),
+  button=$('calendarConnectSave'),status=$('calendarConnectStatus');
+ if(!label||label.length>80){status.textContent='Enter a calendar name up to 80 characters.';return}
+ if(!/^https:\/\//i.test(url)){status.textContent='Paste the HTTPS calendar subscription link from your calendar provider.';return}
+ button.disabled=true;status.textContent='Securing the calendar connection…';
+ try{
+  const saved=await db.rpc('connect_calendar_feed',{p_label:label,p_provider:provider,p_url:url});
+  if(saved.error)throw saved.error;
+  const id=saved.data;
+  if(typeof id!=='string'||!id)throw Error('Calendar source was not confirmed.');
+  $('calendarConnectUrl').value='';
+  await load();
+  status.textContent='Connected. Fetching calendar events…';
+  const result=await syncConnectedCalendar(id,true);
+  await load();
+  renderConnectedCalendarSources();
+  status.textContent='Calendar connected: '+Number(result.created||0)+' events added, '+Number(result.updated||0)+' updated. Changes will refresh automatically while Household is open.';
+ }catch(err){
+  status.textContent='Calendar connection: '+(err.message||String(err))+'. If saved, check the connected list below and use Sync now.';
+  await load().catch(()=>{});
+  renderConnectedCalendarSources();
+ }finally{button.disabled=false}
+});
+$('calendarConnectedSources').addEventListener('click',async e=>{
+ const trigger=e.target.closest('button');if(!trigger)return;
+ const refreshId=trigger.dataset.calendarRefresh,disconnectId=trigger.dataset.calendarDisconnect;
+ if(refreshId){
+  trigger.disabled=true;$('calendarConnectStatus').textContent='Checking the connected calendar…';
+  try{
+   const result=await syncConnectedCalendar(refreshId,true);
+   $('calendarConnectStatus').textContent=result.skipped?'Calendar was just checked.':Number(result.created||0)+' added, '+Number(result.updated||0)+' updated, '+Number(result.removed||0)+' cancelled in the source.';
+   await load();renderConnectedCalendarSources();
+  }catch(err){$('calendarConnectStatus').textContent='Sync failed: '+(err.message||String(err));await load();renderConnectedCalendarSources()}
+  finally{trigger.disabled=false}
+ }
+ if(disconnectId){
+  const source=calendarSources.find(x=>x.id===disconnectId);
+  if(!source||!confirm('Disconnect '+source.label+' and remove its synced events from Household? This does not change the external calendar or any payments.'))return;
+  trigger.disabled=true;
+  try{
+   const result=await db.rpc('disconnect_calendar_feed',{p_source_id:disconnectId});
+   if(result.error)throw result.error;
+   await load();renderConnectedCalendarSources();
+   $('calendarConnectStatus').textContent='Calendar disconnected; its synced events were removed.';
+  }catch(err){$('calendarConnectStatus').textContent='Disconnect failed: '+(err.message||String(err))}
+  finally{trigger.disabled=false}
+ }
+});
+
 /* One-time calendar import: preview locally, store only explicitly selected items. */
 let calendarImportPreview=[],calendarImportFromSetup=false,calendarImportBusy=false;
 const defaultImportRange=()=>{
