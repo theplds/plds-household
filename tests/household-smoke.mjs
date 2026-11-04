@@ -475,6 +475,7 @@ const startupCtx=createContext({
  resolveHousehold:async()=>{starts++;await Promise.resolve();startupCtx.HOUSE='qa-house-id'},
  loadHouseholdProfile:async()=>{startupCtx.householdProfile={onboarding_completed_at:null}},
  renderHouseholdTitle:()=>{},load:async()=>{loaded++},loadPreferences:async()=>{},
+ syncCalendarsInBackground:async()=>{},
  showWelcome:()=>{},updatePushButton:()=>{},checkDailyReminder:()=>{},
  openHouseholdSetup:()=>{guideOpens++},msg:()=>{}
 });
