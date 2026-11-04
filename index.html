@@ -1357,7 +1357,8 @@ $('content').onclick=async e=>{let b=e.target.closest('button');if(!b)return;
  const lessonActivityNotes=activityUpdates.filter(n=>n.activity_id===a.id&&n.session_date===date);
  openEditor(`${a.name} · ${displayDateDMY(date)}`,`
  <div class="assigned-summary"><strong>${esc(namesForIds(currentKids)||'Unassigned')}</strong></div>
- ${currentStatus.startsWith('cancelled_')?'<button type="button" id="rescheduleCancelledLesson" class="primary wide" style="margin:12px 0">Reschedule cancelled lesson</button><p class="muted">Move this cancelled lesson to a new date and time. Its cancellation status will be replaced, with the lesson billed once on the new date.</p>':''}
+ ${currentStatus.startsWith('cancelled_')?'<button type="button" id="rescheduleCancelledLesson" class="primary wide" style="margin:12px 0">Reschedule cancelled lesson</button><p class="muted">Move this cancelled lesson to a new date and time. Its cancellation status will be replaced, with the original per-session charge on the new date. The monthly fee, if applicable, stays unchanged.</p>':''}
+ ${billingPeriodAt(a,date)==="monthly"?'<p class="muted">Fixed monthly fee: cancelling or moving this practice does not change the amount due. Make an exception in Budget → Adjust.</p>':""}
  ${lessonNotes.length?`<div class="teacher-note-readonly"><strong>Teacher notes</strong>${lessonNotes.map(n=>`<p>${esc(n.note).replaceAll("\\n","<br>")}</p>`).join("")}</div>`:""}
  ${lessonHomework.filter(h=>h.schedule_id===id&&h.lesson_date===date).map(h=>`<div class="teacher-note-readonly"><strong>Homework</strong><p>${esc(h.description||'')}</p>${(h.files||[]).length?'<strong class="homework-attachments-heading">Attached files</strong>':''}${(h.files||[]).map(f=>`<p><button type="button" class="homework-download" data-homework-path="${esc(f.path)}">${esc(f.name||'Download attachment')}</button></p>`).join('')}</div>`).join('')}
  ${lessonActivityNotes.map(n=>`<div class="teacher-note-readonly"><strong>Activity update · ${esc(n.title)}</strong>${n.practice_time?`<p>Time: ${esc(n.practice_time)}</p>`:''}${n.location?`<p>Location: ${esc(n.location)}</p>`:''}${n.details?`<p>${esc(n.details)}</p>`:''}</div>`).join('')}
@@ -1366,8 +1367,8 @@ $('content').onclick=async e=>{let b=e.target.closest('button');if(!b)return;
  
  <select id="lessonStatusSelect" class="wide ${currentStatus==='rescheduled'?'reschedule-active':''}">
  <option value="" ${!['cancelled_free','cancelled_charged','rescheduled'].includes(currentStatus)?'selected':''} disabled>Cancel / Reschedule</option>
- <option value="cancelled_free" ${currentStatus==='cancelled_free'?'selected':''}>Cancel · no charge</option>
- <option value="cancelled_charged" ${currentStatus==='cancelled_charged'?'selected':''}>Cancel · charged</option>
+ <option value="cancelled_free" ${currentStatus==='cancelled_free'?'selected':''}>${billingPeriodAt(a,date)==="monthly"?"Cancel practice · fee unchanged":"Cancel · no charge"}</option>
+ <option value="cancelled_charged" ${currentStatus==='cancelled_charged'?'selected':''} ${billingPeriodAt(a,date)==="monthly"&&currentStatus!=="cancelled_charged"?"hidden":""}>Cancel · charged</option>
  <option value="rescheduled" ${currentStatus==='rescheduled'?'selected':''}>Reschedule</option>
  </select>
  </div>
