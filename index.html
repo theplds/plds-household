@@ -1252,7 +1252,7 @@ function render(){
  }).join('')||'<p class="muted">No activity charges this month.</p>';
  // Main navigation is exclusive: calendar (month/list), budget, activities, or payments.
  const calendarActive=tab==='monthview'||tab==='sessions';
-  $('addHouseholdEvent').classList.toggle('hidden',!calendarActive);
+  $('addHouseholdEvent')?.classList?.toggle('hidden',!calendarActive);
  const budgetActive=tab==='budget';
  const viewToggle=$('viewToggle'),calendarMode=calendarActive?tab:lastCalendarTab;
  viewToggle.textContent=calendarActive?(tab==='monthview'?'List view':'Month view'):(calendarMode==='monthview'?'Month view':'List view');
