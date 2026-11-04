@@ -279,7 +279,7 @@ assert.match(html,/id="setupImportCalendar"/);
 assert.match(html,/Step '\+\(setupStep\+1\)\+' of 6/);
 assert.match(html,/'Calendar connection','Finish'\]\[setupStep\]/);
 assert.match(html,/next\.textContent=setupStep===5\?'Finish setup'/);
-assert.match(html,/setupStep===4\)\{\n  content\.innerHTML='<p>Connect a calendar/);
+assert.match(html,/setupStep===4\)\{\n  content\.innerHTML='<p>Import Google Calendar once/);
 assert.match(html,/calendarImportFromSetup=false;setupStep=4;renderHouseholdSetup\(\)/);
 assert.match(html,/setupStep===5\)\{\n  await saveHouseholdProfile\(householdProfile\.name,true\)/);
 assert.match(html,/Calendar events are shared with members of this household/);
