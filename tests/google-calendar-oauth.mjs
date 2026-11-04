@@ -52,4 +52,18 @@ assert.match(edge,/await postgrest\("calendar_import_events\?/);
 assert.doesNotMatch(edge,/\bdataApi\(/);
 assert.doesNotMatch(bridge,/refreshToken/);
 assert.match(bridge,/action:'import'/);
+// Imported entries should render as ordinary activity cards, with linked palette
+// when available and a solid default when not. Distinction is retained in the
+// tooltip/editor, never as cramped inline text or an invented billing charge.
+assert.match(html,/\.calendar-event\.imported-calendar-event:not\(\[data-activity\]\)\{background:#5065f5!important/);
+assert.match(html,/class="calendar-event imported-calendar-event"/);
+assert.match(html,/const linkedActivity=activities\.find\(a=>a\.id===e\.activity_id\)/);
+assert.match(html,/data-palette=".*chosenPalette\(linkedActivity\)/);
+assert.match(html,/class="line activity-box imported-event-row"/);
+assert.doesNotMatch(html,/class="imported-event-label"/);
+assert.doesNotMatch(html,/border:1px dashed #8db1cf/);
+assert.match(html,/Imported calendar appointments are never billed/);
+assert.ok(!html.slice(html.indexOf('const ss=sessions()'),html.indexOf("if(tab==='monthview')")).includes('importedEvents.reduce('),
+ 'Imported appointments must not be included in the billing amount.');
+console.log('PASS: imported calendar events share activity card layout and remain nonbillable.');
 console.log('PASS: one-time Google Calendar import, no saved provider credentials, editable household events.');
