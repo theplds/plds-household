@@ -19,4 +19,5 @@ jobs:
           node tests/google-calendar-oauth.mjs
           node tests/calendar-account-isolation.mjs
           node tests/imported-event-status.mjs
+          node tests/calendar-conversion.mjs
           node tests/google-calendar-error-reasons.mjs
