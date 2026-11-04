@@ -3,8 +3,8 @@ import {readFileSync} from 'node:fs';
 import {Script,createContext,runInContext} from 'node:vm';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.133/);
-assert.ok(!html.includes('v0.3.132'),'The deployed version must be updated consistently');
+assert.match(html,/PLDS Household v0\.3\.134/);
+assert.ok(!html.includes('v0.3.133'),'The deployed version must be updated consistently');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.ok(scripts.length>=1,'No embedded app scripts found');
 for(const [,code] of scripts)new Script(code);
@@ -23,7 +23,7 @@ const dates=ym=>{
  return out;
 };
 const ctx=createContext({
- activities:[activity],schedules:[schedule],overrides:[],
+ activities:[activity],schedules:[schedule],overrides:[],monthlyAdjustments:[],
  activityPrices:[
   {activity_id:'A',effective_from:'0001-01-01',price:30},
   {activity_id:'A',effective_from:'2026-10-30',price:40},
@@ -85,6 +85,12 @@ assert.equal(priceMode('activityCreatedMonth(activities[0])'),'2026-11');
 assert.equal(priceMode('monthlyActivityFee(activities[0],"2026-10")'),0,'Never back-bill before creation');
 assert.equal(priceMode('monthlyActivityFee(activities[0],"2026-11")'),95,'New monthly activity bills this month without sessions');
 assert.equal(priceMode('activityMonthTotal(activities[0],"2026-11",sessions("2026-11"))'),95);
+ctx.monthlyAdjustments=[{activity_id:'A',billing_month:'2026-11-01',amount:0,reason:'Waived by parent'}];
+assert.equal(priceMode('monthlyActivityFee(activities[0],"2026-11")'),0,'Manual override can waive an entire month');
+assert.equal(priceMode('monthlyActivityFee(activities[0],"2026-12")'),95,'Override does not change other months');
+ctx.monthlyAdjustments[0].amount=65;
+assert.equal(priceMode('activityMonthTotal(activities[0],"2026-11",sessions("2026-11"))'),65,'Manual fee amount replaces normal monthly charge');
+ctx.monthlyAdjustments=[];
 assert.match(html,/id="abilling"/);
 assert.match(html,/id="setupActivityBilling"/);
 assert.match(html,/Fixed monthly fee/);
@@ -187,4 +193,36 @@ assert.match(html,/\.options-section\[open\]>summary\{background:#3a6097;color:#
 assert.match(html,/:root\[data-theme="light"\] \.options-section>summary\{background:#eaf1fa\}/);
 assert.match(html,/:root\[data-theme="light"\] \.options-section\[open\]>summary\{background:#bbd8f9;color:#14385c\}/);
 assert.match(html,/\.options-section\[open\]>summary small,\.options-section\[open\]>summary::after\{color:#fff\}/);
-console.log('PASS: finance, navigation, grouped Options, active-header contrast in both themes.');
+// Activity updates and private read-state must remain separate from lesson billing.
+for(const id of ['activityNotesDialog','activityNoteForm','noteViewerDialog','unreadNoticePanel']){
+ assert.equal(html.split('id="'+id+'"').length-1,1,'Missing or duplicated notes UI '+id);
+}
+assert.match(html,/data-activity-notes/);
+assert.match(html,/data-adjust-monthly/);
+assert.match(html,/\.has-teacher-note/);
+assert.match(html,/\.has-homework\.has-teacher-note/);
+const noteStart=html.indexOf('/* Unread note state is per household member');
+const noteEnd=html.indexOf('function render(){',noteStart);
+assert.ok(noteStart>0&&noteEnd>noteStart,'Unread note logic unavailable');
+const panel={hidden:true,innerHTML:''};
+const noteContext=createContext({
+ activities:[{id:'A',name:'Basketball'}],schedules:[{id:'S',activity_id:'A'}],
+ teacherNotes:[{schedule_id:'S',lesson_date:'2026-11-04',teacher_id:'T',note:'Bring shoes',updated_at:'2026-11-04T12:00:00Z'}],
+ lessonHomework:[{id:'H',schedule_id:'S',lesson_date:'2026-11-04',teacher_id:'T',description:'Practice drills',files:[],updated_at:'2026-11-04T12:30:00Z'}],
+ activityUpdates:[{id:'N',activity_id:'A',title:'Court change',details:'Practice in hall B',session_date:'2026-11-05',updated_at:'2026-11-04T13:00:00Z'}],
+ noticeReads:[],noticeFeedStart:'2026-11-01T00:00:00Z',user:{id:'U'},HOUSE:'HH',
+ Date,displayDateDMY:x=>x,esc:x=>String(x),
+ $:id=>{assert.equal(id,'unreadNoticePanel');return panel},
+ db:{from:()=>({upsert:async()=>({error:null})})}
+});
+runInContext(html.slice(noteStart,noteEnd),noteContext);
+assert.equal(runInContext('noticeItems().length',noteContext),3);
+assert.equal(runInContext('unreadNotices().length',noteContext),3);
+runInContext('renderUnreadNotices()',noteContext);
+assert.equal(panel.hidden,false);
+assert.match(panel.innerHTML,/3 unread/);
+await runInContext('markNoticeSeen(unreadNotices()[0])',noteContext);
+assert.equal(runInContext('unreadNotices().length',noteContext),2,'Opening an alert clears only that alert');
+assert.match(panel.innerHTML,/2 unread/);
+assert.equal(runInContext('noticeItems().find(n=>n.kind==="activity").key',noteContext),'activity:N');
+console.log('PASS: pricing, monthly overrides, unread banners, calendar note markers, and existing navigation.');
