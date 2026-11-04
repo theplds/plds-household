@@ -1,4 +1,4 @@
-// One-time Google Calendar import. No provider refresh tokens or background Google sync.
+// One-time, independent Google Calendar consent. Does not sign into Household or store refresh tokens.
 // Imported events are owned and edited within Household only.
 const API=Deno.env.get("SUPABASE_URL")||"";
 const SERVICE=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
@@ -104,15 +104,23 @@ Deno.serve(async(req:Request)=>{
   const household=String(memberships[0].household_id);
   const body=await req.json().catch(()=>({}));
   const action=String(body.action||"");
+  // The signed-in Household identity determines the target household.
+  // The separately authorized Google identity may be different.
+  if(body.expected_household_id!==household)
+   return json({error:"The Household account changed. Reopen the importer and try again."},409);
+  if(action==="config"){
+   const clientId=String(Deno.env.get("GOOGLE_OAUTH_CLIENT_ID")||"").trim();
+   if(!/^[a-z0-9-]+\.apps\.googleusercontent\.com$/i.test(clientId))
+    return json({error:"Google calendar authorization is not configured."},503);
+   return json({ok:true,client_id:clientId});
+  }
   if(action==="list"||action==="import"){
    const token=String(body.provider_token||"");
    if(token.length<20||token.length>4096)return json({error:"Google calendar permission is missing."},400);
-   // Only the same Google account as the signed-in Household user can import.
-   const identity=await getGoogle("/oauth2/v2/userinfo",token);
-   if(String(identity.email||"").toLowerCase()!==String(user.email||"").toLowerCase())
-    return json({error:"Select the same Google account you used to sign in to Household."},409);
+   // Calendar ownership is proven by Google-issued bearer access to the calendar API;
+   // it is deliberately independent of the Household login email.
    const available=await listGoogleCalendars(token);
-   if(action==="list")return json({ok:true,calendars:available});
+   if(action==="list")return json({ok:true,calendars:available,google_account:available.find(c=>c.primary)?.id||null});
    const selected=Array.isArray(body.calendar_ids)?[...new Set(body.calendar_ids.map(String))]:[];
    if(selected.length<1||selected.length>5||selected.some(id=>!available.some(c=>c.id===id)))
     return json({error:"Choose one to five readable calendars."},400);
@@ -146,7 +154,7 @@ Deno.serve(async(req:Request)=>{
      const records=batch.slice(i,i+80).map(event=>({
       ...event,household_id:household,created_by:user.id
      }));
-     const result=await dataApi("calendar_import_events?on_conflict=household_id%2Csource_key",
+     const result=await postgrest("calendar_import_events?on_conflict=household_id%2Csource_key",
       "POST",records,{"Prefer":"resolution=ignore-duplicates,return=representation"});
      const saved=Array.isArray(result)?result.length:0;
      added+=saved;duplicates+=records.length-saved;
