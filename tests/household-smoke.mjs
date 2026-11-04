@@ -277,7 +277,7 @@ for(const id of ['calendarImportDialog','calendarImportFile','calendarImportPrev
 }
 assert.match(html,/id="setupImportCalendar"/);
 assert.match(html,/Step '\+\(setupStep\+1\)\+' of 6/);
-assert.match(html,/'Calendar import','Finish'\]\[setupStep\]/);
+assert.match(html,/'Calendar connection','Finish'\]\[setupStep\]/);
 assert.match(html,/next\.textContent=setupStep===5\?'Finish setup'/);
 assert.match(html,/setupStep===4\)\{\n  content\.innerHTML='<p>Connect a calendar/);
 assert.match(html,/calendarImportFromSetup=false;setupStep=4;renderHouseholdSetup\(\)/);
