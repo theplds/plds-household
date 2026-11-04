@@ -716,7 +716,7 @@ class RestQuery{
  limit(n){this.params.set('limit',String(n));return this;}
  insert(row){this.method='POST';this.payload=row;return this;}
  update(row){this.method='PATCH';this.payload=row;return this;}
- upsert(row,options={}){this.method='POST';this.payload=row;this.prefer='resolution=merge-duplicates,'+(options.returning?'return=representation':'return=minimal');
+ upsert(row,options={}){this.method='POST';this.payload=row;this.prefer='resolution='+(options.ignoreDuplicates?'ignore-duplicates':'merge-duplicates')+','+(options.returning?'return=representation':'return=minimal');
   if(options.onConflict)this.params.set('on_conflict',options.onConflict);return this;}
  delete(){this.method='DELETE';return this;}
  async run(){
@@ -1294,13 +1294,14 @@ $('activityNoteForm').onsubmit=async e=>{
   const record={household_id:HOUSE,activity_id:a.id,created_by:user.id,title,details,
    session_date:$('activityNoteDate').value||null,practice_time:$('activityNoteTime').value.trim(),
    location:$('activityNoteLocation').value.trim(),source:$('activityNoteSource').value};
-  const result=await db.from('activity_updates').insert(record).select('*').single();
+  const result=await db.from('activity_updates').insert(record).select('*');
   if(result.error)throw result.error;
-  activityUpdates.unshift(result.data);
+  const saved=result.data?.[0];if(!saved?.id)throw Error('Could not confirm the new note. Check the activity before retrying.');
+  activityUpdates.unshift(saved);
   $('activityNoteForm').reset();
   $('activityNoteStatus').textContent='Note saved. The calendar and fixed monthly fee were not changed.';
   showActivityNoteList();render();
-  await markNoticeSeen(noticeItems().find(n=>n.kind==='activity'&&n.raw.id===result.data.id));
+  await markNoticeSeen(noticeItems().find(n=>n.kind==='activity'&&n.raw.id===saved.id));
  }catch(err){$('activityNoteStatus').textContent='Could not save: '+err.message}
  finally{b.disabled=false}
 };
