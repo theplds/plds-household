@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- PLDS Household v0.3.137 | 2026-10-28 | Supabase live + v0.3.4 demo design --><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><title>PLDS Household v0.3.137</title><link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="shortcut icon" href="./icon.svg"><link rel="manifest" href="./manifest.webmanifest?v=2"><meta name="mobile-web-app-capable" content="yes"><style>
+<!-- PLDS Household v0.3.138 | 2026-10-28 | Supabase live + v0.3.4 demo design --><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><title>PLDS Household v0.3.138</title><link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="shortcut icon" href="./icon.svg"><link rel="manifest" href="./manifest.webmanifest?v=2"><meta name="mobile-web-app-capable" content="yes"><style>
 :root{font-family:system-ui,-apple-system,Arial;background:#0d1420;color:#edf3ff}*{box-sizing:border-box}body{margin:0}main{max-width:920px;margin:auto;padding:18px}header{display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:24px;margin:6px 0}h2{font-size:18px}small,.muted{color:#a8b7ce}button,input,select{font:inherit;border-radius:10px;padding:11px;border:1px solid #384760}button{background:#273d65;color:white;cursor:pointer}button.primary{background:#3477ec;border-color:#3477ec}button:disabled{opacity:.5}input,select{background:#141f32;color:white;max-width:100%}.panel{background:#172337;border:1px solid #2c3d56;border-radius:16px;padding:16px;margin:14px 0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#172337;border-radius:14px;padding:14px}.stat b{display:block;font-size:23px;margin-top:6px}.toolbar,.line{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.line{justify-content:space-between;padding:12px 0;border-bottom:1px solid #2a3a52}.line:last-child{border:0}.pill{border-radius:20px;padding:4px 9px;background:#283b56;font-size:12px}.day{margin:16px 0 5px;font-weight:700;color:#b6c9eb}.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px}#message{color:#ffca83;min-height:20px}.hidden{display:none}dialog{border:1px solid #415678;background:#172337;color:#fff;border-radius:16px;width:min(94vw,460px)}dialog::backdrop{background:#000a}label{display:block;margin:12px 0 5px}.wide{width:100%}.tab{margin:8px 4px 8px 0} .entry{font-size:14px}.entry b{font-size:15px}@media(max-width:540px){.stats{grid-template-columns:repeat(2,1fr)}main{padding:12px}.stat b{font-size:20px}}
 .activity-box{border:0!important;border-radius:12px;margin:9px 0;padding:14px!important;color:white;box-shadow:0 2px 10px #0003}.activity-box small{color:#fff!important;opacity:.92}.activity-box b{color:#fff;font-weight:500}.activity-box strong{font-weight:500}.activity-box .entry{min-width:0}.activity-box[data-activity="speech therapy"],.activity-box[data-activity="speech therapy"] small,.activity-box[data-activity="speech therapy"] b{color:#1a1408!important}.password-row{display:flex;align-items:stretch;gap:8px}.password-row input{flex:1;min-width:0}.password-row button{flex:0 0 auto}#passwordDialog{max-width:460px}#loginForm button.primary{margin-top:6px}#loginStatus{color:#c5d7f8;font-size:13px;min-height:20px}#loginStatus.bad{color:#ffbcac}#loginStatus.good{color:#b0f0c7}
 /* Demo v0.3.4 styles */
@@ -127,7 +127,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @media(max-width:540px){.header-actions{width:100%;justify-content:space-between}.stats .stat{min-width:0}.calendar-cell{min-height:83px}.calendar-event{overflow-wrap:anywhere}}
 
 
-/* v0.3.137: compact one-centimeter color-only swatches */
+/* v0.3.138: compact one-centimeter color-only swatches */
 .color-palette{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 18px}
 .color-option{position:relative;display:flex;align-items:center;justify-content:center;width:1cm;height:1cm;flex:0 0 1cm;margin:0;padding:3px;border:1px solid #536884;border-radius:6px;background:transparent;cursor:pointer}
 .color-option input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
@@ -153,7 +153,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  color:var(--chosen-ink)!important;text-shadow:none!important
 }
 
-/* v0.3.137: new official activity colors, always white lettering for scheduled lessons.
+/* v0.3.138: new official activity colors, always white lettering for scheduled lessons.
    Selected swatches retain the exact palette hex; shaded text gives contrast on light colors.
    The cancelled/rescheduled status palettes remain completely unaffected. */
 :root[data-theme] .calendar-event[data-palette="true"][data-activity]:not(.is-cancelled):not(.is-rescheduled):not(.is-replacement),
@@ -172,7 +172,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  text-shadow:0 1px 2px rgba(0,0,0,.85),0 0 3px rgba(0,0,0,.65)!important;
 }
 
-/* v0.3.137 — household children, shared assignments and child filters */
+/* v0.3.138 — household children, shared assignments and child filters */
 .child-filter-toolbar{margin-top:13px;align-items:center}
 .child-filter-label{display:inline;margin:0;font-weight:650;font-size:14px}
 #childFilter{min-width:150px;max-width:100%;padding:9px 12px}
@@ -253,7 +253,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 #replacementDateWrap{position:relative;margin-top:10px}#replacementDateWrap .new-date-label{display:block;margin-bottom:7px;font-weight:500}
 #replacementDateWrap{margin-top:10px;position:relative}#replacementDateWrap .new-date-label{position:absolute;left:34px;top:50%;transform:translateY(-50%);margin:0;pointer-events:none;font-weight:400;z-index:1}#replacementDateWrap.has-date .new-date-label,#replacementDateWrap:focus-within .new-date-label{display:none}#replacementDateWrap.no-date:not(:focus-within) #newdate{color:transparent}#replacementDateWrap #newdate{min-height:50px;padding-left:34px}#replacementDateWrap.no-date:not(:focus-within) #newdate::-webkit-datetime-edit{color:transparent}#replacementDateWrap.no-date:not(:focus-within) #newdate::-webkit-calendar-picker-indicator{opacity:.75}
 
-/* v0.3.137: keep New date visible until a date is actually selected */
+/* v0.3.138: keep New date visible until a date is actually selected */
 #replacementDateWrap.no-date .new-date-label{display:block!important;color:#edf3ff!important;z-index:3;left:34px;top:50%;transform:translateY(-50%);pointer-events:none}
 #replacementDateWrap.has-date .new-date-label{display:none!important}
 #replacementDateWrap.no-date #newdate,#replacementDateWrap.no-date #newdate:focus{color:transparent!important}
@@ -261,10 +261,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 #replacementDateWrap #newdate:focus,#replacementDateWrap #newdate:focus-visible{outline:none!important;box-shadow:none!important;border-color:#536884!important}
 :root[data-theme="light"] #replacementDateWrap.no-date .new-date-label{color:#182438!important}
 
-/* v0.3.137: matching leading arrow in date selector */
+/* v0.3.138: matching leading arrow in date selector */
 #replacementDateWrap::before{content:"▸";position:absolute;left:15px;top:50%;transform:translateY(-50%);z-index:4;pointer-events:none;color:inherit;font-size:16px;font-weight:700}
 #lessonStatusSelect.reschedule-active{border:1px solid #536884!important;background-color:rgba(130,166,207,.18)!important;box-shadow:none!important}\n#replacementDateWrap:not([hidden]) #newdate{border:2px solid #8ec6ff!important;box-shadow:0 0 0 2px rgba(142,198,255,.18)!important}\n#replacementDateWrap:not([hidden]) #newdate:focus,#replacementDateWrap:not([hidden]) #newdate:focus-visible{border-color:#8ec6ff!important;box-shadow:0 0 0 2px rgba(142,198,255,.18)!important}\n#replacementDateWrap{position:relative}\n#replacementDateWrap #newdateFormatted{position:absolute;left:34px;top:50%;transform:translateY(-50%);pointer-events:none;z-index:3;font:inherit;color:inherit}\n#replacementDateWrap #newdate::-webkit-datetime-edit{color:transparent!important}\n#replacementDateWrap #newdate::-webkit-datetime-edit-text,#replacementDateWrap #newdate::-webkit-datetime-edit-day-field,#replacementDateWrap #newdate::-webkit-datetime-edit-month-field,#replacementDateWrap #newdate::-webkit-datetime-edit-year-field{color:transparent!important}\n#replacementDateWrap.no-date #newdateFormatted{display:none}\n
-/* v0.3.137: one visible date, while native date picker remains tappable */
+/* v0.3.138: one visible date, while native date picker remains tappable */
 #replacementDateWrap{position:relative}
 #replacementDateWrap #newdate{position:relative;z-index:2;color:transparent!important;-webkit-text-fill-color:transparent!important}
 #replacementDateWrap #newdate::-webkit-datetime-edit{opacity:0!important}
@@ -418,7 +418,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  #monthlyReportDialog .report-footnote{color:#374151!important}
 }
 
-/* v0.3.137 — Progressive-disclosure Options and contextual financial reports */
+/* v0.3.138 — Progressive-disclosure Options and contextual financial reports */
 .settings-dialog{width:min(500px,calc(100vw - 24px));max-width:500px;max-height:90dvh;overflow-y:auto;padding:20px}
 .settings-dialog #settingsHeading{margin:0 0 5px}
 .options-intro{font-size:13px;margin:0 0 15px}
@@ -468,7 +468,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 :root[data-theme="light"] .options-danger-zone{border-color:#dfa7a7}
 @media(max-width:480px){.settings-dialog{padding:14px}.options-footer{bottom:-14px;margin:14px -14px -14px;padding:12px 14px}.budget-quick-actions button{width:100%}}
 
-/* v0.3.137 — actionable unread notice strip, activity updates, and manual fee adjustments */
+/* v0.3.138 — actionable unread notice strip, activity updates, and manual fee adjustments */
 .notice-strip{margin:2px 0 12px;border:1px solid #79a8e0;border-radius:10px;background:#254367;overflow:hidden}
 .notice-strip[hidden]{display:none!important}
 .notice-action{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;width:100%;padding:11px 14px;border:0;background:transparent;color:#f7fbff;cursor:pointer}
@@ -495,7 +495,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 :root[data-theme="light"] .activity-note-card{background:#eef5fe;border-color:#c0d4ed}
 :root[data-theme="light"] .activity-note-card small{color:#506481}
 
-/* v0.3.137 — one-time iCalendar import, visually separate from paid lessons */
+/* v0.3.138 — one-time iCalendar import, visually separate from paid lessons */
 .calendar-event.imported-calendar-event{background:#30485a!important;border:1px dashed #8db1cf!important;color:#f4faff!important}
 .imported-calendar-event .calendar-event-time{color:#dcecff}
 .imported-event-row{border:1px dashed #7899b3;border-radius:9px;background:#273b50;padding:9px 12px;margin:7px 0}
@@ -526,10 +526,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .signup-dialog{width:min(92vw,460px);max-height:90dvh;overflow:auto;padding:20px}
 .signup-dialog h2{margin-top:0}
 .signup-dialog label{display:block;margin:12px 0 5px}
-.signup-dialog input{width:100%;box-sizing:border-box}
+.signup-dialog input{width:100%;box-sizing:border-box}.signup-dialog .password-row input{flex:1;min-width:0;width:auto}.signup-dialog .password-row button{flex:0 0 auto;min-width:58px}
 .signup-dialog .toolbar{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:15px}
 #signupStatus{min-height:18px;white-space:pre-wrap;overflow-wrap:anywhere}
-</style></head><body><main><header><div><small>SHARED HOUSEHOLD</small><h1><span id="householdTitle">PLDS Household</span> <span class="title-build-version" aria-label="App version">v0.3.137</span></h1></div><div class="header-actions"><div id="identity" class="muted"></div><div id="headerAccountActions" class="header-account-actions"><details id="headerMoreMenu" class="header-more-menu"><summary aria-label="More options" title="More options"><span class="header-menu-dots" aria-hidden="true"></span></summary><div class="header-more-options"><button type="button" data-menu-tab="history">History</button><button id="openSettings" type="button">Options</button></div></details></div></div></header><p id="message"></p><section id="login" class="panel"><h2>Welcome home</h2><p class="muted">Sign in with your household email and password. Your session stays signed in on this device.</p><form id="loginForm" novalidate><label for="email">Email address</label><input id="email" name="email" type="email" inputmode="email" autocomplete="username" class="wide" placeholder="Your household email" required><label for="password">Password</label><div class="password-row"><input id="password" name="password" type="password" autocomplete="current-password" class="wide" placeholder="Password" required><button id="revealPassword" type="button" aria-label="Show or hide password" title="Show password">Show</button></div><p><button class="primary wide" type="submit" id="send">Sign in</button></p><p id="loginStatus" role="status" aria-live="polite">Checking app readiness…</p></form><div class="panel" style="margin-top:12px"><strong>Invited beta household?</strong><p class="muted">Use the email address that received the invitation. New accounts may require email confirmation.</p><button class="primary wide" type="button" id="betaSignup" aria-haspopup="dialog" aria-controls="signupDialog">Create invited account</button><p id="betaStatus" role="status" aria-live="polite"></p></div><button type="button" id="changePassword" class="login-password-action">Change / reset password</button><p class="muted" style="font-size:13px">First time here? Your household account needs a password set by its administrator. No email links required.</p></section><section id="app" class="hidden">
+</style></head><body><main><header><div><small>SHARED HOUSEHOLD</small><h1><span id="householdTitle">PLDS Household</span> <span class="title-build-version" aria-label="App version">v0.3.138</span></h1></div><div class="header-actions"><div id="identity" class="muted"></div><div id="headerAccountActions" class="header-account-actions"><details id="headerMoreMenu" class="header-more-menu"><summary aria-label="More options" title="More options"><span class="header-menu-dots" aria-hidden="true"></span></summary><div class="header-more-options"><button type="button" data-menu-tab="history">History</button><button id="openSettings" type="button">Options</button></div></details></div></div></header><p id="message"></p><section id="login" class="panel"><h2>Welcome home</h2><p class="muted">Sign in with your household email and password. Your session stays signed in on this device.</p><form id="loginForm" novalidate><label for="email">Email address</label><input id="email" name="email" type="email" inputmode="email" autocomplete="username" class="wide" placeholder="Your household email" required><label for="password">Password</label><div class="password-row"><input id="password" name="password" type="password" autocomplete="current-password" class="wide" placeholder="Password" required><button id="revealPassword" type="button" aria-label="Show or hide password" title="Show password">Show</button></div><p><button class="primary wide" type="submit" id="send">Sign in</button></p><p id="loginStatus" role="status" aria-live="polite">Checking app readiness…</p></form><div class="panel" style="margin-top:12px"><strong>Invited beta household?</strong><p class="muted">Use the email address that received the invitation. New accounts may require email confirmation.</p><button class="primary wide" type="button" id="betaSignup" aria-haspopup="dialog" aria-controls="signupDialog">Create invited account</button><p id="betaStatus" role="status" aria-live="polite"></p></div><button type="button" id="changePassword" class="login-password-action">Change / reset password</button><p class="muted" style="font-size:13px">First time here? Your household account needs a password set by its administrator. No email links required.</p></section><section id="app" class="hidden">
   <p id="qaTestBanner" class="muted" hidden style="font-size:13px;margin:0 0 12px;padding:9px 12px;border:1px dashed #759ed3;border-radius:9px">QA TEST HOUSEHOLD — This is disposable sample data, completely separate from your real household. Restart the six-step guide at any time through Options → Account &amp; maintenance.</p>
   <div class="toolbar month-child-toolbar">
     <input type="month" id="month" aria-label="Selected month">
@@ -555,7 +555,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <section class="panel" style="margin-top:14px"><h2>Budget by activity</h2><div id="activityBalances"></div></section>
   </div>
   <section class="panel" id="content" aria-live="polite"></section>
-</section><footer id="build-version" style="text-align:center;padding:18px 12px 28px;color:#a8b7ce;font:12px system-ui,sans-serif">PLDS Household · v0.3.137 · Live Supabase · Demo v0.3.4 design · 28 Oct 2026</footer></main><dialog id="activityNotesDialog" class="activity-notes-dialog" aria-labelledby="activityNotesHeading">
+</section><footer id="build-version" style="text-align:center;padding:18px 12px 28px;color:#a8b7ce;font:12px system-ui,sans-serif">PLDS Household · v0.3.138 · Live Supabase · Demo v0.3.4 design · 28 Oct 2026</footer></main><dialog id="activityNotesDialog" class="activity-notes-dialog" aria-labelledby="activityNotesHeading">
 <h2 id="activityNotesHeading">Activity notes</h2>
 <p class="muted">Practice announcements, locations and other activity updates. Notes do not change the calendar.</p>
 <div id="activityNoteItems"></div>
@@ -689,8 +689,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <p class="muted">Use the exact email address invited to this household. This is separate from Sign in.</p>
 <label for="signupEmail">Invited email</label><input id="signupEmail" class="wide" type="email" inputmode="email" autocomplete="username" placeholder="name@example.com" required>
 <label for="signupName">Your name</label><input id="signupName" class="wide" type="text" autocomplete="name" maxlength="60" placeholder="First name" required>
-<label for="signupPassword">Create password (12 characters minimum)</label><input id="signupPassword" class="wide" type="password" autocomplete="new-password" minlength="12" required>
-<label for="signupPasswordConfirm">Confirm new password</label><input id="signupPasswordConfirm" class="wide" type="password" autocomplete="new-password" minlength="12" required>
+<label for="signupPassword">Create password (12 characters minimum)</label><div class="password-row"><input id="signupPassword" class="wide" type="password" autocomplete="new-password" minlength="12" required><button type="button" id="showSignupPassword" aria-label="Show new password" aria-pressed="false">Show</button></div>
+<label for="signupPasswordConfirm">Confirm new password</label><div class="password-row"><input id="signupPasswordConfirm" class="wide" type="password" autocomplete="new-password" minlength="12" required><button type="button" id="showSignupPasswordConfirm" aria-label="Show confirmation password" aria-pressed="false">Show</button></div>
 <p id="signupStatus" role="status" aria-live="polite"></p>
 <div class="toolbar"><button type="button" id="signupCancel">Close</button><button class="primary" type="submit" id="signupSubmit">Create account</button></div>
 </form>
@@ -810,7 +810,7 @@ const setTheme=t=>{
 let chosenTheme='dark';try{chosenTheme=localStorage.getItem('plds_household_theme')||'dark'}catch(_){}
 setTheme(chosenTheme==='light'?'light':'dark');
 document.getElementById('themeToggle').onclick=()=>{setTheme(document.documentElement.dataset.theme==='light'?'dark':'light');document.getElementById('headerMoreMenu').open=false};
-const $=id=>document.getElementById(id);const budgetToggle=document.getElementById('budgetToggle');budgetToggle.onclick=()=>navigateDashboard('budget');let pushReady=false,userPreferences=null,lastDailyReminderKey='';let user=null,qaMode=false,activities=[],activityPrices=[],schedules=[],overrides=[],payments=[],members=[],logs=[],children=[],activityChildren=[],scheduleChildren=[],teacherNotes=[],lessonHomework=[],activityUpdates=[],noticeReads=[],monthlyAdjustments=[],importedEvents=[],noticeFeedStart=null,childFilter='all',tab='monthview',lastCalendarTab='monthview',month=localDate(new Date()).slice(0,7),listWeek='';/* v0.3.137: nine activity swatches with HSL saturation multiplied by 0.90. */
+const $=id=>document.getElementById(id);const budgetToggle=document.getElementById('budgetToggle');budgetToggle.onclick=()=>navigateDashboard('budget');let pushReady=false,userPreferences=null,lastDailyReminderKey='';let user=null,qaMode=false,activities=[],activityPrices=[],schedules=[],overrides=[],payments=[],members=[],logs=[],children=[],activityChildren=[],scheduleChildren=[],teacherNotes=[],lessonHomework=[],activityUpdates=[],noticeReads=[],monthlyAdjustments=[],importedEvents=[],noticeFeedStart=null,childFilter='all',tab='monthview',lastCalendarTab='monthview',month=localDate(new Date()).slice(0,7),listWeek='';/* v0.3.138: nine activity swatches with HSL saturation multiplied by 0.90. */
 const ACTIVITY_PALETTE=["#e65b4f","#586bed","#9958ed","#ed58c3","#4ac1be","#91e15a","#315a96"];const ACTIVITY_COLORS={'greek':'#586bed','english':'#4ac1be','french':'#9958ed','piano':'#e8a85e','cleaning':'#ed58c3','speech therapy':'#e8c55e'};const activityColor=a=>/^#[0-9a-f]{6}$/i.test(String(a?.color||''))?a.color:(ACTIVITY_COLORS[String(a?.name||'').toLowerCase()]||'#64748b');const euro=n=>'€'+Number(n||0).toLocaleString('en-IE',{minimumFractionDigits:2,maximumFractionDigits:2});const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function msg(s){$('message').textContent=s||''}function localDate(d){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}async function addMonth(n){let [y,m]=month.split('-').map(Number);month=localDate(new Date(y,m-1+n,1)).slice(0,7);$('month').value=month;await refreshRunningBalances();render()}function dates(forMonth=month){let [y,m]=forMonth.split('-').map(Number),out=[];for(let d=new Date(y,m-1,1);d.getMonth()===m-1;d.setDate(d.getDate()+1))out.push({date:localDate(d),weekday:d.getDay()});return out}// Financial rates are effective-dated and owned by the database. Never infer old charges from activities.price.
 function priceAt(a,sessionDate){
  let first=null,rate=null;
@@ -1664,9 +1664,24 @@ $('betaSignup').onclick=()=>{
  $('signupEmail').value=$('email').value.trim();
  $('signupPassword').value='';
  $('signupPasswordConfirm').value='';
+ for(const [field,control] of [['signupPassword','showSignupPassword'],['signupPasswordConfirm','showSignupPasswordConfirm']]){
+  $(field).type='password';
+  $(control).textContent='Show';
+  $(control).setAttribute('aria-pressed','false');
+  $(control).setAttribute('aria-label',field==='signupPassword'?'Show new password':'Show confirmation password');
+ }
  $('signupDialog').showModal();
  $('signupEmail').focus({preventScroll:true});
 };
+function toggleSignupPassword(field,control,descriptor){
+ const input=$(field),button=$(control),visible=input.type==='password';
+ input.type=visible?'text':'password';
+ button.textContent=visible?'Hide':'Show';
+ button.setAttribute('aria-pressed',String(visible));
+ button.setAttribute('aria-label',(visible?'Hide ':'Show ')+descriptor);
+}
+$('showSignupPassword').onclick=()=>toggleSignupPassword('signupPassword','showSignupPassword','new password');
+$('showSignupPasswordConfirm').onclick=()=>toggleSignupPassword('signupPasswordConfirm','showSignupPasswordConfirm','confirmation password');
 $('signupCancel').onclick=()=>{$('signupDialog').close()};
 $('signupForm').addEventListener('submit',async event=>{
  event.preventDefault();
@@ -1680,7 +1695,11 @@ $('signupForm').addEventListener('submit',async event=>{
  if(password!==confirmPassword){status.textContent='Passwords do not match.';$('signupPasswordConfirm').focus();return}
  button.disabled=true;button.textContent='Creating account…';status.textContent='Contacting the registration service…';
  try{
-  const result=await requestJson('/auth/v1/signup',{method:'POST',body:JSON.stringify({email,password,data:{display_name:name}})});
+  const redirectTo=new globalThis.URL('./',location.href).href;
+  const result=await requestJson('/auth/v1/signup?redirect_to='+encodeURIComponent(redirectTo),{
+   method:'POST',
+   body:JSON.stringify({email,password,data:{display_name:name},email_redirect_to:redirectTo})
+  });
   $('signupPassword').value='';$('signupPasswordConfirm').value='';
   $('email').value=email;
   if(result.access_token&&result.refresh_token){
@@ -1690,7 +1709,7 @@ $('signupForm').addEventListener('submit',async event=>{
    $('signupDialog').close();
    $('betaStatus').textContent='Account created and signed in.';
   }else{
-   status.textContent='Account request received. Check '+email+' for a confirmation link. After confirming, close this window and sign in using the password you just created.';
+   status.textContent='Account request received. Check '+email+' for a confirmation link. After confirming, return to Household and sign in using the password you just created.';
    $('betaStatus').textContent='Registration started. Check your inbox for the confirmation email.';
   }
  }catch(err){
@@ -1876,7 +1895,7 @@ load=async function(){await originalLoad();await refreshTeacherRequests()};
 function renderHouseholdTitle(){
  const name=(user&&householdProfile&&householdProfile.name?householdProfile.name:'PLDS Household').trim();
  const title=$('householdTitle');if(title)title.textContent=name;
- document.title=name+' · v0.3.137';
+ document.title=name+' · v0.3.138';
 }
 async function loadHouseholdProfile(){
  if(!HOUSE||!user)throw Error('Sign in before loading household details.');
