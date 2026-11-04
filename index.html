@@ -1207,7 +1207,8 @@ function render(){
  $('childFilter').innerHTML='<option value="all">Everyone</option>'+children.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('')+'<option value="unassigned">Unassigned</option>';
  $('childFilter').value=childFilter;
  const visibleSs=filteredLessons(ss);
- const visibleImported=importedEvents.filter(e=>e.event_date.startsWith(month)&&(childFilter==='all'||(childFilter==='unassigned'?!e.child_id:e.child_id===childFilter)));
+ const importedEventChildIds=e=>e.child_id?[e.child_id]:e.activity_id?activityChildren.filter(ac=>ac.activity_id===e.activity_id).map(ac=>ac.child_id):[];
+ const visibleImported=importedEvents.filter(e=>!e.hidden&&!e.removed_from_source&&e.event_date.startsWith(month)&&(childFilter==='all'||(childFilter==='unassigned'?!importedEventChildIds(e).length:importedEventChildIds(e).includes(childFilter))));
  const owed=ss.reduce((sum,x)=>sum+x.charge,0)+activities.reduce((sum,a)=>sum+monthlyActivityFee(a,month),0),paid=monthlyPayments.reduce((sum,p)=>sum+Number(p.amount),0);
  const runningBalances=window.householdRunningBalances||[];
  $('owed').textContent=euro(owed);$('remaining').textContent=euro(owed-paid);
@@ -1494,6 +1495,12 @@ function openCalendarImporter(fromSetup=false){
  $('calendarImportFrom').value=bounds.windowStart;$('calendarImportThrough').value=bounds.windowEnd;
  $('calendarImportRange').textContent='Choose the dates to import (up to 800 days). A maximum of 400 occurrences per preview. To import more, repeat with another date range; duplicates are skipped.';
  $('calendarImportChild').innerHTML='<option value="">Unassigned / everyone</option>'+children.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('');
+ $('calendarImportActivity').innerHTML='<option value="">No linked activity</option>'+activities.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.name)+'</option>').join('');
+ $('calendarConnectStatus').textContent='';
+ $('calendarConnectUrl').value='';
+ $('calendarConnectLabel').value='';
+ $('calendarFileBackup').open=false;
+ renderConnectedCalendarSources();
  dialog.showModal();
 }
 $('openCalendarImporter').onclick=()=>openCalendarImporter(false);
@@ -1568,10 +1575,11 @@ $('calendarImportSave').onclick=async()=>{
  $('calendarImportClose').disabled=true;
  let inserted=0;
  try{
-  const childId=$('calendarImportChild').value||null;
+  const childId=$('calendarImportChild').value||null,activityId=$('calendarImportActivity').value||null;
   if(childId&&!children.some(c=>c.id===childId))throw Error('Child selection is no longer valid.');
+  if(activityId&&!activities.some(a=>a.id===activityId))throw Error('Activity selection is no longer valid.');
   for(let i=0;i<picked.length;i+=75){
-   const group=picked.slice(i,i+75).map(x=>({...x,child_id:childId,household_id:HOUSE,created_by:user.id}));
+   const group=picked.slice(i,i+75).map(x=>({...x,child_id:childId,activity_id:activityId,household_id:HOUSE,created_by:user.id}));
    const result=await db.from('calendar_import_events').upsert(group,{onConflict:'household_id,source_key',ignoreDuplicates:true,returning:true});
    if(result.error)throw result.error;
    inserted+=(result.data||[]).length;
