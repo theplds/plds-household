@@ -1797,6 +1797,7 @@ function showImportedEvent(id=null){
   ?'<p class="muted">Live subscription event: you may assign it to a child or activity, but its title and time are controlled by the source calendar.</p>'
   :'<p class="muted">This event belongs to Household. Changes are shared with its members and never sent to Google. No extra charges.</p>';
  $('calendarEventEditFields').hidden=readOnly;
+ $('calendarEventActionPanel').hidden=readOnly||!event;
  $('calendarEventTitle').value=event?.title||'';
  $('calendarEventDate').value=event?.event_date||localDate(new Date());
  $('calendarEventAllDay').checked=event?.all_day??false;
@@ -1805,6 +1806,11 @@ function showImportedEvent(id=null){
  $('calendarEventLocation').value=event?.location||'';
  $('calendarEventNotes').value=event?.details||'';
  $('calendarEventTimes').hidden=$('calendarEventAllDay').checked;
+ $('calendarEventAction').value=event?.event_status||'scheduled';
+ $('calendarEventNewDate').value=event?.replacement_date||event?.event_date||localDate(new Date());
+ $('calendarEventNewStart').value=String(event?.replacement_start_time||event?.start_time||'15:00').slice(0,5);
+ $('calendarEventNewEnd').value=String(event?.replacement_end_time||event?.end_time||'16:00').slice(0,5);
+ updateCalendarEventActionUI();
  $('calendarEventChild').innerHTML='<option value="">Unassigned / everyone</option>'+
   children.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('');
  $('calendarEventActivity').innerHTML='<option value="">No linked activity</option>'+
@@ -1818,7 +1824,15 @@ function showImportedEvent(id=null){
  $('calendarEventDialog').showModal();
 }
 $('addHouseholdEvent').onclick=()=>showImportedEvent();
-$('calendarEventAllDay').onchange=()=>{$('calendarEventTimes').hidden=$('calendarEventAllDay').checked};
+function updateCalendarEventActionUI(){
+ $('calendarEventReplacement').hidden=$('calendarEventAction').value!=='rescheduled';
+ $('calendarEventNewTimes').hidden=$('calendarEventAllDay').checked;
+}
+$('calendarEventAction').onchange=updateCalendarEventActionUI;
+$('calendarEventAllDay').onchange=()=>{
+ $('calendarEventTimes').hidden=$('calendarEventAllDay').checked;
+ updateCalendarEventActionUI();
+};
 $('calendarEventClose').onclick=()=>$('calendarEventDialog').close();
 $('calendarEventSave').onclick=async()=>{
  const e=openImportedEventId?importedEvents.find(x=>x.id===openImportedEventId):null;
@@ -1842,7 +1856,35 @@ $('calendarEventSave').onclick=async()=>{
    status.textContent='Enter a valid start time and a later end time.';return
   }
   if(details.length>3000||location.length>300){status.textContent='Notes or location are too long.';return}
-  payload={...payload,title,event_date:date,all_day,start_time,end_time,details,location};
+  const event_status=e?$('calendarEventAction').value:'scheduled';
+  if(!['scheduled','cancelled','rescheduled'].includes(event_status)){
+   status.textContent='Choose a valid event status.';return;
+  }
+  let replacement_date=null,replacement_start_time=null,replacement_end_time=null;
+  if(event_status==='rescheduled'){
+   replacement_date=$('calendarEventNewDate').value;
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(replacement_date)||
+    !Number.isFinite(Date.parse(replacement_date+'T12:00:00Z'))||
+    new Date(replacement_date+'T12:00:00Z').toISOString().slice(0,10)!==replacement_date){
+    status.textContent='Choose a valid replacement date.';return;
+   }
+   if(!all_day){
+    replacement_start_time=$('calendarEventNewStart').value;
+    replacement_end_time=$('calendarEventNewEnd').value||null;
+    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(replacement_start_time)||
+     (replacement_end_time&&(!/^([01]\d|2[0-3]):[0-5]\d$/.test(replacement_end_time)||
+      replacement_end_time<=replacement_start_time))){
+     status.textContent='Choose a valid replacement start and later end time.';return;
+    }
+   }
+   if(date===replacement_date&&(all_day||(
+    start_time===replacement_start_time&&
+    (end_time||'')===(replacement_end_time||'')))){
+    status.textContent='Choose a different date or time when rescheduling.';return;
+   }
+  }
+  payload={...payload,title,event_date:date,all_day,start_time,end_time,details,location,
+   event_status,replacement_date,replacement_start_time,replacement_end_time};
  }
  button.disabled=true;
  try{
