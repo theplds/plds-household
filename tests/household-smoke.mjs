@@ -4,8 +4,8 @@ import {Script,createContext,runInContext} from 'node:vm';
 import {URL as NodeURL} from 'node:url';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.140/);
-assert.ok(!html.includes('v0.3.139'),'The deployed version must be updated consistently');
+assert.match(html,/PLDS Household v0\.3\.141/);
+assert.ok(!html.includes('v0.3.140'),'The deployed version must be updated consistently');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.ok(scripts.length>=1,'No embedded app scripts found');
 for(const [,code] of scripts)new Script(code);
@@ -395,7 +395,7 @@ assert.ok(!optionsAccount.includes('id="logout"'),'Options must not also contain
 assert.equal(html.split('id="logout"').length-1,1,'Sign out must be unique');
 assert.match(html,/\$\('logout'\)\.onclick=async\(\)=>\{\$\('headerMoreMenu'\)\.open=false/);
 assert.match(html,/async function handleRecoveryLink\(\)/);
-assert.match(html,/\['recovery','signup','invite','email'\]/);
+assert.match(html,/const hasAuthCallback=Boolean\(authError\|\|query\.has\('code'\)\|\|\(access&&refresh\)\)/);
 assert.match(html,/history\.replaceState\(null,'',location\.pathname\)/);
 
 // Regression for verified beta accounts with no member invitation:
@@ -543,4 +543,78 @@ assert.match(html,/activity_id:activityId,household_id:HOUSE/);
 assert.match(html,/Calendar events are shared with members of this household/);
 assert.ok(!lessonCode.includes('calendarSources'), 'Calendar subscriptions must not create financial charges');
 
-console.log('PASS: billing, first-use QA, signup, secure live calendar links and event assignments.');
+// Google OAuth is initiated only by the user, and uses Supabase's approved callback flow.
+for(const id of ['googleLogin','loginForm','send','betaSignup']){
+ assert.equal(html.split('id="'+id+'"').length-1,1,'Google login must preserve existing login controls: '+id);
+}
+assert.match(html,/id="googleLogin" class="google-auth-button wide"/);
+assert.match(html,/Calendar access is requested separately/);
+const oauthBegin=html.indexOf('function googleOAuthAuthorizeUrl(){');
+const oauthEnd=html.indexOf("$('revealPassword').onclick=",oauthBegin);
+assert.ok(oauthBegin>=0&&oauthEnd>oauthBegin,'Google OAuth button handler missing');
+let capturedGoogleUrl='',oauthPending={};
+const googleButton={disabled:false};
+const googleStatus={textContent:'',className:''};
+const googleCtx=createContext({
+ URL:'https://vizoixctzkwyhjhhaulj.supabase.co',
+ globalThis:{URL:NodeURL},
+ location:{href:'https://theplds.github.io/plds-household/index.html',assign:url=>{capturedGoogleUrl=url}},
+ $:id=>id==='googleLogin'?googleButton:id==='loginStatus'?googleStatus:null,
+ sessionStorage:{setItem:(k,v)=>{oauthPending[k]=v},removeItem:k=>{delete oauthPending[k]}}
+});
+runInContext(html.slice(oauthBegin,oauthEnd),googleCtx);
+googleCtx.googleOAuthAuthorizeUrl=runInContext('googleOAuthAuthorizeUrl',googleCtx);
+const googleUrl=new NodeURL(googleCtx.googleOAuthAuthorizeUrl());
+assert.equal(googleUrl.host,'vizoixctzkwyhjhhaulj.supabase.co');
+assert.equal(googleUrl.pathname,'/auth/v1/authorize');
+assert.equal(googleUrl.searchParams.get('provider'),'google');
+assert.equal(googleUrl.searchParams.get('redirect_to'),'https://theplds.github.io/plds-household/');
+assert.equal(googleUrl.searchParams.get('scopes'),null,'Login must not request Google Calendar access');
+googleButton.onclick();
+assert.equal(capturedGoogleUrl,googleUrl.href);
+assert.equal(oauthPending.plds_google_oauth_pending,'1');
+assert.equal(googleButton.disabled,true);
+assert.match(googleStatus.textContent,/Redirecting to Google/);
+
+// OAuth's implicit callback may not have a type. Token fragments must be removed
+// before persisting the session, and startup must not race callback handling.
+const callbackBegin=html.indexOf('async function handleRecoveryLink(){');
+const callbackEnd=html.indexOf("$('cancelPassword').onclick=",callbackBegin);
+assert.ok(callbackBegin>=0&&callbackEnd>callbackBegin,'Auth callback missing');
+const callbackCode=html.slice(callbackBegin,callbackEnd);
+function callbackHarness(hash,query='',pending=false){
+ const seen=[],storage={};
+ if(pending)storage.plds_google_oauth_pending='1';
+ const ctx=createContext({
+  URLSearchParams,location:{hash,search:query,pathname:'/plds-household/'},
+  history:{replaceState:(...args)=>seen.push(['clearUrl',...args])},
+  sessionStorage:{getItem:k=>storage[k]||null,removeItem:k=>{delete storage[k]}},
+  localStorage:{getItem:()=>null,removeItem:()=>{}},
+  saveSession:sess=>{seen.push(['saveSession',sess]);assert.equal(seen[0][0],'clearUrl','Remove tokens before storing session')},
+  $:id=>id==='loginStatus'?{set textContent(v){seen.push(['status',v])},set className(v){}}:
+   id==='passwordMessage'?{textContent:''}:id==='passwordDialog'?{showModal:()=>seen.push(['recoveryDialog'])}:null,
+  requestJson:async()=>{throw Error('Unexpected token exchange in implicit OAuth flow')}
+ });
+ runInContext(callbackCode,ctx);
+ return {ctx,seen,storage,promise:runInContext('authenticationReady',ctx)};
+}
+const returned=callbackHarness('#access_token=oauth-access&refresh_token=oauth-refresh&expires_in=3600&provider=google','',true);
+assert.equal(await returned.promise,true);
+assert.equal(returned.seen[0][0],'clearUrl');
+assert.equal(returned.seen[1][0],'saveSession');
+assert.equal(returned.seen[1][1].access_token,'oauth-access');
+assert.equal(returned.seen[1][1].refresh_token,'oauth-refresh');
+assert.equal(returned.storage.plds_google_oauth_pending,undefined);
+assert.ok(returned.seen.some(x=>x[0]==='status'&&/Google account verified/.test(x[1])));
+const emailCallback=callbackHarness('#access_token=email-access&refresh_token=email-refresh&type=signup','',false);
+assert.equal(await emailCallback.promise,true,'Existing email-verification callback must still work');
+const deniedCallback=callbackHarness('#error=access_denied&error_description=User+denied','',true);
+assert.equal(await deniedCallback.promise,false,'Declined Google OAuth must not continue into household');
+assert.ok(deniedCallback.seen.some(x=>x[0]==='status'&&/Authentication failed:/.test(x[1])));
+const notCallback=callbackHarness('', '',false);
+assert.equal(await notCallback.promise,true,'Ordinary login still starts');
+assert.equal(notCallback.seen.length,0);
+assert.match(html,/authenticationReady\.then\(ready=>\{if\(ready\)start\(\)\}\)/);
+assert.ok(!html.includes('handleRecoveryLink();\n$(\\'cancelPassword\\')'),'Old unawaited startup must be removed');
+
+console.log('PASS: household finances, signup, Google OAuth redirect/callback, and account separation.');
