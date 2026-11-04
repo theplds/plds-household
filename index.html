@@ -1387,7 +1387,142 @@ $('activityBalances').addEventListener('click',e=>{
  };
 });
 
+
+/* One-time calendar import: preview locally, store only explicitly selected items. */
+let calendarImportPreview=[],calendarImportFromSetup=false,calendarImportBusy=false;
+const importRange=()=>{
+ const now=new Date(),from=new Date(now.getFullYear(),now.getMonth()-6,1),through=new Date(now.getFullYear(),now.getMonth()+13,0);
+ return {windowStart:localDate(from),windowEnd:localDate(through)};
+};
+function openCalendarImporter(fromSetup=false){
+ if(!user||!HOUSE)return;
+ calendarImportFromSetup=fromSetup;
+ if(fromSetup&&$('householdSetupDialog').open)$('householdSetupDialog').close();
+ if($('settingsDialog').open)$('settingsDialog').close();
+ const dialog=$('calendarImportDialog');
+ if(dialog.open)return;
+ calendarImportPreview=[];calendarImportBusy=false;
+ $('calendarImportFile').value='';
+ $('calendarImportPreview').innerHTML='';$('calendarImportPreview').hidden=true;
+ $('calendarImportSave').disabled=true;
+ $('calendarImportStatus').textContent='Select a .ics file to preview your events. No information is uploaded until you confirm.';
+ const bounds=importRange();
+ $('calendarImportRange').textContent='Included dates: '+displayDateDMY(bounds.windowStart)+' – '+displayDateDMY(bounds.windowEnd)+'. A maximum of 400 occurrences per file. Recurring patterns that cannot be read safely will be skipped.';
+ $('calendarImportChild').innerHTML='<option value="">Unassigned / everyone</option>'+children.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('');
+ dialog.showModal();
+}
+$('openCalendarImporter').onclick=()=>openCalendarImporter(false);
+$('calendarImportClose').onclick=()=>{if(!calendarImportBusy)$('calendarImportDialog').close()};
+$('calendarImportDialog').addEventListener('close',()=>{
+ if(calendarImportFromSetup&&user&&HOUSE){
+  calendarImportFromSetup=false;setupStep=3;renderHouseholdSetup();
+  if(!$('householdSetupDialog').open)$('householdSetupDialog').showModal();
+ }
+});
+function importSelection(){
+ return [...$('calendarImportPreview').querySelectorAll('input.calendar-import-check:checked')]
+  .map(c=>calendarImportPreview[Number(c.value)]).filter(Boolean);
+}
+function updateImportSelection(){
+ const chosen=importSelection().length;
+ $('calendarImportSave').disabled=!chosen||calendarImportBusy;
+ $('calendarImportSave').textContent='Import '+chosen+' selected event'+(chosen===1?'':'s');
+}
+function readCalendarText(file){
+ return new Promise((resolve,reject)=>{
+  const reader=new FileReader();
+  reader.onload=()=>resolve(String(reader.result||''));
+  reader.onerror=()=>reject(Error('Could not read the selected calendar file.'));
+  reader.readAsText(file,'UTF-8');
+ });
+}
+$('calendarImportFile').onchange=async e=>{
+ const file=e.target.files?.[0];
+ $('calendarImportSave').disabled=true;
+ $('calendarImportPreview').hidden=true;$('calendarImportPreview').innerHTML='';
+ calendarImportPreview=[];
+ if(!file)return;
+ try{
+  if(!/\.ics$/i.test(file.name))throw Error('Select an .ics calendar file. Extract Google Calendar ZIP exports first.');
+  if(file.size>2e6)throw Error('Choose a calendar file smaller than 2 MB.');
+  $('calendarImportStatus').textContent='Reading calendar locally…';
+  const text=await readCalendarText(file);
+  if(!gCalendarParser())throw Error('The calendar importer did not load. Refresh the app and retry.');
+  const result=globalThis.HouseholdICS.parse(text,{...importRange(),limit:400});
+  calendarImportPreview=result.events;
+  const stored=new Set(importedEvents.map(x=>x.source_key));
+  const duplicates=calendarImportPreview.filter(x=>stored.has(x.source_key)).length;
+  const newCount=calendarImportPreview.length-duplicates;
+  $('calendarImportPreview').innerHTML=calendarImportPreview.map((x,i)=>{
+   const duplicate=stored.has(x.source_key);
+   return '<label class="calendar-import-item"><input class="calendar-import-check" type="checkbox" value="'+i+'" '+(duplicate?'disabled':'checked')+'>'
+    +'<span><strong>'+esc(x.title)+'</strong><small>'
+    +esc(displayDateDMY(x.event_date))+' · '+esc(x.all_day?'All day':String(x.start_time||'').slice(0,5))
+    +(x.location?' · '+esc(x.location):'')+(duplicate?' · Already imported':'')
+    +'</small></span></label>';
+  }).join('');
+  $('calendarImportPreview').hidden=!calendarImportPreview.length;
+  const warnings=result.warnings||[];
+  $('calendarImportStatus').innerHTML=esc(calendarImportPreview.length+' occurrences found, '+newCount+' new, '+duplicates+' already imported.')+
+   (warnings.length?'<p class="calendar-import-warning">'+warnings.slice(0,4).map(x=>esc(x)).join(' ') +(warnings.length>4?' Plus '+(warnings.length-4)+' more warnings.':'')+'</p>':'');
+  updateImportSelection();
+ }catch(err){$('calendarImportStatus').textContent='Import preview unavailable: '+(err.message||String(err))}
+};
+function gCalendarParser(){return globalThis.HouseholdICS&&typeof globalThis.HouseholdICS.parse==='function'}
+$('calendarImportPreview').addEventListener('change',e=>{if(e.target.classList.contains('calendar-import-check'))updateImportSelection()});
+$('calendarImportSave').onclick=async()=>{
+ if(calendarImportBusy||!user||!HOUSE)return;
+ const picked=importSelection();
+ if(!picked.length)return;
+ calendarImportBusy=true;$('calendarImportSave').disabled=true;
+ $('calendarImportClose').disabled=true;
+ let inserted=0;
+ try{
+  const childId=$('calendarImportChild').value||null;
+  if(childId&&!children.some(c=>c.id===childId))throw Error('Child selection is no longer valid.');
+  for(let i=0;i<picked.length;i+=75){
+   const group=picked.slice(i,i+75).map(x=>({...x,child_id:childId,household_id:HOUSE,created_by:user.id}));
+   const result=await db.from('calendar_import_events').upsert(group,{onConflict:'household_id,source_key',ignoreDuplicates:true,returning:true});
+   if(result.error)throw result.error;
+   inserted+=(result.data||[]).length;
+   $('calendarImportStatus').textContent='Saving '+Math.min(i+75,picked.length)+' of '+picked.length+' selected events…';
+  }
+  await load();
+  $('calendarImportDialog').close();
+  msg('Imported '+inserted+' new event'+(inserted===1?'':'s')+'. These are free calendar entries and do not change activities or charges.');
+ }catch(err){
+  $('calendarImportStatus').textContent='Import stopped after '+inserted+' new events: '+(err.message||String(err))+'. Reopening the file is safe; duplicates are skipped.';
+  await load().catch(e=>console.warn('Calendar reload failed:',e.message));
+ }finally{calendarImportBusy=false;$('calendarImportClose').disabled=false;updateImportSelection()}
+};
+let openImportedEventId=null;
+function showImportedEvent(id){
+ const e=importedEvents.find(x=>x.id===id);if(!e)return;
+ openImportedEventId=id;
+ $('calendarEventHeading').textContent=e.title;
+ const when=e.all_day?'All-day event':(String(e.start_time||'').slice(0,5)+(e.end_time?'–'+String(e.end_time).slice(0,5):''));
+ const kid=e.child_id?children.find(c=>c.id===e.child_id)?.name||'Assigned child':'Unassigned';
+ $('calendarEventDetails').innerHTML='<p><strong>'+esc(displayDateDMY(e.event_date))+'</strong> · '+esc(when)+'</p>'
+   +(e.location?'<p><strong>Location:</strong> '+esc(e.location)+'</p>':'')
+   +(e.details?'<p style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(e.details)+'</p>':'')
+   +'<p class="muted">Child: '+esc(kid)+' · Imported from an .ics file. This event does not create an activity or any charge.</p>';
+ $('calendarEventDialog').showModal();
+}
+$('calendarEventClose').onclick=()=>$('calendarEventDialog').close();
+$('calendarEventRemove').onclick=async()=>{
+ const e=importedEvents.find(x=>x.id===openImportedEventId);
+ if(!e||!confirm('Remove this imported calendar event? This will not affect lessons, payments or any external calendar.'))return;
+ const b=$('calendarEventRemove');b.disabled=true;
+ try{
+  const result=await db.from('calendar_import_events').delete().eq('id',e.id).eq('household_id',HOUSE);
+  if(result.error)throw result.error;
+  $('calendarEventDialog').close();await load();msg('Imported calendar event removed.');
+ }catch(err){msg('Could not remove imported event: '+err.message)}
+ finally{b.disabled=false}
+};
+
 $('content').onclick=async e=>{let b=e.target.closest('button');if(!b)return;
+ if(b.dataset.importEvent){showImportedEvent(b.dataset.importEvent);return;}
  if(b.dataset.activityNotes){openActivityNotes(b.dataset.activityNotes);return;}
  if(b.id==='newChild'||b.dataset.child){
   const child=children.find(c=>c.id===b.dataset.child);
