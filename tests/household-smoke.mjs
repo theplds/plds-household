@@ -323,7 +323,7 @@ assert.match(html,/id="betaSignup" aria-haspopup="dialog" aria-controls="signupD
 assert.match(html,/<form id="signupForm" novalidate>/);
 assert.ok(!html.includes('id="betaName"'),'Obsolete registration field must not remain outside the form');
 const signBegin=html.indexOf("$('betaSignup').onclick=()=>{");
-const signEnd=html.indexOf("$('revealPassword').onclick=",signBegin);
+const signEnd=html.indexOf('function googleOAuthAuthorizeUrl(){',signBegin);
 assert.ok(signBegin>0&&signEnd>signBegin,'Invited signup interaction handlers missing');
 const signupElements=Object.fromEntries(['signupDialog','signupForm','signupEmail','signupName',
  'signupPassword','signupPasswordConfirm','showSignupPassword','showSignupPasswordConfirm','signupStatus','signupSubmit','signupCancel',
