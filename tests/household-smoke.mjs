@@ -4,8 +4,8 @@ import {Script,createContext,runInContext} from 'node:vm';
 import {URL as NodeURL} from 'node:url';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.139/);
-assert.ok(!html.includes('v0.3.138'),'The deployed version must be updated consistently');
+assert.match(html,/PLDS Household v0\.3\.140/);
+assert.ok(!html.includes('v0.3.139'),'The deployed version must be updated consistently');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.ok(scripts.length>=1,'No embedded app scripts found');
 for(const [,code] of scripts)new Script(code);
@@ -248,6 +248,10 @@ assert.equal(recurring.events[0].event_date,'2026-11-05');
 assert.equal(recurring.events[1].event_date,'2026-11-12');
 const duplicated=parseICS(icsFile([icsEvent('same','20261105T170000','20261105T180000'),icsEvent('same','20261105T170000','20261105T180000')]));
 assert.equal(duplicated.events.length,1,'UID plus occurrence must deduplicate');
+const movedFrom=parseICS(icsFile([icsEvent('same-event','20261105T170000','20261105T180000')]));
+const movedTo=parseICS(icsFile([icsEvent('same-event','20261106T183000','20261106T193000')]));
+assert.equal(movedFrom.events[0].source_key,movedTo.events[0].source_key,'One-off events retain ID after rescheduling, preserving child/activity links');
+assert.notEqual(movedFrom.events[0].event_date,movedTo.events[0].event_date);
 const allDay=parseICS(icsFile([icsEvent('holiday','20261225','20261226')]));
 assert.equal(allDay.events[0].all_day,true);
 assert.equal(allDay.events[0].start_time,null);
@@ -273,12 +277,12 @@ for(const id of ['calendarImportDialog','calendarImportFile','calendarImportPrev
 }
 assert.match(html,/id="setupImportCalendar"/);
 assert.match(html,/Step '\+\(setupStep\+1\)\+' of 6/);
-assert.match(html,/'Calendar import','Finish'\]\[setupStep\]/);
+assert.match(html,/'Calendar connection','Finish'\]\[setupStep\]/);
 assert.match(html,/next\.textContent=setupStep===5\?'Finish setup'/);
-assert.match(html,/setupStep===4\)\{\n  content\.innerHTML='<p>Already have a family calendar\?/);
+assert.match(html,/setupStep===4\)\{\n  content\.innerHTML='<p>Connect a calendar/);
 assert.match(html,/calendarImportFromSetup=false;setupStep=4;renderHouseholdSetup\(\)/);
 assert.match(html,/setupStep===5\)\{\n  await saveHouseholdProfile\(householdProfile\.name,true\)/);
-assert.match(html,/Imported entries will be visible to/);
+assert.match(html,/Calendar events are shared with members of this household/);
 assert.match(html,/data-import-event/);
 assert.match(html,/db\.from\('calendar_import_events'\)/);
 assert.match(html,/ignoreDuplicates:true,returning:true/);
@@ -475,6 +479,7 @@ const startupCtx=createContext({
  resolveHousehold:async()=>{starts++;await Promise.resolve();startupCtx.HOUSE='qa-house-id'},
  loadHouseholdProfile:async()=>{startupCtx.householdProfile={onboarding_completed_at:null}},
  renderHouseholdTitle:()=>{},load:async()=>{loaded++},loadPreferences:async()=>{},
+ syncCalendarsInBackground:async()=>{},
  showWelcome:()=>{},updatePushButton:()=>{},checkDailyReminder:()=>{},
  openHouseholdSetup:()=>{guideOpens++},msg:()=>{}
 });
@@ -489,8 +494,53 @@ assert.equal(nodes.app.classes.has('hidden'),false,'Initialized app becomes visi
 assert.equal(nodes.retryLogin.classes.has('hidden'),true);
 assert.match(html,/if\(!user\|\|!HOUSE\)return;try\{/);
 assert.match(html,/if\(user&&HOUSE&&!document\.hidden\)load\(\)/);
-assert.match(html,/if\(!document\.hidden&&user&&HOUSE\)load\(\)/);
+assert.match(html,/if\(!document\.hidden&&user&&HOUSE\)\{load\(\)\.then\(checkDailyReminder\)/);
 assert.match(html,/if\(!user\|\|!HOUSE\|\|document\.hidden\|\|householdPollBusy/);
 assert.equal(html.split('id="retryLogin"').length-1,1);
 
-console.log('PASS: invited account claim, recovery, startup, signup UX, and financial/calendar tests.');
+// Connected calendar subscriptions: actual provider URLs are stored only in Vault.
+const sourceSchema=readFileSync(new URL('../migrations/20261104_calendar_auto_sync_and_assignments.sql',import.meta.url),'utf8');
+const securedChanges=readFileSync(new URL('../migrations/20261104_calendar_sync_qa_and_column_security.sql',import.meta.url),'utf8');
+const edge=readFileSync(new URL('../supabase/functions/calendar-feed-sync/index.ts',import.meta.url),'utf8');
+const edgeParser=readFileSync(new URL('../supabase/functions/calendar-feed-sync/calendar-import.js',import.meta.url),'utf8');
+assert.equal(edgeParser,parserSource,'Browser and backend must share the tested ICS parser');
+assert.match(sourceSchema,/create table private\.calendar_feed_credentials/i);
+assert.match(sourceSchema,/vault\.create_secret/);
+assert.match(sourceSchema,/join vault\.decrypted_secrets/i);
+assert.match(sourceSchema,/grant execute on function public\.read_calendar_feed_secret\(uuid\) to service_role/);
+assert.match(sourceSchema,/revoke all on function public\.read_calendar_feed_secret\(uuid\) from public,anon,authenticated/);
+assert.match(sourceSchema,/create policy calendar_import_household_update/);
+assert.match(sourceSchema,/a\.household_id=calendar_import_events\.household_id/);
+assert.match(securedChanges,/grant update \(child_id,activity_id,hidden\) on public\.calendar_import_events to authenticated/);
+assert.match(securedChanges,/delete from public\.calendar_sync_sources where household_id=v_household/);
+assert.match(edge,/const ORIGIN="https:\/\/theplds\.github\.io"/);
+assert.match(edge,/async function syncSource\(/);
+assert.match(edge,/read_calendar_feed_secret/);
+assert.match(edge,/if\(!members\.length\)return json\(\{error:/);
+assert.match(edge,/source\.id\+"\|"\+event\.source_key/);
+assert.match(edge,/if\(Object\.keys\(patch\)\.length\)/);
+assert.match(edge,/if\(next\.length\)/);
+assert.match(edge,/removed_from_source:true/);
+assert.match(edge,/redirect:"manual"/);
+assert.match(edge,/providerHost\(current,provider\)/);
+assert.match(edge,/Never handles household billing/);
+for(const id of ['calendarConnectForm','calendarConnectProvider','calendarConnectLabel','calendarConnectUrl',
+ 'calendarConnectSave','calendarConnectStatus','calendarConnectedSources','calendarFileBackup',
+ 'calendarImportActivity','calendarEventChild','calendarEventActivity','calendarEventSave','calendarEventStatus']){
+ assert.equal(html.split('id="'+id+'"').length-1,1,'Missing or duplicate live calendar control '+id);
+}
+assert.match(html,/db\.rpc\('connect_calendar_feed'/);
+assert.match(html,/db\.rpc\('disconnect_calendar_feed'/);
+assert.match(html,/functions\/v1\/calendar-feed-sync/);
+assert.match(html,/calendarSources=calSources\.data/);
+assert.match(html,/syncCalendarsInBackground\(\)/);
+assert.match(html,/15\*60\*1000/);
+assert.match(html,/const importedEventChildIds=/);
+assert.match(html,/!e\.hidden&&!e\.removed_from_source/);
+assert.match(html,/update\(\{child_id,activity_id\}\)/);
+assert.match(html,/update\(\{hidden:true\}\)/);
+assert.match(html,/activity_id:activityId,household_id:HOUSE/);
+assert.match(html,/Calendar events are shared with members of this household/);
+assert.ok(!lessonCode.includes('calendarSources'), 'Calendar subscriptions must not create financial charges');
+
+console.log('PASS: billing, first-use QA, signup, secure live calendar links and event assignments.');
