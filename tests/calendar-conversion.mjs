@@ -17,6 +17,19 @@ assert.match(bridge,/db\.rpc\('convert_calendar_events_to_activities'/);
 assert.match(bridge,/expectedHousehold=HOUSE,expectedUser=user\.id/);
 assert.match(bridge,/calendar-convert-occurrence/);
 assert.match(bridge,/calendar-convert-price/);
+assert.doesNotMatch(bridge,/<select class="calendar-convert-color">/,'Conversion color selection must not use a dropdown');
+assert.match(bridge,/class="calendar-convert-palette color-palette"/);
+assert.match(bridge,/class="color-option"/);
+assert.match(bridge,/class="color-swatch"/);
+assert.match(bridge,/name="calendarConvertColor'\+i\+'/,'Each converted activity must get an independent radio group');
+assert.match(bridge,/c===defaultColor\?'checked'/,'One swatch should be selected by default');
+assert.match(bridge,/\.calendar-convert-color:checked/,'Conversion must submit the checked swatch color');
+assert.match(bridge,/colors\.forEach\(color=>\{color\.disabled=Boolean\(existing\)\}\)/,
+ 'Matching existing activities must keep their original color');
+assert.match(html,/\.calendar-convert-color-field\{grid-column:1\/-1/);
+assert.match(html,/\.calendar-convert-palette \.color-option input\{width:1px!important/,
+ 'Full-width form inputs must not stretch the color radio controls');
+
 assert.match(bridge,/confirm\(warning\)/);
 assert.match(bridge,/value="0"/);
 assert.match(bridge,/e\.event_date>=today/);
