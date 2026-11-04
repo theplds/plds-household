@@ -1,6 +1,6 @@
 /* Google Calendar authorization is separate from household sign-in.
- * Supabase session tokens remain managed by Household; Google refresh credentials
- * are sent once to the Edge Function and stored in Vault, never localStorage.
+ * Google read-only access is used for one import only. Household manages edits
+ * and shares them with household members; no Google refresh token is retained.
  */
 async function googleCalendarApi(payload){
  const session=await validSession();
@@ -37,11 +37,10 @@ async function showGoogleCalendarSelector(){
   if(!result.calendars?.length)throw Error('Google returned no readable calendars.');
   grant.calendars=result.calendars;
   $('googleCalendarChoices').innerHTML=result.calendars.map((c,i)=>
-   '<label class="google-calendar-choice"><input type="checkbox" name="googleCalendarChoice" value="'+i+'" '+
-   (c.primary?'checked':'')+'><span>'+esc(c.label)+(c.primary?' · Primary':'')+'</span></label>'
+   '<label class="google-calendar-choice"><input type="checkbox" name="googleCalendarChoice" value="'+i+'"><span>'+esc(c.label)+(c.primary?' · Primary':'')+'</span></label>'
   ).join('');
   panel.hidden=false;
-  status.textContent='Choose up to five calendars, then select Import.';
+  status.textContent='Choose up to five calendars to copy into Household. This is a one-time import.';
  }catch(err){status.textContent='Could not list Google calendars: '+(err.message||String(err))}
 }
 $('googleCalendarConnect').onclick=()=>{
@@ -50,8 +49,6 @@ $('googleCalendarConnect').onclick=()=>{
  oauth.searchParams.set('provider','google');
  oauth.searchParams.set('redirect_to',new globalThis.URL('./',location.href).href);
  oauth.searchParams.set('scopes','https://www.googleapis.com/auth/calendar.readonly');
- oauth.searchParams.set('access_type','offline');
- oauth.searchParams.set('prompt','consent');
  try{
   sessionStorage.setItem('plds_calendar_oauth_pending',user.id);
   $('googleCalendarStatus').textContent='Redirecting to Google for separate read-only calendar permission…';
@@ -66,20 +63,15 @@ $('googleCalendarConfirm').onclick=async()=>{
  const ids=[...document.querySelectorAll('input[name="googleCalendarChoice"]:checked')]
   .map(x=>grant.calendars[Number(x.value)]?.id).filter(Boolean);
  if(!ids.length||ids.length>5){status.textContent='Choose one to five calendars.';return}
- button.disabled=true;status.textContent='Securing Google access and importing appointments…';
+ button.disabled=true;status.textContent='Copying selected Google appointments into Household…';
  try{
   const result=await googleCalendarApi({
-   action:'connect',provider_token:grant.accessToken,
-   provider_refresh_token:grant.refreshToken,calendar_ids:ids
+   action:'import',provider_token:grant.accessToken,calendar_ids:ids
   });
   pendingGoogleCalendarGrant=null;
   $('googleCalendarPick').hidden=true;
   await load();renderConnectedCalendarSources();
-  const sources=result.connected||[],added=sources.reduce((n,x)=>n+Number(x.created||0),0);
-  const issues=sources.filter(x=>x.ok!==true);
-  status.textContent=sources.length+' Google calendar(s) connected, '+added+' new appointments imported.'+
-   (issues.length?' Sync issues: '+issues.map(x=>x.error||'Unknown issue').join('; '):
-   ' Future changes will sync automatically while Household is open.');
+  status.textContent=Number(result.added||0)+' appointments imported from '+Number(result.calendars||0)+' Google calendar(s). '+Number(result.duplicates||0)+' existing appointments kept unchanged. Future edits stay inside Household and sync among its members.';
  }catch(err){
   status.textContent='Google Calendar import: '+(err.message||String(err));
  }finally{button.disabled=false}
