@@ -2283,7 +2283,7 @@ function renderHouseholdSetup(){
    +'<div class="setup-actions"><button type="button" id="setupAddSchedule">+ Add weekly lesson</button></div>':'<p class="muted">Add an activity on the previous step before creating weekly lessons.</p>');
   if(activities.length)$('setupAddSchedule').onclick=()=>runSetupAction(async()=>{await setupAddSchedule();renderHouseholdSetup()});
  }else if(setupStep===4){
-  content.innerHTML='<p>Connect Google Calendar directly with read-only access, or use an Outlook, Apple or Google subscription link. A one-time .ics file import is available as a backup.</p>'
+  content.innerHTML='<p>Connect a calendar directly with read-only Google account permission, or use an Outlook, Apple or Google subscription link. A one-time .ics file import is available as a backup.</p>'
    +'<div class="setup-list"><div><strong>Optional — no calendar connection required</strong></div>'
    +'<div>Connected calendars: '+calendarSources.length+'</div><div>Imported events: '+importedEvents.length+'</div>'
    +'<div>Imported entries are free calendar events, not paid activities or lessons.</div>'
