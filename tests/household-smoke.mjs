@@ -271,6 +271,12 @@ for(const id of ['calendarImportDialog','calendarImportFile','calendarImportPrev
  assert.equal(html.split('id="'+id+'"').length-1,1,'Missing or repeated calendar import control '+id);
 }
 assert.match(html,/id="setupImportCalendar"/);
+assert.match(html,/Step '\+\(setupStep\+1\)\+' of 6/);
+assert.match(html,/'Calendar import','Finish'\]\[setupStep\]/);
+assert.match(html,/next\.textContent=setupStep===5\?'Finish setup'/);
+assert.match(html,/setupStep===4\)\{\n  content\.innerHTML='<p>Already have a family calendar\?/);
+assert.match(html,/calendarImportFromSetup=false;setupStep=4;renderHouseholdSetup\(\)/);
+assert.match(html,/setupStep===5\)\{\n  await saveHouseholdProfile\(householdProfile\.name,true\)/);
 assert.match(html,/Imported entries will be visible to/);
 assert.match(html,/data-import-event/);
 assert.match(html,/db\.from\('calendar_import_events'\)/);
