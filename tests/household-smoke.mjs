@@ -260,11 +260,18 @@ const cancelled=parseICS(icsFile([
 assert.equal(cancelled.events.length,2,'RECURRENCE-ID cancellations must be removed');
 const zone=parseICS(icsFile([icsEvent('london','20261105T150000','20261105T160000','')]).replaceAll('DTSTART:','DTSTART;TZID=Europe/London:').replaceAll('DTEND:','DTEND;TZID=Europe/London:'));
 assert.equal(zone.events[0].start_time,'17:00:00','London TZID must map to Athens');
+const winTz=parseICS(icsFile([icsEvent('win-tz','20261105T170000','20261105T180000')]).replaceAll('DTSTART:','DTSTART;TZID=GTB Standard Time:').replaceAll('DTEND:','DTEND;TZID=GTB Standard Time:'));
+assert.equal(winTz.events[0].start_time,'17:00:00','Windows Outlook TZID should map correctly');
+const rangeSpan=parseICS(icsFile([icsEvent('multiday','20261105','20261108')]));
+assert.equal(rangeSpan.events.length,3,'Exclusive-end three-day all-day events must show on all three days');
+assert.equal(rangeSpan.events[2].event_date,'2026-11-07');
+
 assert.match(html,/<script src="calendar-import\.js"><\/script>/);
-for(const id of ['calendarImportDialog','calendarImportFile','calendarImportPreview','calendarImportSave','calendarImportChild','calendarEventDialog','openCalendarImporter']){
+for(const id of ['calendarImportDialog','calendarImportFile','calendarImportPreview','calendarImportSave','calendarImportChild','calendarImportFrom','calendarImportThrough','calendarEventDialog','openCalendarImporter']){
  assert.equal(html.split('id="'+id+'"').length-1,1,'Missing or repeated calendar import control '+id);
 }
 assert.match(html,/id="setupImportCalendar"/);
+assert.match(html,/Imported entries will be visible to/);
 assert.match(html,/data-import-event/);
 assert.match(html,/db\.from\('calendar_import_events'\)/);
 assert.match(html,/ignoreDuplicates:true,returning:true/);
