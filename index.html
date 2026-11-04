@@ -1007,7 +1007,7 @@ function unreadNotices(){
  return noticeItems().filter(n=>{
   const updated=Date.parse(n.updated_at||0);
   const receipt=noticeReads.find(r=>r.notice_key===n.key);
-  return updated>since&&(!receipt||updated>Date.parse(receipt.seen_at));
+  return updated>since&&(!receipt||updated>Date.parse(receipt.seen_version||receipt.seen_at));
  }).sort((a,b)=>Date.parse(b.updated_at)-Date.parse(a.updated_at));
 }
 function renderUnreadNotices(){
@@ -1022,11 +1022,11 @@ function renderUnreadNotices(){
 }
 async function markNoticeSeen(n){
  if(!n||!user)return;
- const seen_at=new Date().toISOString(),record={user_id:user.id,household_id:HOUSE,notice_key:n.key,seen_at};
+ const seen_at=new Date().toISOString(),seen_version=n.updated_at||seen_at,record={user_id:user.id,household_id:HOUSE,notice_key:n.key,seen_at,seen_version};
  const res=await db.from('household_notice_reads').upsert(record,{onConflict:'user_id,household_id,notice_key'});
  if(res.error)throw res.error;
  const existing=noticeReads.find(r=>r.notice_key===n.key);
- if(existing)existing.seen_at=seen_at;else noticeReads.push(record);
+ if(existing){existing.seen_at=seen_at;existing.seen_version=seen_version}else noticeReads.push(record);
  renderUnreadNotices();
 }
 function noteDetailMarkup(n){
