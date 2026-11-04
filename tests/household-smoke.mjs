@@ -490,7 +490,7 @@ assert.equal(nodes.app.classes.has('hidden'),false,'Initialized app becomes visi
 assert.equal(nodes.retryLogin.classes.has('hidden'),true);
 assert.match(html,/if\(!user\|\|!HOUSE\)return;try\{/);
 assert.match(html,/if\(user&&HOUSE&&!document\.hidden\)load\(\)/);
-assert.match(html,/if\(!document\.hidden&&user&&HOUSE\)load\(\)/);
+assert.match(html,/if\(!document\.hidden&&user&&HOUSE\)\{load\(\)\.then\(checkDailyReminder\)/);
 assert.match(html,/if\(!user\|\|!HOUSE\|\|document\.hidden\|\|householdPollBusy/);
 assert.equal(html.split('id="retryLogin"').length-1,1);
 
