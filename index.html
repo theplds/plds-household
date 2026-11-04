@@ -2174,7 +2174,7 @@ function setupList(items,empty){
 function renderHouseholdSetup(){
  const content=$('setupContent'),next=$('setupNext');
  $('setupMessage').textContent='';
- $('setupProgress').textContent='Step '+(setupStep+1)+' of 6 · '+['Household & appearance','Children','Activities & costs','Weekly timetable','Calendar import','Finish'][setupStep];
+ $('setupProgress').textContent='Step '+(setupStep+1)+' of 6 · '+['Household & appearance','Children','Activities & costs','Weekly timetable','Calendar connection','Finish'][setupStep];
  $('setupBack').hidden=setupStep===0;
  next.textContent=setupStep===5?'Finish setup':setupStep===4&&!calendarSources.length&&!importedEvents.length?'Skip for now':'Continue';
  if(setupStep===0){
