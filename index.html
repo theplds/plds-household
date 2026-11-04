@@ -599,18 +599,18 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <p class="muted">Connect a read-only calendar subscription for automatic updates while Household is open. Calendar events are shared with members of this household. Imported events never create charges.</p>
 <section class="calendar-connect-panel">
 <section class="google-calendar-direct" aria-label="Direct Google Calendar connection">
-<h3>Google Calendar · direct connection</h3>
-<p class="muted">Connect your Google account to import appointments automatically while Household is open. Google will ask for separate read-only calendar access. Choose which calendars to share with household members.</p>
-<button type="button" class="primary" id="googleCalendarConnect">Connect Google Calendar</button>
+<h3>Import once from Google Calendar</h3>
+<p class="muted">Choose Google calendars to copy appointments into Household once. Google will request read-only access. After importing, household members can edit their copies. Changes will not go back to Google.</p>
+<button type="button" class="primary" id="googleCalendarConnect">Import from Google Calendar</button>
 <div id="googleCalendarPick" class="google-calendar-pick" hidden>
-<p class="muted">Select the calendars you want everyone in this household to see. You can link their events to children and activities later. Imported events never create charges.</p>
+<p class="muted">Only select calendars suitable for sharing with everyone in this household. Imported events never create charges, and future Google changes will not overwrite your Household edits.</p>
 <div id="googleCalendarChoices"></div>
 <button type="button" id="googleCalendarConfirm" class="primary">Import selected Google calendars</button>
 </div>
 <p id="googleCalendarStatus" role="status" aria-live="polite"></p>
 </section>
-<h3>Subscription link (alternative)</h3>
-<p class="muted">Use a private subscription link for Outlook, Apple or Google calendars if you prefer not to authorize an account. This connection also refreshes while Household is open.</p>
+<h3>Live subscription link (alternative)</h3>
+<p class="muted">Alternatively, connect a live read-only calendar subscription from Google, Outlook or Apple. These feed events continue updating from their provider, unlike a one-time Google import.</p>
 <form id="calendarConnectForm" novalidate>
 <label for="calendarConnectProvider">Calendar provider</label>
 <select id="calendarConnectProvider"><option value="google">Google Calendar</option><option value="outlook">Outlook / Microsoft</option><option value="apple">Apple / iCloud</option></select>
@@ -1252,6 +1252,7 @@ function render(){
  }).join('')||'<p class="muted">No activity charges this month.</p>';
  // Main navigation is exclusive: calendar (month/list), budget, activities, or payments.
  const calendarActive=tab==='monthview'||tab==='sessions';
+  $('addHouseholdEvent').classList.toggle('hidden',!calendarActive);
  const budgetActive=tab==='budget';
  const viewToggle=$('viewToggle'),calendarMode=calendarActive?tab:lastCalendarTab;
  viewToggle.textContent=calendarActive?(tab==='monthview'?'List view':'Month view'):(calendarMode==='monthview'?'Month view':'List view');
@@ -2055,10 +2056,10 @@ async function handleRecoveryLink(){
    // OAuth implicit callbacks may have no "type" parameter.
    saveSession({access_token:access,refresh_token:refresh,expires_in:Number(hash.get('expires_in')||3600)});
    if(pendingCalendarUser){
-    const providerToken=hash.get('provider_token'),providerRefresh=hash.get('provider_refresh_token');
-    pendingGoogleCalendarGrant=providerToken&&providerRefresh?
-     {accessToken:providerToken,refreshToken:providerRefresh,expectedUserId:pendingCalendarUser}:
-     {error:'Google Calendar did not provide persistent read-only permission. Please connect again.'};
+    const providerToken=hash.get('provider_token');
+    pendingGoogleCalendarGrant=providerToken?
+     {accessToken:providerToken,expectedUserId:pendingCalendarUser}:
+     {error:'Google did not provide read-only Calendar permission. Please try importing again.'};
    }
   }else if(query.has('code')){
    const verifier=localStorage.getItem('supabase.auth.token-code-verifier');
@@ -2338,7 +2339,7 @@ function renderHouseholdSetup(){
    +'<div class="setup-actions"><button type="button" id="setupAddSchedule">+ Add weekly lesson</button></div>':'<p class="muted">Add an activity on the previous step before creating weekly lessons.</p>');
   if(activities.length)$('setupAddSchedule').onclick=()=>runSetupAction(async()=>{await setupAddSchedule();renderHouseholdSetup()});
  }else if(setupStep===4){
-  content.innerHTML='<p>Connect a calendar directly with read-only Google account permission, or use an Outlook, Apple or Google subscription link. A one-time .ics file import is available as a backup.</p>'
+  content.innerHTML='<p>Import Google Calendar once to edit events in Household, or use a live subscription link from Outlook, Apple or Google. A one-time .ics file import is available as a backup.</p>'
    +'<div class="setup-list"><div><strong>Optional — no calendar connection required</strong></div>'
    +'<div>Connected calendars: '+calendarSources.length+'</div><div>Imported events: '+importedEvents.length+'</div>'
    +'<div>Imported entries are free calendar events, not paid activities or lessons.</div>'
