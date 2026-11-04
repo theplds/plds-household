@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- PLDS Household v0.3.145 | 2026-10-28 | Supabase live + v0.3.4 demo design --><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><title>PLDS Household v0.3.145</title><link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="shortcut icon" href="./icon.svg"><link rel="manifest" href="./manifest.webmanifest?v=2"><meta name="mobile-web-app-capable" content="yes"><style>
+<!-- PLDS Household v0.3.146 | 2026-10-28 | Supabase live + v0.3.4 demo design --><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><title>PLDS Household v0.3.146</title><link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="shortcut icon" href="./icon.svg"><link rel="manifest" href="./manifest.webmanifest?v=2"><meta name="mobile-web-app-capable" content="yes"><style>
 :root{font-family:system-ui,-apple-system,Arial;background:#0d1420;color:#edf3ff}*{box-sizing:border-box}body{margin:0}main{max-width:920px;margin:auto;padding:18px}header{display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:24px;margin:6px 0}h2{font-size:18px}small,.muted{color:#a8b7ce}button,input,select{font:inherit;border-radius:10px;padding:11px;border:1px solid #384760}button{background:#273d65;color:white;cursor:pointer}button.primary{background:#3477ec;border-color:#3477ec}button:disabled{opacity:.5}input,select{background:#141f32;color:white;max-width:100%}.panel{background:#172337;border:1px solid #2c3d56;border-radius:16px;padding:16px;margin:14px 0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#172337;border-radius:14px;padding:14px}.stat b{display:block;font-size:23px;margin-top:6px}.toolbar,.line{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.line{justify-content:space-between;padding:12px 0;border-bottom:1px solid #2a3a52}.line:last-child{border:0}.pill{border-radius:20px;padding:4px 9px;background:#283b56;font-size:12px}.day{margin:16px 0 5px;font-weight:700;color:#b6c9eb}.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px}#message{color:#ffca83;min-height:20px}.hidden{display:none}dialog{border:1px solid #415678;background:#172337;color:#fff;border-radius:16px;width:min(94vw,460px)}dialog::backdrop{background:#000a}label{display:block;margin:12px 0 5px}.wide{width:100%}.tab{margin:8px 4px 8px 0} .entry{font-size:14px}.entry b{font-size:15px}@media(max-width:540px){.stats{grid-template-columns:repeat(2,1fr)}main{padding:12px}.stat b{font-size:20px}}
 .activity-box{border:0!important;border-radius:12px;margin:9px 0;padding:14px!important;color:white;box-shadow:0 2px 10px #0003}.activity-box small{color:#fff!important;opacity:.92}.activity-box b{color:#fff;font-weight:500}.activity-box strong{font-weight:500}.activity-box .entry{min-width:0}.activity-box[data-activity="speech therapy"],.activity-box[data-activity="speech therapy"] small,.activity-box[data-activity="speech therapy"] b{color:#1a1408!important}.password-row{display:flex;align-items:stretch;gap:8px}.password-row input{flex:1;min-width:0}.password-row button{flex:0 0 auto}#passwordDialog{max-width:460px}#loginForm button.primary{margin-top:6px}#loginStatus{color:#c5d7f8;font-size:13px;min-height:20px}#loginStatus.bad{color:#ffbcac}#loginStatus.good{color:#b0f0c7}
 /* Demo v0.3.4 styles */
@@ -497,12 +497,23 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
 /* v0.3.145 — imported appointments match activity cards, without billing */
 .calendar-event.imported-calendar-event{border:0!important}
-.calendar-event.imported-calendar-event:not([data-activity]){background:#5065f5!important;color:#fff!important;text-shadow:0 1px 2px #0007!important}
+.calendar-event.imported-calendar-event:not([data-activity]):not(.is-cancelled):not(.is-rescheduled):not(.is-replacement){background:#5065f5!important;color:#fff!important;text-shadow:0 1px 2px #0007!important}
 .imported-calendar-event .calendar-event-time{color:#dcecff}
 .imported-event-row{border:0!important;border-radius:12px;padding:14px!important;margin:9px 0}
-.imported-event-row:not([data-activity]){background:#5065f5!important;color:#fff!important}
+.imported-event-row:not([data-activity]):not(.is-cancelled):not(.is-rescheduled):not(.is-replacement){background:#5065f5!important;color:#fff!important}
 .imported-event-row:not([data-activity]) .entry b,.imported-event-row:not([data-activity]) .entry small{color:#fff!important}
 .imported-event-row .entry{flex:1;min-width:0}
+.calendar-event-action-panel{border-top:1px solid #526987;margin:17px 0 8px;padding-top:10px}
+.calendar-event-action-panel #calendarEventAction{min-height:48px}
+#calendarEventReplacement{margin-top:11px;padding:10px;border:1px solid #526987;border-radius:9px}
+#calendarEventReplacement[hidden],#calendarEventNewTimes[hidden],#calendarEventActionPanel[hidden]{display:none!important}
+.calendar-event.imported-calendar-event.is-cancelled{border:2px solid #d83c4a!important;background:#e5e7eb!important;color:#b91c1c!important}
+.calendar-event.imported-calendar-event.is-rescheduled{border:3px solid #111827!important;background:#e5e7eb!important;color:#111827!important}
+.calendar-event.imported-calendar-event.is-replacement{border:3px solid #16a34a!important;background:#e5e7eb!important;color:#15803d!important}
+.calendar-event.imported-calendar-event .calendar-event-state{display:inline-block;font-size:10px;font-weight:800;line-height:1.2;text-decoration:none!important}
+.imported-event-row.is-cancelled .list-lesson-status{color:#b91c1c!important}
+.imported-event-row.is-rescheduled .list-lesson-status{color:#111827!important}
+.imported-event-row.is-replacement .list-lesson-status{color:#15803d!important}
 .calendar-import-dialog{width:min(92vw,670px);max-height:90dvh;overflow:auto;padding:18px}
 .calendar-import-dialog h2{margin:0 0 10px}
 .calendar-import-dialog label{display:block;margin-top:13px}
@@ -528,8 +539,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .calendar-import-item small{display:block;color:#abc5e5;font-size:12px;line-height:1.4}
 .calendar-import-warning{color:#ffce83}
 .calendar-import-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:14px}
-:root[data-theme="light"] .calendar-event.imported-calendar-event:not([data-activity]){background:#435ed1!important;color:#fff!important}
-:root[data-theme="light"] .imported-event-row:not([data-activity]){background:#435ed1!important}
+:root[data-theme="light"] .calendar-event.imported-calendar-event:not([data-activity]):not(.is-cancelled):not(.is-rescheduled):not(.is-replacement){background:#435ed1!important;color:#fff!important}
+:root[data-theme="light"] .imported-event-row:not([data-activity]):not(.is-cancelled):not(.is-rescheduled):not(.is-replacement){background:#435ed1!important}
 :root[data-theme="light"] .calendar-import-item{border-color:#cdd9e7}
 :root[data-theme="light"] .calendar-import-item small{color:#536984}
 @media(max-width:480px){.calendar-import-dialog{padding:12px}.calendar-import-preview{max-height:220px}}
@@ -553,7 +564,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .google-calendar-choice input{flex:none}
 .google-calendar-pick{margin-top:12px}
 :root[data-theme="light"] .google-auth-separator span{background:#fff}
-</style></head><body><main><header><div><small>SHARED HOUSEHOLD</small><h1><span id="householdTitle">PLDS Household</span> <span class="title-build-version" aria-label="App version">v0.3.145</span></h1></div><div class="header-actions"><div id="identity" class="muted"></div><div id="headerAccountActions" class="header-account-actions"><details id="headerMoreMenu" class="header-more-menu"><summary aria-label="More options" title="More options"><span class="header-menu-dots" aria-hidden="true"></span></summary><div class="header-more-options"><button type="button" data-menu-tab="history">History</button><button id="openSettings" type="button">Options</button><button id="logout" type="button">Sign out</button></div></details></div></div></header><p id="message"></p><section id="login" class="panel"><h2>Welcome home</h2><p class="muted">Sign in with your household email and password. Your session stays signed in on this device.</p><form id="loginForm" novalidate><label for="email">Email address</label><input id="email" name="email" type="email" inputmode="email" autocomplete="username" class="wide" placeholder="Your household email" required><label for="password">Password</label><div class="password-row"><input id="password" name="password" type="password" autocomplete="current-password" class="wide" placeholder="Password" required><button id="revealPassword" type="button" aria-label="Show or hide password" title="Show password">Show</button></div><p><button class="primary wide" type="submit" id="send">Sign in</button></p><div class="google-auth-separator"><span>or</span></div><button type="button" id="googleLogin" class="google-auth-button wide" aria-label="Continue with Google"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M21.35 12.22c0-.66-.06-1.29-.17-1.91H12v3.62h5.25a4.49 4.49 0 0 1-1.95 2.94v2.44h3.14c1.84-1.7 2.91-4.2 2.91-7.09Z"/><path fill="#34A853" d="M12 21.75c2.63 0 4.84-.87 6.44-2.44l-3.14-2.44c-.87.58-1.98.93-3.3.93-2.54 0-4.69-1.71-5.46-4.01H3.3v2.52A9.75 9.75 0 0 0 12 21.75Z"/><path fill="#FBBC05" d="M6.54 13.79a5.87 5.87 0 0 1 0-3.58V7.69H3.3a9.75 9.75 0 0 0 0 8.62l3.24-2.52Z"/><path fill="#EA4335" d="M12 6.2c1.43 0 2.72.49 3.73 1.46l2.79-2.79A9.36 9.36 0 0 0 12 2.25 9.75 9.75 0 0 0 3.3 7.69l3.24 2.52C7.31 7.91 9.46 6.2 12 6.2Z"/></svg><span>Continue with Google</span></button><p class="muted google-auth-note">Use the Google account that was invited to this household. Calendar access is requested separately.</p><p id="loginStatus" role="status" aria-live="polite">Checking app readiness…</p><button id="retryLogin" type="button" class="hidden">Retry household setup</button></form><div class="panel" style="margin-top:12px"><strong>Invited beta household?</strong><p class="muted">Use the email address that received the invitation. New accounts may require email confirmation.</p><button class="primary wide" type="button" id="betaSignup" aria-haspopup="dialog" aria-controls="signupDialog">Create invited account</button><p id="betaStatus" role="status" aria-live="polite"></p></div><button type="button" id="changePassword" class="login-password-action">Change / reset password</button><p class="muted" style="font-size:13px">First time here? Your household account needs a password set by its administrator. No email links required.</p></section><section id="app" class="hidden">
+</style></head><body><main><header><div><small>SHARED HOUSEHOLD</small><h1><span id="householdTitle">PLDS Household</span> <span class="title-build-version" aria-label="App version">v0.3.146</span></h1></div><div class="header-actions"><div id="identity" class="muted"></div><div id="headerAccountActions" class="header-account-actions"><details id="headerMoreMenu" class="header-more-menu"><summary aria-label="More options" title="More options"><span class="header-menu-dots" aria-hidden="true"></span></summary><div class="header-more-options"><button type="button" data-menu-tab="history">History</button><button id="openSettings" type="button">Options</button><button id="logout" type="button">Sign out</button></div></details></div></div></header><p id="message"></p><section id="login" class="panel"><h2>Welcome home</h2><p class="muted">Sign in with your household email and password. Your session stays signed in on this device.</p><form id="loginForm" novalidate><label for="email">Email address</label><input id="email" name="email" type="email" inputmode="email" autocomplete="username" class="wide" placeholder="Your household email" required><label for="password">Password</label><div class="password-row"><input id="password" name="password" type="password" autocomplete="current-password" class="wide" placeholder="Password" required><button id="revealPassword" type="button" aria-label="Show or hide password" title="Show password">Show</button></div><p><button class="primary wide" type="submit" id="send">Sign in</button></p><div class="google-auth-separator"><span>or</span></div><button type="button" id="googleLogin" class="google-auth-button wide" aria-label="Continue with Google"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M21.35 12.22c0-.66-.06-1.29-.17-1.91H12v3.62h5.25a4.49 4.49 0 0 1-1.95 2.94v2.44h3.14c1.84-1.7 2.91-4.2 2.91-7.09Z"/><path fill="#34A853" d="M12 21.75c2.63 0 4.84-.87 6.44-2.44l-3.14-2.44c-.87.58-1.98.93-3.3.93-2.54 0-4.69-1.71-5.46-4.01H3.3v2.52A9.75 9.75 0 0 0 12 21.75Z"/><path fill="#FBBC05" d="M6.54 13.79a5.87 5.87 0 0 1 0-3.58V7.69H3.3a9.75 9.75 0 0 0 0 8.62l3.24-2.52Z"/><path fill="#EA4335" d="M12 6.2c1.43 0 2.72.49 3.73 1.46l2.79-2.79A9.36 9.36 0 0 0 12 2.25 9.75 9.75 0 0 0 3.3 7.69l3.24 2.52C7.31 7.91 9.46 6.2 12 6.2Z"/></svg><span>Continue with Google</span></button><p class="muted google-auth-note">Use the Google account that was invited to this household. Calendar access is requested separately.</p><p id="loginStatus" role="status" aria-live="polite">Checking app readiness…</p><button id="retryLogin" type="button" class="hidden">Retry household setup</button></form><div class="panel" style="margin-top:12px"><strong>Invited beta household?</strong><p class="muted">Use the email address that received the invitation. New accounts may require email confirmation.</p><button class="primary wide" type="button" id="betaSignup" aria-haspopup="dialog" aria-controls="signupDialog">Create invited account</button><p id="betaStatus" role="status" aria-live="polite"></p></div><button type="button" id="changePassword" class="login-password-action">Change / reset password</button><p class="muted" style="font-size:13px">First time here? Your household account needs a password set by its administrator. No email links required.</p></section><section id="app" class="hidden">
   <p id="qaTestBanner" class="muted" hidden style="font-size:13px;margin:0 0 12px;padding:9px 12px;border:1px dashed #759ed3;border-radius:9px">QA TEST HOUSEHOLD — This is disposable sample data, completely separate from your real household. Restart the six-step guide at any time through Options → Account &amp; maintenance.</p>
   <div class="toolbar month-child-toolbar">
     <input type="month" id="month" aria-label="Selected month">
@@ -656,6 +667,22 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <label for="calendarEventChild">Assign to child</label><select id="calendarEventChild"><option value="">Unassigned / everyone</option></select>
 <label for="calendarEventActivity">Link to Household activity</label><select id="calendarEventActivity"><option value="">No linked activity</option></select>
 <p class="muted">Linking an event is informational: it does not create a lesson or an additional charge.</p>
+<div id="calendarEventActionPanel" class="calendar-event-action-panel">
+ <label for="calendarEventAction">Status</label>
+ <select id="calendarEventAction" class="wide" aria-label="Cancel or reschedule Household calendar event">
+  <option value="scheduled">Scheduled / Restore</option>
+  <option value="cancelled">Cancel</option>
+  <option value="rescheduled">Reschedule</option>
+ </select>
+ <div id="calendarEventReplacement" hidden>
+  <label for="calendarEventNewDate">Choose a new date</label><input type="date" id="calendarEventNewDate" class="wide">
+  <div id="calendarEventNewTimes">
+   <label for="calendarEventNewStart">New start time</label><input type="time" id="calendarEventNewStart" class="wide">
+   <label for="calendarEventNewEnd">New end time</label><input type="time" id="calendarEventNewEnd" class="wide">
+  </div>
+ </div>
+ <p class="muted">Changes apply only to this appointment in Household, not to Google Calendar or lesson charges.</p>
+</div>
 <p id="calendarEventStatus" role="status" aria-live="polite"></p>
 <div class="calendar-import-actions"><button type="button" id="calendarEventRemove">Remove event</button><button type="button" id="calendarEventClose">Close</button><button type="button" class="primary" id="calendarEventSave">Save event</button></div>
 </dialog>
@@ -1243,7 +1270,13 @@ function render(){
  $('childFilter').value=childFilter;
  const visibleSs=filteredLessons(ss);
  const importedEventChildIds=e=>e.child_id?[e.child_id]:e.activity_id?activityChildren.filter(ac=>ac.activity_id===e.activity_id).map(ac=>ac.child_id):[];
- const visibleImported=importedEvents.filter(e=>!e.hidden&&!e.removed_from_source&&e.event_date.startsWith(month)&&(childFilter==='all'||(childFilter==='unassigned'?!importedEventChildIds(e).length:importedEventChildIds(e).includes(childFilter))));
+ const visibleImported=importedEvents.filter(e=>!e.hidden&&!e.removed_from_source&&(childFilter==='all'||(childFilter==='unassigned'?!importedEventChildIds(e).length:importedEventChildIds(e).includes(childFilter)))).flatMap(e=>{
+  const entries=[];
+  if(e.event_date.startsWith(month))entries.push({e,date:e.event_date,isReplacement:false});
+  if(e.event_status==='rescheduled'&&e.replacement_date?.startsWith(month))
+   entries.push({e,date:e.replacement_date,isReplacement:true});
+  return entries;
+ });
  const owed=ss.reduce((sum,x)=>sum+x.charge,0)+activities.reduce((sum,a)=>sum+monthlyActivityFee(a,month),0),paid=monthlyPayments.reduce((sum,p)=>sum+Number(p.amount),0);
  const runningBalances=window.householdRunningBalances||[];
  $('owed').textContent=euro(owed);$('remaining').textContent=euro(owed-paid);
@@ -1282,12 +1315,16 @@ function render(){
     const noteDate=x.replacement?(x.o?.new_date||x.d.date):x.d.date;const hasTeacherNote=teacherNotes.some(n=>n.schedule_id===x.s.id&&n.lesson_date===noteDate&&String(n.note||'').trim())||activityUpdates.some(n=>n.activity_id===x.a.id&&n.session_date===noteDate);const hasHomework=lessonHomework.some(h=>h.schedule_id===x.s.id&&h.lesson_date===noteDate&&(String(h.description||'').trim()||(Array.isArray(h.files)&&h.files.length)));
     html+=`<button class="calendar-event ${sc}${hasTeacherNote?' has-teacher-note':''}${hasHomework?' has-homework':''}" data-activity="${esc(x.a.name)}" data-palette="${chosenPalette(x.a)}" style="${colorStyle(x.a)}" data-session="${esc(sessionButtonKey(x))}" title="${esc(x.a.name)} ${time} · ${esc(lessonKids(x))} · ${esc(label)} · ${euro(x.charge)}" aria-label="${esc(x.a.name)} ${time} ${esc(lessonKids(x))} ${esc(label)} ${euro(x.charge)}"><span class="calendar-event-time">${esc(time)}–${esc(x.s.end_time.slice(0,5))}</span> <span class="full-label">${esc(x.a.name)}</span><span class="short-label">${esc(short)}</span>${symbol}${shortLessonKids(x)?`<span class="assignment-inline">${esc(shortLessonKids(x))}</span>`:""}</button>`;
    }
-   for(const e of visibleImported.filter(e=>e.event_date===date)){
-    const time=e.all_day?'All day':String(e.start_time||'').slice(0,5);
-    const linkedActivity=activities.find(a=>a.id===e.activity_id);
-    const eventSource=e.source_id?'Live subscription':String(e.source_key||'').startsWith('google-copy:')?'Google import':String(e.source_key||'').startsWith('household:')?'Household event':'Calendar import';
+   for(const item of visibleImported.filter(item=>item.date===date)){
+    const e=item.e,linkedActivity=activities.find(a=>a.id===e.activity_id);
+    const cancelled=e.event_status==='cancelled',moved=e.event_status==='rescheduled';
+    const cls=item.isReplacement?'is-replacement':cancelled?'is-cancelled':moved?'is-rescheduled':'';
+    const shownTime=item.isReplacement?e.replacement_start_time:e.start_time;
+    const time=e.all_day?'All day':String(shownTime||'').slice(0,5);
+    const state=item.isReplacement?'Rescheduled':cancelled?'Cancelled':moved?'Rescheduled':'';
+    const source=e.source_id?'Live subscription':String(e.source_key||'').startsWith('google-copy:')?'Google import':'Household event';
     const childName=children.find(c=>c.id===e.child_id)?.name||'';
-    html+=`<button type="button" class="calendar-event imported-calendar-event" ${linkedActivity?'data-activity="'+esc(linkedActivity.name)+'" data-palette="'+chosenPalette(linkedActivity)+'" style="'+colorStyle(linkedActivity)+'"':''} data-import-event="${esc(e.id)}" title="${esc(e.title)} · ${esc(eventSource)} · No charge" aria-label="${esc(time+' '+e.title+(childName?' '+childName:'')+' · '+eventSource+', no charge')}"><span class="calendar-event-time">${esc(time)}</span> <span class="full-label">${esc(e.title)}</span><span class="short-label">${esc(e.title)}</span>${childName?'<span class="assignment-inline">'+esc(childName)+'</span>':''}</button>`;
+    html+=`<button type="button" class="calendar-event imported-calendar-event ${cls}" ${linkedActivity?'data-activity="'+esc(linkedActivity.name)+'" data-palette="'+chosenPalette(linkedActivity)+'" style="'+colorStyle(linkedActivity)+'"':''} data-import-event="${esc(e.id)}" title="${esc(e.title)} · ${esc(source)}${state?' · '+state:''} · No charge" aria-label="${esc(time+' '+e.title+(childName?' '+childName:'')+(state?' '+state:'')+' · '+source+', no charge')}"><span class="calendar-event-time">${esc(time)}</span> <span class="full-label">${esc(e.title)}</span><span class="short-label">${esc(e.title)}</span>${state?' <span class="calendar-event-state">'+esc(state)+'</span>':''}${childName?'<span class="assignment-inline">'+esc(childName)+'</span>':''}</button>`;
    }
    html+='</div>';
   }
@@ -1301,15 +1338,19 @@ function render(){
   html+=`<div class="list-week-nav"><button type="button" data-week-step="-1" aria-label="Previous week">‹</button><strong>${formatDay(chosenMonday)} – ${formatDay(chosenSunday)}</strong><button type="button" data-week-step="1" aria-label="Next week">›</button></div>`;
   const weekItems=[
    ...visibleSs.filter(x=>weekStart(x.d.date).toISOString().slice(0,10)===listWeek).map(x=>({type:'lesson',date:x.d.date,time:(x.replacement&&x.o?.new_time||x.s.start_time).slice(0,5),x})),
-   ...visibleImported.filter(e=>weekStart(e.event_date).toISOString().slice(0,10)===listWeek).map(e=>({type:'import',date:e.event_date,time:e.start_time||'',e}))
+   ...visibleImported.filter(item=>weekStart(item.date).toISOString().slice(0,10)===listWeek).map(item=>({type:'import',date:item.date,time:item.isReplacement?(item.e.replacement_start_time||''):(item.e.start_time||''),e:item.e,isReplacement:item.isReplacement}))
   ].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
   for(const item of weekItems){
    const day=item.date;
    if(day!==lastDate){lastDate=day;html+=`<div class="day">${new Date(day+'T12:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'})}</div>`}
    if(item.type==='import'){
-    const e=item.e,when=e.all_day?'All day':String(e.start_time||'').slice(0,5);
+    const e=item.e,when=e.all_day?'All day':String((item.isReplacement?e.replacement_start_time:e.start_time)||'').slice(0,5);
     const linkedActivity=activities.find(a=>a.id===e.activity_id),childName=children.find(c=>c.id===e.child_id)?.name||'';
-    html+=`<div class="line activity-box imported-event-row" ${linkedActivity?'data-activity="'+esc(linkedActivity.name)+'" data-palette="'+chosenPalette(linkedActivity)+'" style="'+colorStyle(linkedActivity)+'"':''}><div class="entry"><b>${esc(e.title)}</b> <small>${esc(when)}</small>${childName?'<div><small>'+esc(childName)+'</small></div>':''}${e.location?'<div><small>'+esc(e.location)+'</small></div>':''}</div><button type="button" data-import-event="${esc(e.id)}" aria-label="View ${esc(e.title)}, imported calendar event with no charge">View</button></div>`;
+    const cancelled=e.event_status==='cancelled',moved=e.event_status==='rescheduled';
+    const cls=item.isReplacement?'is-replacement':cancelled?'is-cancelled':moved?'is-rescheduled':'';
+    const status=item.isReplacement?'Rescheduled':cancelled?'Cancelled':moved?'Rescheduled':'';
+    const isInactive=cancelled||(moved&&!item.isReplacement);
+    html+=`<div class="line activity-box imported-event-row list-lesson ${cls} ${isInactive?'list-inactive-lesson':''}" ${linkedActivity?'data-activity="'+esc(linkedActivity.name)+'" data-palette="'+chosenPalette(linkedActivity)+'" style="'+colorStyle(linkedActivity)+'"':''}><div class="entry"><b>${esc(e.title)}</b> <small>${esc(when)}</small>${childName?'<div><small>'+esc(childName)+'</small></div>':''}${e.location?'<div><small>'+esc(e.location)+'</small></div>':''}</div><span class="list-lesson-status">${status}</span><button type="button" data-import-event="${esc(e.id)}" aria-label="View ${esc(e.title)}, Household calendar event no charge">View</button></div>`;
     continue;
    }
    const x=item.x;
@@ -1756,6 +1797,7 @@ function showImportedEvent(id=null){
   ?'<p class="muted">Live subscription event: you may assign it to a child or activity, but its title and time are controlled by the source calendar.</p>'
   :'<p class="muted">This event belongs to Household. Changes are shared with its members and never sent to Google. No extra charges.</p>';
  $('calendarEventEditFields').hidden=readOnly;
+ $('calendarEventActionPanel').hidden=readOnly||!event;
  $('calendarEventTitle').value=event?.title||'';
  $('calendarEventDate').value=event?.event_date||localDate(new Date());
  $('calendarEventAllDay').checked=event?.all_day??false;
@@ -1764,6 +1806,11 @@ function showImportedEvent(id=null){
  $('calendarEventLocation').value=event?.location||'';
  $('calendarEventNotes').value=event?.details||'';
  $('calendarEventTimes').hidden=$('calendarEventAllDay').checked;
+ $('calendarEventAction').value=event?.event_status||'scheduled';
+ $('calendarEventNewDate').value=event?.replacement_date||event?.event_date||localDate(new Date());
+ $('calendarEventNewStart').value=String(event?.replacement_start_time||event?.start_time||'15:00').slice(0,5);
+ $('calendarEventNewEnd').value=String(event?.replacement_end_time||event?.end_time||'16:00').slice(0,5);
+ updateCalendarEventActionUI();
  $('calendarEventChild').innerHTML='<option value="">Unassigned / everyone</option>'+
   children.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('');
  $('calendarEventActivity').innerHTML='<option value="">No linked activity</option>'+
@@ -1777,7 +1824,15 @@ function showImportedEvent(id=null){
  $('calendarEventDialog').showModal();
 }
 $('addHouseholdEvent').onclick=()=>showImportedEvent();
-$('calendarEventAllDay').onchange=()=>{$('calendarEventTimes').hidden=$('calendarEventAllDay').checked};
+function updateCalendarEventActionUI(){
+ $('calendarEventReplacement').hidden=$('calendarEventAction').value!=='rescheduled';
+ $('calendarEventNewTimes').hidden=$('calendarEventAllDay').checked;
+}
+$('calendarEventAction').onchange=updateCalendarEventActionUI;
+$('calendarEventAllDay').onchange=()=>{
+ $('calendarEventTimes').hidden=$('calendarEventAllDay').checked;
+ updateCalendarEventActionUI();
+};
 $('calendarEventClose').onclick=()=>$('calendarEventDialog').close();
 $('calendarEventSave').onclick=async()=>{
  const e=openImportedEventId?importedEvents.find(x=>x.id===openImportedEventId):null;
@@ -1801,7 +1856,35 @@ $('calendarEventSave').onclick=async()=>{
    status.textContent='Enter a valid start time and a later end time.';return
   }
   if(details.length>3000||location.length>300){status.textContent='Notes or location are too long.';return}
-  payload={...payload,title,event_date:date,all_day,start_time,end_time,details,location};
+  const event_status=e?$('calendarEventAction').value:'scheduled';
+  if(!['scheduled','cancelled','rescheduled'].includes(event_status)){
+   status.textContent='Choose a valid event status.';return;
+  }
+  let replacement_date=null,replacement_start_time=null,replacement_end_time=null;
+  if(event_status==='rescheduled'){
+   replacement_date=$('calendarEventNewDate').value;
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(replacement_date)||
+    !Number.isFinite(Date.parse(replacement_date+'T12:00:00Z'))||
+    new Date(replacement_date+'T12:00:00Z').toISOString().slice(0,10)!==replacement_date){
+    status.textContent='Choose a valid replacement date.';return;
+   }
+   if(!all_day){
+    replacement_start_time=$('calendarEventNewStart').value;
+    replacement_end_time=$('calendarEventNewEnd').value||null;
+    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(replacement_start_time)||
+     (replacement_end_time&&(!/^([01]\d|2[0-3]):[0-5]\d$/.test(replacement_end_time)||
+      replacement_end_time<=replacement_start_time))){
+     status.textContent='Choose a valid replacement start and later end time.';return;
+    }
+   }
+   if(date===replacement_date&&(all_day||(
+    start_time===replacement_start_time&&
+    (end_time||'')===(replacement_end_time||'')))){
+    status.textContent='Choose a different date or time when rescheduling.';return;
+   }
+  }
+  payload={...payload,title,event_date:date,all_day,start_time,end_time,details,location,
+   event_status,replacement_date,replacement_start_time,replacement_end_time};
  }
  button.disabled=true;
  try{
