@@ -615,6 +615,6 @@ const notCallback=callbackHarness('', '',false);
 assert.equal(await notCallback.promise,true,'Ordinary login still starts');
 assert.equal(notCallback.seen.length,0);
 assert.match(html,/authenticationReady\.then\(ready=>\{if\(ready\)start\(\)\}\)/);
-assert.ok(!html.includes('handleRecoveryLink();\n$(\\'cancelPassword\\')'),'Old unawaited startup must be removed');
+assert.ok(!html.includes('\nhandleRecoveryLink();\n'),'Old unawaited callback must not remain');
 
 console.log('PASS: household finances, signup, Google OAuth redirect/callback, and account separation.');
