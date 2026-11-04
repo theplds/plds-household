@@ -173,7 +173,7 @@ select coalesce(jsonb_agg(jsonb_build_object(
   'paid',coalesce((select sum(p.amount) from payments p where p.activity_id=a.id),0)
 ) order by a.id),'[]'::jsonb)
 from allowed a
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.teacher_payment_summary(p_month date)
  RETURNS jsonb
@@ -248,5 +248,5 @@ select coalesce(jsonb_agg(jsonb_build_object(
   '[]'::jsonb))), '[]'::jsonb)
 from allowed al left join pay on pay.activity_id=al.id
 where auth.uid() is not null and p_month=date_trunc('month',p_month)::date
-$function$
+$function$;
 
