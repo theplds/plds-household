@@ -4,8 +4,8 @@ import {Script,createContext,runInContext} from 'node:vm';
 import {URL as NodeURL} from 'node:url';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.141/);
-assert.ok(!html.includes('v0.3.140'),'The deployed version must be updated consistently');
+assert.match(html,/PLDS Household v0\.3\.142/);
+assert.ok(!html.includes('v0.3.141'),'The deployed version must be updated consistently');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.ok(scripts.length>=1,'No embedded app scripts found');
 for(const [,code] of scripts)new Script(code);
@@ -610,7 +610,13 @@ const emailCallback=callbackHarness('#access_token=email-access&refresh_token=em
 assert.equal(await emailCallback.promise,true,'Existing email-verification callback must still work');
 const deniedCallback=callbackHarness('#error=access_denied&error_description=User+denied','',true);
 assert.equal(await deniedCallback.promise,false,'Declined Google OAuth must not continue into household');
-assert.ok(deniedCallback.seen.some(x=>x[0]==='status'&&/Authentication failed:/.test(x[1])));
+assert.ok(deniedCallback.seen.some(x=>x[0]==='status'&&/Authentication failed:/.test(x[1])),'Auth failures must show a visible message');
+const statusDefault="$('loginStatus').textContent='Ready. Sign in with your email and password.';";
+const callbackInit='const authenticationReady=handleRecoveryLink();';
+assert.equal(html.split(statusDefault).length-1,1,'Normal ready banner must be set once');
+assert.ok(html.indexOf(statusDefault)<html.indexOf(callbackInit),'Normal banner must not overwrite asynchronous OAuth callback results');
+assert.ok(html.indexOf(callbackInit)<html.indexOf("db.auth.onAuthStateChange("),'Auth callback must run before ongoing app events');
+
 const notCallback=callbackHarness('', '',false);
 assert.equal(await notCallback.promise,true,'Ordinary login still starts');
 assert.equal(notCallback.seen.length,0);
