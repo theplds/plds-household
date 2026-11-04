@@ -35,7 +35,7 @@ function calendarConversionGroups(){
 function calendarConvertExistingOptions(){
  return '<option value="">Create a new activity</option>'+
   activities.filter(a=>a.active!==false)
-  .map(a=>'<option value="'+esc(a.id)+'">'+esc(a.name)+(Number(a.price)?' · '+euro(a.price)+'/session':' · €0/session')+'</option>').join('');
+  .map(a=>'<option value="'+esc(a.id)+'">'+esc(a.name)+' · '+euro(a.price)+(a.billing_period==='monthly'?'/month':'/session')+'</option>').join('');
 }
 function calendarConvertPreviewTotals(){
  const checked=[...document.querySelectorAll('.calendar-convert-group-toggle:checked')];
@@ -70,8 +70,8 @@ function renderCalendarConvertGroups(){
  const options=calendarConvertExistingOptions();
  const palette=Array.isArray(ACTIVITY_PALETTE)?ACTIVITY_PALETTE:['#5065f5'];
  el.innerHTML=calendarConvertPreview.map((group,i)=>{
-  const first=group.events.map(e=>e.event_date).sort()[0],
-        last=group.events.map(e=>e.event_date).sort().at(-1);
+  const sortedDates=group.events.map(e=>e.event_date).sort(),
+        first=sortedDates[0],last=sortedDates[sortedDates.length-1];
   const match=activities.find(a=>a.active!==false&&calendarConvertKey(a.name)===calendarConvertKey(group.name));
   const defaultColor=palette[i%palette.length]||'#5065f5';
   const occurrences=group.events.slice().sort((a,b)=>(a.event_date+a.start_time).localeCompare(b.event_date+b.start_time));
