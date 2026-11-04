@@ -74,7 +74,7 @@ begin
   if v_price is null or v_price < 0 or v_price > 10000 then
    raise exception 'Price must be between 0 and 10000 EUR' using errcode='22023';
   end if;
-  if pg_catalog.coalesce(pg_catalog.array_length(v_ids,1),0) <>
+  if coalesce(pg_catalog.array_length(v_ids,1),0) <>
      (select count(distinct value #>> '{}') from pg_catalog.jsonb_array_elements(v_group->'event_ids')) then
    raise exception 'An appointment appears more than once in one group' using errcode='22023';
   end if;
@@ -119,7 +119,7 @@ begin
    if exists(
     select 1 from public.calendar_import_events e join public.schedules s
      on s.activity_id=v_activity_id
-     and s.weekday=pg_catalog.extract(dow from e.event_date)::integer
+     and s.weekday=extract(dow from e.event_date)::integer
      and s.start_time=e.start_time and s.end_time=e.end_time
      and e.event_date>=s.valid_from
      and (s.valid_until is null or e.event_date<=s.valid_until)
@@ -150,11 +150,11 @@ begin
   for v_run in
    with source as (
     select e.id,e.event_date,e.start_time,e.end_time,
-      pg_catalog.extract(dow from e.event_date)::integer as weekday,
-      pg_catalog.coalesce(v_assigned_child,e.child_id) as child_id,
+      extract(dow from e.event_date)::integer as weekday,
+      coalesce(v_assigned_child,e.child_id) as child_id,
       pg_catalog.lag(e.event_date) over(
-       partition by pg_catalog.extract(dow from e.event_date)::integer,
-         e.start_time,e.end_time,pg_catalog.coalesce(v_assigned_child,e.child_id)
+       partition by extract(dow from e.event_date)::integer,
+         e.start_time,e.end_time,coalesce(v_assigned_child,e.child_id)
        order by e.event_date,e.id
       ) as prev_date
     from public.calendar_import_events e
