@@ -754,7 +754,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <p id="signupStatus" role="status" aria-live="polite"></p>
 <div class="toolbar"><button type="button" id="signupCancel">Close</button><button class="primary" type="submit" id="signupSubmit">Create account</button></div>
 </form>
-</dialog><dialog id="passwordDialog"><form id="passwordForm"><h2>Change password</h2><label for="newPassword">New password</label><input id="newPassword" type="password" autocomplete="new-password" minlength="12" required class="wide"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="12" required class="wide"><p id="passwordMessage" class="muted"></p><div class="toolbar"><button type="button" id="cancelPassword">Cancel</button><button type="submit" class="primary" id="savePassword">Save password</button></div></form></dialog><script src="calendar-import.js"></script><script>
+</dialog><dialog id="passwordDialog"><form id="passwordForm"><h2>Change password</h2><label for="newPassword">New password</label><input id="newPassword" type="password" autocomplete="new-password" minlength="12" required class="wide"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="12" required class="wide"><p id="passwordMessage" class="muted"></p><div class="toolbar"><button type="button" id="cancelPassword">Cancel</button><button type="submit" class="primary" id="savePassword">Save password</button></div></form></dialog><script src="calendar-import.js"></script><script src="google-calendar-bridge.js"></script><script>
 window.addEventListener('error',function(event){
  var m=document.getElementById('message'),s=document.getElementById('loginStatus');
  if(m)m.textContent='App error: '+String(event.message||'JavaScript failed');
@@ -1983,12 +1983,13 @@ async function handleRecoveryLink(){
  const type=hash.get('type')||query.get('type'),access=hash.get('access_token'),refresh=hash.get('refresh_token');
  const authError=hash.get('error_description')||query.get('error_description')||hash.get('error');
  const pendingGoogle=(()=>{try{return sessionStorage.getItem('plds_google_oauth_pending')==='1'}catch(_){return false}})();
+ const pendingCalendarUser=(()=>{try{return sessionStorage.getItem('plds_calendar_oauth_pending')||''}catch(_){return ''}})();
  const isGoogleCallback=pendingGoogle&&Boolean(access&&refresh);
  const hasAuthCallback=Boolean(authError||query.has('code')||(access&&refresh));
  if(!hasAuthCallback)return true;
  // Strip access and refresh tokens before doing any asynchronous work or rendering.
  history.replaceState(null,'',location.pathname);
- try{sessionStorage.removeItem('plds_google_oauth_pending')}catch(_){}
+ try{sessionStorage.removeItem('plds_google_oauth_pending');sessionStorage.removeItem('plds_calendar_oauth_pending')}catch(_){}
  if(authError){
   $('loginStatus').textContent='Authentication failed: '+authError+'. You can try Google again or sign in with email and password.';
   $('loginStatus').className='bad';
@@ -1998,6 +1999,12 @@ async function handleRecoveryLink(){
   if(access&&refresh){
    // OAuth implicit callbacks may have no "type" parameter.
    saveSession({access_token:access,refresh_token:refresh,expires_in:Number(hash.get('expires_in')||3600)});
+   if(pendingCalendarUser){
+    const providerToken=hash.get('provider_token'),providerRefresh=hash.get('provider_refresh_token');
+    pendingGoogleCalendarGrant=providerToken&&providerRefresh?
+     {accessToken:providerToken,refreshToken:providerRefresh,expectedUserId:pendingCalendarUser}:
+     {error:'Google Calendar did not provide persistent read-only permission. Please connect again.'};
+   }
   }else if(query.has('code')){
    const verifier=localStorage.getItem('supabase.auth.token-code-verifier');
    if(!verifier)throw Error('The authorization session expired. Start sign-in again.');
