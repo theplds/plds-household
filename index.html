@@ -754,7 +754,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <p id="signupStatus" role="status" aria-live="polite"></p>
 <div class="toolbar"><button type="button" id="signupCancel">Close</button><button class="primary" type="submit" id="signupSubmit">Create account</button></div>
 </form>
-</dialog><dialog id="passwordDialog"><form id="passwordForm"><h2>Change password</h2><label for="newPassword">New password</label><input id="newPassword" type="password" autocomplete="new-password" minlength="12" required class="wide"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="12" required class="wide"><p id="passwordMessage" class="muted"></p><div class="toolbar"><button type="button" id="cancelPassword">Cancel</button><button type="submit" class="primary" id="savePassword">Save password</button></div></form></dialog><script src="calendar-import.js"></script><script src="google-calendar-bridge.js"></script><script>
+</dialog><dialog id="passwordDialog"><form id="passwordForm"><h2>Change password</h2><label for="newPassword">New password</label><input id="newPassword" type="password" autocomplete="new-password" minlength="12" required class="wide"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="12" required class="wide"><p id="passwordMessage" class="muted"></p><div class="toolbar"><button type="button" id="cancelPassword">Cancel</button><button type="submit" class="primary" id="savePassword">Save password</button></div></form></dialog><script src="calendar-import.js"></script><script>
 window.addEventListener('error',function(event){
  var m=document.getElementById('message'),s=document.getElementById('loginStatus');
  if(m)m.textContent='App error: '+String(event.message||'JavaScript failed');
@@ -2546,4 +2546,4 @@ $('reportCSV').onclick=()=>{
 };
 
 authenticationReady.then(ready=>{if(ready)start()}).catch(err=>{$('loginStatus').textContent='Authentication initialization failed: '+(err?.message||String(err));$('loginStatus').className='bad'});
-</script></body></html>
+</script><script src="google-calendar-bridge.js"></script></body></html>
