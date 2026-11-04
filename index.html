@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- PLDS Household v0.3.142 | 2026-10-28 | Supabase live + v0.3.4 demo design --><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><title>PLDS Household v0.3.142</title><link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="shortcut icon" href="./icon.svg"><link rel="manifest" href="./manifest.webmanifest?v=2"><meta name="mobile-web-app-capable" content="yes"><style>
+<!-- PLDS Household v0.3.143 | 2026-10-28 | Supabase live + v0.3.4 demo design --><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><title>PLDS Household v0.3.143</title><link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="shortcut icon" href="./icon.svg"><link rel="manifest" href="./manifest.webmanifest?v=2"><meta name="mobile-web-app-capable" content="yes"><style>
 :root{font-family:system-ui,-apple-system,Arial;background:#0d1420;color:#edf3ff}*{box-sizing:border-box}body{margin:0}main{max-width:920px;margin:auto;padding:18px}header{display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:24px;margin:6px 0}h2{font-size:18px}small,.muted{color:#a8b7ce}button,input,select{font:inherit;border-radius:10px;padding:11px;border:1px solid #384760}button{background:#273d65;color:white;cursor:pointer}button.primary{background:#3477ec;border-color:#3477ec}button:disabled{opacity:.5}input,select{background:#141f32;color:white;max-width:100%}.panel{background:#172337;border:1px solid #2c3d56;border-radius:16px;padding:16px;margin:14px 0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#172337;border-radius:14px;padding:14px}.stat b{display:block;font-size:23px;margin-top:6px}.toolbar,.line{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.line{justify-content:space-between;padding:12px 0;border-bottom:1px solid #2a3a52}.line:last-child{border:0}.pill{border-radius:20px;padding:4px 9px;background:#283b56;font-size:12px}.day{margin:16px 0 5px;font-weight:700;color:#b6c9eb}.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px}#message{color:#ffca83;min-height:20px}.hidden{display:none}dialog{border:1px solid #415678;background:#172337;color:#fff;border-radius:16px;width:min(94vw,460px)}dialog::backdrop{background:#000a}label{display:block;margin:12px 0 5px}.wide{width:100%}.tab{margin:8px 4px 8px 0} .entry{font-size:14px}.entry b{font-size:15px}@media(max-width:540px){.stats{grid-template-columns:repeat(2,1fr)}main{padding:12px}.stat b{font-size:20px}}
 .activity-box{border:0!important;border-radius:12px;margin:9px 0;padding:14px!important;color:white;box-shadow:0 2px 10px #0003}.activity-box small{color:#fff!important;opacity:.92}.activity-box b{color:#fff;font-weight:500}.activity-box strong{font-weight:500}.activity-box .entry{min-width:0}.activity-box[data-activity="speech therapy"],.activity-box[data-activity="speech therapy"] small,.activity-box[data-activity="speech therapy"] b{color:#1a1408!important}.password-row{display:flex;align-items:stretch;gap:8px}.password-row input{flex:1;min-width:0}.password-row button{flex:0 0 auto}#passwordDialog{max-width:460px}#loginForm button.primary{margin-top:6px}#loginStatus{color:#c5d7f8;font-size:13px;min-height:20px}#loginStatus.bad{color:#ffbcac}#loginStatus.good{color:#b0f0c7}
 /* Demo v0.3.4 styles */
@@ -545,8 +545,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .google-auth-button:hover{background:#f0f5fc!important}
 .google-auth-button:focus-visible{outline:3px solid #8bb9ed;outline-offset:2px}
 .google-auth-note{font-size:12px;line-height:1.4;margin:8px 0 13px}
+.google-calendar-direct{border:1px solid #4c759b;border-radius:10px;padding:14px;margin-bottom:18px;background:color-mix(in srgb,#32618a 14%,transparent)}
+.google-calendar-direct button{margin-top:8px}
+.google-calendar-choice{display:flex;gap:10px;align-items:center;margin:8px 0;padding:7px;border:1px solid #586b7d;border-radius:6px}
+.google-calendar-choice input{flex:none}
+.google-calendar-pick{margin-top:12px}
 :root[data-theme="light"] .google-auth-separator span{background:#fff}
-</style></head><body><main><header><div><small>SHARED HOUSEHOLD</small><h1><span id="householdTitle">PLDS Household</span> <span class="title-build-version" aria-label="App version">v0.3.142</span></h1></div><div class="header-actions"><div id="identity" class="muted"></div><div id="headerAccountActions" class="header-account-actions"><details id="headerMoreMenu" class="header-more-menu"><summary aria-label="More options" title="More options"><span class="header-menu-dots" aria-hidden="true"></span></summary><div class="header-more-options"><button type="button" data-menu-tab="history">History</button><button id="openSettings" type="button">Options</button><button id="logout" type="button">Sign out</button></div></details></div></div></header><p id="message"></p><section id="login" class="panel"><h2>Welcome home</h2><p class="muted">Sign in with your household email and password. Your session stays signed in on this device.</p><form id="loginForm" novalidate><label for="email">Email address</label><input id="email" name="email" type="email" inputmode="email" autocomplete="username" class="wide" placeholder="Your household email" required><label for="password">Password</label><div class="password-row"><input id="password" name="password" type="password" autocomplete="current-password" class="wide" placeholder="Password" required><button id="revealPassword" type="button" aria-label="Show or hide password" title="Show password">Show</button></div><p><button class="primary wide" type="submit" id="send">Sign in</button></p><div class="google-auth-separator"><span>or</span></div><button type="button" id="googleLogin" class="google-auth-button wide" aria-label="Continue with Google"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M21.35 12.22c0-.66-.06-1.29-.17-1.91H12v3.62h5.25a4.49 4.49 0 0 1-1.95 2.94v2.44h3.14c1.84-1.7 2.91-4.2 2.91-7.09Z"/><path fill="#34A853" d="M12 21.75c2.63 0 4.84-.87 6.44-2.44l-3.14-2.44c-.87.58-1.98.93-3.3.93-2.54 0-4.69-1.71-5.46-4.01H3.3v2.52A9.75 9.75 0 0 0 12 21.75Z"/><path fill="#FBBC05" d="M6.54 13.79a5.87 5.87 0 0 1 0-3.58V7.69H3.3a9.75 9.75 0 0 0 0 8.62l3.24-2.52Z"/><path fill="#EA4335" d="M12 6.2c1.43 0 2.72.49 3.73 1.46l2.79-2.79A9.36 9.36 0 0 0 12 2.25 9.75 9.75 0 0 0 3.3 7.69l3.24 2.52C7.31 7.91 9.46 6.2 12 6.2Z"/></svg><span>Continue with Google</span></button><p class="muted google-auth-note">Use the Google account that was invited to this household. Calendar access is requested separately.</p><p id="loginStatus" role="status" aria-live="polite">Checking app readiness…</p><button id="retryLogin" type="button" class="hidden">Retry household setup</button></form><div class="panel" style="margin-top:12px"><strong>Invited beta household?</strong><p class="muted">Use the email address that received the invitation. New accounts may require email confirmation.</p><button class="primary wide" type="button" id="betaSignup" aria-haspopup="dialog" aria-controls="signupDialog">Create invited account</button><p id="betaStatus" role="status" aria-live="polite"></p></div><button type="button" id="changePassword" class="login-password-action">Change / reset password</button><p class="muted" style="font-size:13px">First time here? Your household account needs a password set by its administrator. No email links required.</p></section><section id="app" class="hidden">
+</style></head><body><main><header><div><small>SHARED HOUSEHOLD</small><h1><span id="householdTitle">PLDS Household</span> <span class="title-build-version" aria-label="App version">v0.3.143</span></h1></div><div class="header-actions"><div id="identity" class="muted"></div><div id="headerAccountActions" class="header-account-actions"><details id="headerMoreMenu" class="header-more-menu"><summary aria-label="More options" title="More options"><span class="header-menu-dots" aria-hidden="true"></span></summary><div class="header-more-options"><button type="button" data-menu-tab="history">History</button><button id="openSettings" type="button">Options</button><button id="logout" type="button">Sign out</button></div></details></div></div></header><p id="message"></p><section id="login" class="panel"><h2>Welcome home</h2><p class="muted">Sign in with your household email and password. Your session stays signed in on this device.</p><form id="loginForm" novalidate><label for="email">Email address</label><input id="email" name="email" type="email" inputmode="email" autocomplete="username" class="wide" placeholder="Your household email" required><label for="password">Password</label><div class="password-row"><input id="password" name="password" type="password" autocomplete="current-password" class="wide" placeholder="Password" required><button id="revealPassword" type="button" aria-label="Show or hide password" title="Show password">Show</button></div><p><button class="primary wide" type="submit" id="send">Sign in</button></p><div class="google-auth-separator"><span>or</span></div><button type="button" id="googleLogin" class="google-auth-button wide" aria-label="Continue with Google"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M21.35 12.22c0-.66-.06-1.29-.17-1.91H12v3.62h5.25a4.49 4.49 0 0 1-1.95 2.94v2.44h3.14c1.84-1.7 2.91-4.2 2.91-7.09Z"/><path fill="#34A853" d="M12 21.75c2.63 0 4.84-.87 6.44-2.44l-3.14-2.44c-.87.58-1.98.93-3.3.93-2.54 0-4.69-1.71-5.46-4.01H3.3v2.52A9.75 9.75 0 0 0 12 21.75Z"/><path fill="#FBBC05" d="M6.54 13.79a5.87 5.87 0 0 1 0-3.58V7.69H3.3a9.75 9.75 0 0 0 0 8.62l3.24-2.52Z"/><path fill="#EA4335" d="M12 6.2c1.43 0 2.72.49 3.73 1.46l2.79-2.79A9.36 9.36 0 0 0 12 2.25 9.75 9.75 0 0 0 3.3 7.69l3.24 2.52C7.31 7.91 9.46 6.2 12 6.2Z"/></svg><span>Continue with Google</span></button><p class="muted google-auth-note">Use the Google account that was invited to this household. Calendar access is requested separately.</p><p id="loginStatus" role="status" aria-live="polite">Checking app readiness…</p><button id="retryLogin" type="button" class="hidden">Retry household setup</button></form><div class="panel" style="margin-top:12px"><strong>Invited beta household?</strong><p class="muted">Use the email address that received the invitation. New accounts may require email confirmation.</p><button class="primary wide" type="button" id="betaSignup" aria-haspopup="dialog" aria-controls="signupDialog">Create invited account</button><p id="betaStatus" role="status" aria-live="polite"></p></div><button type="button" id="changePassword" class="login-password-action">Change / reset password</button><p class="muted" style="font-size:13px">First time here? Your household account needs a password set by its administrator. No email links required.</p></section><section id="app" class="hidden">
   <p id="qaTestBanner" class="muted" hidden style="font-size:13px;margin:0 0 12px;padding:9px 12px;border:1px dashed #759ed3;border-radius:9px">QA TEST HOUSEHOLD — This is disposable sample data, completely separate from your real household. Restart the six-step guide at any time through Options → Account &amp; maintenance.</p>
   <div class="toolbar month-child-toolbar">
     <input type="month" id="month" aria-label="Selected month">
@@ -558,7 +563,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <button class="tab" id="viewToggle" type="button" aria-label="Switch to list view">List view</button>
     <button class="tab" id="budgetToggle" type="button" aria-expanded="false" aria-controls="budgetDetails" aria-pressed="false">Budget</button>
     <button class="tab" data-tab="activities">Activities</button>
-    <button class="tab" data-tab="payments">Payments</button>
+    <button class="tab" data-tab="payments">Payments</button><button id="addHouseholdEvent" type="button">+ Event</button>
   </nav>
   <div id="budgetDetails" hidden>
     <div class="budget-quick-actions">
@@ -593,8 +598,19 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <h2 id="calendarImportHeading">Connect your calendar</h2>
 <p class="muted">Connect a read-only calendar subscription for automatic updates while Household is open. Calendar events are shared with members of this household. Imported events never create charges.</p>
 <section class="calendar-connect-panel">
-<h3>Automatic calendar connection</h3>
-<p class="muted">Use your calendar provider's private subscription link. This is a live connection, not a one-time file import. Direct Google/Microsoft account authorization is not yet enabled.</p>
+<section class="google-calendar-direct" aria-label="Direct Google Calendar connection">
+<h3>Import once from Google Calendar</h3>
+<p class="muted">Choose Google calendars to copy appointments into Household once. Google will request read-only access. After importing, household members can edit their copies. Changes will not go back to Google.</p>
+<button type="button" class="primary" id="googleCalendarConnect">Import from Google Calendar</button>
+<div id="googleCalendarPick" class="google-calendar-pick" hidden>
+<p class="muted">Only select calendars suitable for sharing with everyone in this household. Imported events never create charges, and future Google changes will not overwrite your Household edits.</p>
+<div id="googleCalendarChoices"></div>
+<button type="button" id="googleCalendarConfirm" class="primary">Import selected Google calendars</button>
+</div>
+<p id="googleCalendarStatus" role="status" aria-live="polite"></p>
+</section>
+<h3>Live subscription link (alternative)</h3>
+<p class="muted">Alternatively, connect a live read-only calendar subscription from Google, Outlook or Apple. These feed events continue updating from their provider, unlike a one-time Google import.</p>
 <form id="calendarConnectForm" novalidate>
 <label for="calendarConnectProvider">Calendar provider</label>
 <select id="calendarConnectProvider"><option value="google">Google Calendar</option><option value="outlook">Outlook / Microsoft</option><option value="apple">Apple / iCloud</option></select>
@@ -626,12 +642,20 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <div class="calendar-import-actions"><button type="button" id="calendarImportClose">Close</button></div>
 </dialog>
 <dialog id="calendarEventDialog" class="calendar-import-dialog" aria-labelledby="calendarEventHeading">
-<h2 id="calendarEventHeading">Imported event</h2><div id="calendarEventDetails"></div>
+<h2 id="calendarEventHeading">Household event</h2><div id="calendarEventDetails"></div>
+<div id="calendarEventEditFields">
+<label for="calendarEventTitle">Title</label><input id="calendarEventTitle" class="wide" maxlength="250" required>
+<label for="calendarEventDate">Date</label><input id="calendarEventDate" type="date" class="wide" required>
+<label for="calendarEventAllDay"><input id="calendarEventAllDay" type="checkbox"> All day</label>
+<div id="calendarEventTimes"><label for="calendarEventStart">Start <input id="calendarEventStart" type="time"></label><label for="calendarEventEnd">End <input id="calendarEventEnd" type="time"></label></div>
+<label for="calendarEventLocation">Location</label><input id="calendarEventLocation" class="wide" maxlength="300">
+<label for="calendarEventNotes">Notes</label><textarea id="calendarEventNotes" class="wide" rows="3" maxlength="3000"></textarea>
+</div>
 <label for="calendarEventChild">Assign to child</label><select id="calendarEventChild"><option value="">Unassigned / everyone</option></select>
 <label for="calendarEventActivity">Link to Household activity</label><select id="calendarEventActivity"><option value="">No linked activity</option></select>
 <p class="muted">Linking an event is informational: it does not create a lesson or an additional charge.</p>
 <p id="calendarEventStatus" role="status" aria-live="polite"></p>
-<div class="calendar-import-actions"><button type="button" id="calendarEventRemove">Remove event</button><button type="button" id="calendarEventClose">Close</button><button type="button" class="primary" id="calendarEventSave">Save assignment</button></div>
+<div class="calendar-import-actions"><button type="button" id="calendarEventRemove">Remove event</button><button type="button" id="calendarEventClose">Close</button><button type="button" class="primary" id="calendarEventSave">Save event</button></div>
 </dialog>
 <dialog id="monthlyReportDialog" aria-labelledby="monthlyReportHeading">
  <div id="monthlyReportControls" class="report-controls">
@@ -754,6 +778,7 @@ const URL='https://vizoixctzkwyhjhhaulj.supabase.co',KEY='sb_publishable_kwivjQp
 let HOUSE=null,householdProfile=null;
 // No CDN needed: directly use Supabase's supported Auth and PostgREST HTTPS endpoints.
 const SESSION_STORE='plds_household_session_v0110';
+let pendingGoogleCalendarGrant=null;
 let currentSession=null,refreshPromise=null;
 try { currentSession=JSON.parse(localStorage.getItem(SESSION_STORE)||'null'); }catch(_){ currentSession=null; }
 function saveSession(payload){
@@ -1227,6 +1252,7 @@ function render(){
  }).join('')||'<p class="muted">No activity charges this month.</p>';
  // Main navigation is exclusive: calendar (month/list), budget, activities, or payments.
  const calendarActive=tab==='monthview'||tab==='sessions';
+  $('addHouseholdEvent')?.classList?.toggle('hidden',!calendarActive);
  const budgetActive=tab==='budget';
  const viewToggle=$('viewToggle'),calendarMode=calendarActive?tab:lastCalendarTab;
  viewToggle.textContent=calendarActive?(tab==='monthview'?'List view':'Month view'):(calendarMode==='monthview'?'Month view':'List view');
@@ -1488,12 +1514,13 @@ function renderConnectedCalendarSources(){
   const last=source.last_synced_at?new Date(source.last_synced_at).toLocaleString('en-GB'):'Never';
   return '<div class="calendar-source-item"><strong>'+esc(source.label)+'</strong>'
    +'<small>'+esc(source.provider)+' · Last updated: '+esc(last)
-   +(source.last_event_count==null?'':' · '+Number(source.last_event_count)+' events')+'</small>'
+   +(source.last_event_count==null?'':' · '+Number(source.last_event_count)+' events')
+    +(source.connection_kind==='google_oauth'?' · Google account':'')+'</small>'
    +(source.last_error?'<small class="calendar-source-error">Sync issue: '+esc(source.last_error)+'</small>':'')
    +'<div class="calendar-source-actions"><button type="button" data-calendar-refresh="'+esc(source.id)+'">Sync now</button>'
    +'<button type="button" data-calendar-disconnect="'+esc(source.id)+'">Disconnect</button></div></div>'
  }).join('')
- :'<p class="muted">No calendar subscriptions connected yet. File imports remain available below.</p>';
+ :'<p class="muted">No calendars connected yet. Connect Google above, use a subscription link, or import a backup file below.</p>';
 }
 const calendarConnectionHints={
  google:'Google Calendar → Settings → Settings for my calendars → select calendar → Integrate calendar → Secret address in iCal format.',
@@ -1505,6 +1532,8 @@ $('calendarConnectProvider').onchange=()=>{
 };
 async function syncConnectedCalendar(sourceId,force=false){
  if(!user||!HOUSE)throw Error('Sign in to your household first');
+ const source=calendarSources.find(s=>s.id===sourceId);
+ if(source?.connection_kind==='google_oauth')return googleCalendarApi({action:'sync',source_id:sourceId,force});
  const session=await validSession();if(!session?.access_token)throw Error('Your session expired. Sign in again.');
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
  try{
@@ -1709,52 +1738,99 @@ $('calendarImportSave').onclick=async()=>{
  }finally{calendarImportBusy=false;$('calendarImportClose').disabled=false;updateImportSelection()}
 };
 let openImportedEventId=null;
-function showImportedEvent(id){
- const e=importedEvents.find(x=>x.id===id);if(!e)return;
- openImportedEventId=id;
- $('calendarEventHeading').textContent=e.title;
- const when=e.all_day?'All-day event':(String(e.start_time||'').slice(0,5)+(e.end_time?'–'+String(e.end_time).slice(0,5):''));
- $('calendarEventDetails').innerHTML='<p><strong>'+esc(displayDateDMY(e.event_date))+'</strong> · '+esc(when)+'</p>'
-  +(e.location?'<p><strong>Location:</strong> '+esc(e.location)+'</p>':'')
-  +(e.details?'<p style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(e.details)+'</p>':'')
-  +'<p class="muted">'+(e.source_id?'Read-only synced calendar event':'One-time .ics import')+'. The linked activity is informational, with no extra charge.</p>';
- $('calendarEventChild').innerHTML='<option value="">Unassigned / everyone</option>'+children.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('');
- $('calendarEventActivity').innerHTML='<option value="">No linked activity</option>'+activities.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.name)+'</option>').join('');
- $('calendarEventChild').value=e.child_id||'';
- $('calendarEventActivity').value=e.activity_id||'';
+function showImportedEvent(id=null){
+ const event=id?importedEvents.find(x=>x.id===id):null;
+ if(id&&!event)return;
+ openImportedEventId=event?.id||null;
+ const readOnly=Boolean(event?.source_id);
+ $('calendarEventHeading').textContent=event?.title||'New Household event';
+ $('calendarEventDetails').innerHTML=readOnly
+  ?'<p class="muted">Live subscription event: you may assign it to a child or activity, but its title and time are controlled by the source calendar.</p>'
+  :'<p class="muted">This event belongs to Household. Changes are shared with its members and never sent to Google. No extra charges.</p>';
+ $('calendarEventEditFields').hidden=readOnly;
+ $('calendarEventTitle').value=event?.title||'';
+ $('calendarEventDate').value=event?.event_date||localDate(new Date());
+ $('calendarEventAllDay').checked=event?.all_day??false;
+ $('calendarEventStart').value=String(event?.start_time||'').slice(0,5)||'15:00';
+ $('calendarEventEnd').value=String(event?.end_time||'').slice(0,5)||'16:00';
+ $('calendarEventLocation').value=event?.location||'';
+ $('calendarEventNotes').value=event?.details||'';
+ $('calendarEventTimes').hidden=$('calendarEventAllDay').checked;
+ $('calendarEventChild').innerHTML='<option value="">Unassigned / everyone</option>'+
+  children.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('');
+ $('calendarEventActivity').innerHTML='<option value="">No linked activity</option>'+
+  activities.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.name)+'</option>').join('');
+ $('calendarEventChild').value=event?.child_id||(children.some(c=>c.id===childFilter)?childFilter:'');
+ $('calendarEventActivity').value=event?.activity_id||'';
  $('calendarEventStatus').textContent='';
- $('calendarEventRemove').textContent=e.source_id?'Hide this event':'Remove event';
+ $('calendarEventSave').textContent=readOnly?'Save assignment':event?'Save event':'Create event';
+ $('calendarEventRemove').hidden=!event;
+ $('calendarEventRemove').textContent=readOnly?'Hide event':'Delete event';
  $('calendarEventDialog').showModal();
 }
+$('addHouseholdEvent').onclick=()=>showImportedEvent();
+$('calendarEventAllDay').onchange=()=>{$('calendarEventTimes').hidden=$('calendarEventAllDay').checked};
 $('calendarEventClose').onclick=()=>$('calendarEventDialog').close();
 $('calendarEventSave').onclick=async()=>{
- const e=importedEvents.find(x=>x.id===openImportedEventId);if(!e||!user||!HOUSE)return;
+ const e=openImportedEventId?importedEvents.find(x=>x.id===openImportedEventId):null;
+ if(!user||!HOUSE)return;
+ const status=$('calendarEventStatus'),button=$('calendarEventSave');
  const child_id=$('calendarEventChild').value||null,activity_id=$('calendarEventActivity').value||null;
- if(child_id&&!children.some(c=>c.id===child_id))return $('calendarEventStatus').textContent='Invalid child selection.';
- if(activity_id&&!activities.some(a=>a.id===activity_id))return $('calendarEventStatus').textContent='Invalid activity selection.';
- const button=$('calendarEventSave');button.disabled=true;
+ if(child_id&&!children.some(c=>c.id===child_id)){status.textContent='Invalid child selection.';return}
+ if(activity_id&&!activities.some(a=>a.id===activity_id)){status.textContent='Invalid activity selection.';return}
+ let payload={child_id,activity_id};
+ if(!e?.source_id){
+  const title=$('calendarEventTitle').value.trim(),date=$('calendarEventDate').value;
+  const all_day=$('calendarEventAllDay').checked;
+  const start_time=all_day?null:$('calendarEventStart').value;
+  const end_time=all_day?null:($('calendarEventEnd').value||null);
+  const details=$('calendarEventNotes').value,location=$('calendarEventLocation').value.trim();
+  if(!title||title.length>250){status.textContent='Enter an event title (up to 250 characters).';return}
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date+'T12:00:00Z'))||
+   new Date(date+'T12:00:00Z').toISOString().slice(0,10)!==date){status.textContent='Choose a valid date.';return}
+  if(!all_day&&(!/^([01]\d|2[0-3]):[0-5]\d$/.test(start_time)||end_time&&
+   (!/^([01]\d|2[0-3]):[0-5]\d$/.test(end_time)||end_time<=start_time))){
+   status.textContent='Enter a valid start time and a later end time.';return
+  }
+  if(details.length>3000||location.length>300){status.textContent='Notes or location are too long.';return}
+  payload={...payload,title,event_date:date,all_day,start_time,end_time,details,location};
+ }
+ button.disabled=true;
  try{
-  const result=await db.from('calendar_import_events').update({child_id,activity_id}).eq('id',e.id).eq('household_id',HOUSE);
+  let result;
+  if(e){
+   result=await db.from('calendar_import_events').update(payload)
+    .eq('id',e.id).eq('household_id',HOUSE).eq('updated_at',e.updated_at).select('id');
+  }else{
+   result=await db.from('calendar_import_events').insert({...payload,household_id:HOUSE,
+    source_key:'household:'+crypto.randomUUID(),created_by:user.id}).select('id');
+  }
   if(result.error)throw result.error;
+  if(!result.data?.length)throw Error('Someone else updated this event. Reopen it to review their changes.');
   $('calendarEventDialog').close();
   await load();
-  msg('Event assignment saved. No lessons or charges were created.');
- }catch(err){$('calendarEventStatus').textContent='Could not save assignment: '+(err.message||String(err))}
+  msg('Household event saved. No lessons or charges were created.');
+ }catch(err){status.textContent='Could not save event: '+(err.message||String(err))}
  finally{button.disabled=false}
 };
 $('calendarEventRemove').onclick=async()=>{
  const e=importedEvents.find(x=>x.id===openImportedEventId);if(!e)return;
- const label=e.source_id?'Hide this synced event from Household? It will remain hidden when the calendar refreshes.':'Remove this imported event? This will not affect lessons, payments or any external calendar.';
- if(!confirm(label))return;
- const b=$('calendarEventRemove');b.disabled=true;
+ const readOnly=Boolean(e.source_id);
+ if(!confirm(readOnly?'Hide this live subscription event from Household?':
+  'Delete this Household event for all household members? This never changes Google Calendar.'))return;
+ const button=$('calendarEventRemove');button.disabled=true;
  try{
-  const result=e.source_id
-   ?await db.from('calendar_import_events').update({hidden:true}).eq('id',e.id).eq('household_id',HOUSE)
-   :await db.from('calendar_import_events').delete().eq('id',e.id).eq('household_id',HOUSE);
+  const q=readOnly
+   ?db.from('calendar_import_events').update({hidden:true})
+   :db.from('calendar_import_events').delete();
+  const result=await q.eq('id',e.id).eq('household_id',HOUSE)
+   .eq('updated_at',e.updated_at).select('id');
   if(result.error)throw result.error;
-  $('calendarEventDialog').close();await load();msg(e.source_id?'Synced event hidden from Household.':'Imported calendar event removed.');
- }catch(err){msg('Could not remove imported event: '+err.message)}
- finally{b.disabled=false}
+  if(!result.data?.length)throw Error('Someone else changed this event. Reopen it to review.');
+  $('calendarEventDialog').close();await load();
+  msg(readOnly?'Subscription event hidden from Household.':'Household event deleted.');
+ }catch(err){$('calendarEventStatus').textContent='Could not remove event: '+(err.message||String(err))}
+ finally{button.disabled=false}
 };
 $('content').onclick=async e=>{let b=e.target.closest('button');if(!b)return;
  if(b.dataset.importEvent){showImportedEvent(b.dataset.importEvent);return;}
@@ -1920,6 +1996,7 @@ function googleOAuthAuthorizeUrl(){
 }
 $('googleLogin').onclick=()=>{
  const button=$('googleLogin');
+ try{sessionStorage.removeItem('plds_calendar_oauth_pending')}catch(_){}
  button.disabled=true;
  $('loginStatus').textContent='Redirecting to Google…';
  $('loginStatus').className='';
@@ -1962,12 +2039,13 @@ async function handleRecoveryLink(){
  const type=hash.get('type')||query.get('type'),access=hash.get('access_token'),refresh=hash.get('refresh_token');
  const authError=hash.get('error_description')||query.get('error_description')||hash.get('error');
  const pendingGoogle=(()=>{try{return sessionStorage.getItem('plds_google_oauth_pending')==='1'}catch(_){return false}})();
+ const pendingCalendarUser=(()=>{try{return sessionStorage.getItem('plds_calendar_oauth_pending')||''}catch(_){return ''}})();
  const isGoogleCallback=pendingGoogle&&Boolean(access&&refresh);
  const hasAuthCallback=Boolean(authError||query.has('code')||(access&&refresh));
  if(!hasAuthCallback)return true;
  // Strip access and refresh tokens before doing any asynchronous work or rendering.
  history.replaceState(null,'',location.pathname);
- try{sessionStorage.removeItem('plds_google_oauth_pending')}catch(_){}
+ try{sessionStorage.removeItem('plds_google_oauth_pending');sessionStorage.removeItem('plds_calendar_oauth_pending')}catch(_){}
  if(authError){
   $('loginStatus').textContent='Authentication failed: '+authError+'. You can try Google again or sign in with email and password.';
   $('loginStatus').className='bad';
@@ -1977,6 +2055,12 @@ async function handleRecoveryLink(){
   if(access&&refresh){
    // OAuth implicit callbacks may have no "type" parameter.
    saveSession({access_token:access,refresh_token:refresh,expires_in:Number(hash.get('expires_in')||3600)});
+   if(pendingCalendarUser){
+    const providerToken=hash.get('provider_token');
+    pendingGoogleCalendarGrant=providerToken?
+     {accessToken:providerToken,expectedUserId:pendingCalendarUser}:
+     {error:'Google did not provide read-only Calendar permission. Please try importing again.'};
+   }
   }else if(query.has('code')){
    const verifier=localStorage.getItem('supabase.auth.token-code-verifier');
    if(!verifier)throw Error('The authorization session expired. Start sign-in again.');
@@ -2255,7 +2339,7 @@ function renderHouseholdSetup(){
    +'<div class="setup-actions"><button type="button" id="setupAddSchedule">+ Add weekly lesson</button></div>':'<p class="muted">Add an activity on the previous step before creating weekly lessons.</p>');
   if(activities.length)$('setupAddSchedule').onclick=()=>runSetupAction(async()=>{await setupAddSchedule();renderHouseholdSetup()});
  }else if(setupStep===4){
-  content.innerHTML='<p>Connect a calendar to keep family appointments, practices and school events updated automatically. Use your Google, Outlook or Apple calendar subscription link. A one-time .ics file import is available as a backup.</p>'
+  content.innerHTML='<p>Import Google Calendar once to edit events in Household, or use a live subscription link from Outlook, Apple or Google. A one-time .ics file import is available as a backup.</p>'
    +'<div class="setup-list"><div><strong>Optional — no calendar connection required</strong></div>'
    +'<div>Connected calendars: '+calendarSources.length+'</div><div>Imported events: '+importedEvents.length+'</div>'
    +'<div>Imported entries are free calendar events, not paid activities or lessons.</div>'
@@ -2518,4 +2602,4 @@ $('reportCSV').onclick=()=>{
 };
 
 authenticationReady.then(ready=>{if(ready)start()}).catch(err=>{$('loginStatus').textContent='Authentication initialization failed: '+(err?.message||String(err));$('loginStatus').className='bad'});
-</script></body></html>
+</script><script src="google-calendar-bridge.js"></script></body></html>

@@ -1,10 +1,8 @@
-// Household Google Calendar: explicit read-only consent, Vault refresh credentials,
-// household-scoped API access, and bounded incremental reconciliation while app is open.
+// One-time Google Calendar import. No provider refresh tokens or background Google sync.
+// Imported events are owned and edited within Household only.
 const API=Deno.env.get("SUPABASE_URL")||"";
 const SERVICE=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
 const ANON=Deno.env.get("SUPABASE_ANON_KEY")||"";
-const GOOGLE_ID=Deno.env.get("GOOGLE_OAUTH_CLIENT_ID")||"";
-const GOOGLE_SECRET=Deno.env.get("GOOGLE_OAUTH_CLIENT_SECRET")||"";
 const ORIGIN="https://theplds.github.io";
 const CORS={"Access-Control-Allow-Origin":ORIGIN,
  "Access-Control-Allow-Headers":"authorization,apikey,content-type",
@@ -51,23 +49,6 @@ async function listGoogleCalendars(token:string){
  }
  return calendars;
 }
-async function refreshAccess(sourceId:string){
- if(!GOOGLE_ID||!GOOGLE_SECRET)throw Error("Google OAuth credentials are not configured for calendar sync.");
- const secret=await postgrest("rpc/read_google_calendar_refresh","POST",{p_source_id:sourceId});
- if(typeof secret!=="string"||!secret)throw Error("Google calendar connection is missing its refresh permission.");
- const data=new URLSearchParams({client_id:GOOGLE_ID,client_secret:GOOGLE_SECRET,
-  refresh_token:secret,grant_type:"refresh_token"});
- const r=await fetch("https://oauth2.googleapis.com/token",{
-  method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:data,
-  signal:AbortSignal.timeout(18000)});
- if(!r.ok){
-  if(r.status===400||r.status===401)throw Error("Google access expired or was revoked. Reconnect this calendar.");
-  throw Error("Google token renewal failed: HTTP "+r.status);
- }
- const result=await r.json();
- if(!result.access_token)throw Error("Google did not return a calendar access token");
- return String(result.access_token);
-}
 function athensParts(raw:string){
  const date=new Date(raw);
  if(!Number.isFinite(date.getTime()))throw Error("Invalid event date");
@@ -81,12 +62,13 @@ function mapGoogleEvents(events:any[],sourceId:string):EventRow[]{
  for(const e of events){
   if(!e||e.status==="cancelled"||!e.id||!e.start)continue;
   const title=String(e.summary||"Untitled appointment").slice(0,250);
-  const details=String(e.description||"").slice(0,4000);
-  const location=String(e.location||"").slice(0,500);
+  const details=String(e.description||"").slice(0,3000);
+  const location=String(e.location||"").slice(0,300);
   if(e.start.date){
    const begin=String(e.start.date),end=String(e.end?.date||begin);
    const from=Date.parse(begin+"T12:00:00Z"),to=Date.parse(end+"T12:00:00Z");
-   const days=Number.isFinite(from)&&Number.isFinite(to)?Math.max(1,Math.min(31,Math.ceil((to-from)/86400000))):1;
+   const days=Number.isFinite(from)&&Number.isFinite(to)?Math.ceil((to-from)/86400000):0;
+   if(days<1||days>31)throw Error("One Google all-day event spans over 31 days or has invalid dates.");
    for(let i=0;i<days;i++){
     const day=new Date(from+i*86400000).toISOString().slice(0,10);
     rows.push({source_key:sourceId+"|google:"+e.id+"|"+day,event_date:day,
@@ -107,67 +89,6 @@ function syncRange(){
  return {start:start.toISOString(),end:end.toISOString(),startDay:start.toISOString().slice(0,10),
   endDay:end.toISOString().slice(0,10)};
 }
-async function syncSource(source:Source,force:boolean){
- if(source.last_synced_at&&Date.now()-Date.parse(source.last_synced_at)<(force?60000:15*60000))
-  return {ok:true,skipped:true};
- try{
-  const access=await refreshAccess(source.id),range=syncRange(),items:any[]=[];
-  let page="";
-  for(let i=0;i<12;i++){
-   const path="/calendar/v3/calendars/"+encodeURIComponent(source.google_calendar_id)+
-    "/events?singleEvents=true&showDeleted=false&maxResults=250&timeMin="+
-    encodeURIComponent(range.start)+"&timeMax="+encodeURIComponent(range.end)+
-    (page?"&pageToken="+encodeURIComponent(page):"");
-   const result=await getGoogle(path,access);
-   items.push(...(result.items||[]));
-   if(items.length>1500)throw Error("Google calendar has too many events to sync safely.");
-   if(!result.nextPageToken){page="";break}
-   page=String(result.nextPageToken);
-  }
-  if(page)throw Error("Google calendar is too large to sync completely.");
-  const incoming=mapGoogleEvents(items,source.id);
-  const existing=await postgrest("calendar_import_events?select=id,source_key,event_date,title,details,location,start_time,end_time,all_day,removed_from_source&source_id=eq."+
-   source.id+"&limit=1700");
-  if(existing.length>=1700)throw Error("Too many previously synced Google appointments.");
-  const byKey=new Map(existing.map((e:any)=>[e.source_key,e]));
-  const newKeys=new Set(incoming.map(e=>e.source_key));
-  const created:any[]=[];let updated=0,removed=0;
-  for(const event of incoming){
-   const old:any=byKey.get(event.source_key);
-   if(!old){created.push({...event,household_id:source.household_id,source_id:source.id,created_by:source.created_by});continue;}
-   const patch:any={};
-   for(const field of ["event_date","title","details","location","start_time","end_time","all_day"])
-    if(String(old[field]??"")!==String((event as any)[field]??""))patch[field]=(event as any)[field];
-   if(old.removed_from_source)patch.removed_from_source=false;
-   if(Object.keys(patch).length){
-    await postgrest("calendar_import_events?id=eq."+old.id+"&source_id=eq."+source.id,"PATCH",patch);
-    updated++;
-   }
-  }
-  let added=0;
-  for(let i=0;i<created.length;i+=100){
-   const batch=created.slice(i,i+100);
-   const result=await postgrest("calendar_import_events?on_conflict=household_id%2Csource_key",
-    "POST",batch,{Prefer:"resolution=ignore-duplicates,return=representation"});
-   added+=Array.isArray(result)?result.length:0;
-  }
-  // A complete, successful list is required before marking missing source events removed.
-  for(const old of existing){
-   if(!old.removed_from_source&&old.event_date>=range.startDay&&old.event_date<range.endDay&&
-    !newKeys.has(old.source_key)){
-    await postgrest("calendar_import_events?id=eq."+old.id+"&source_id=eq."+source.id,
-      "PATCH",{removed_from_source:true});removed++;
-   }
-  }
-  await postgrest("calendar_sync_sources?id=eq."+source.id,"PATCH",{
-   last_synced_at:new Date().toISOString(),last_error:null,last_event_count:incoming.length});
-  return {ok:true,created:added,updated,removed,total:incoming.length};
- }catch(error){
-  const message=(error instanceof Error?error.message:"Unknown Google Calendar failure").slice(0,250);
-  await postgrest("calendar_sync_sources?id=eq."+source.id,"PATCH",{last_error:message}).catch(()=>{});
-  return {ok:false,error:message};
- }
-}
 Deno.serve(async(req:Request)=>{
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:CORS});
  if(req.method!=="POST")return json({error:"Method not allowed"},405);
@@ -183,61 +104,59 @@ Deno.serve(async(req:Request)=>{
   const household=String(memberships[0].household_id);
   const body=await req.json().catch(()=>({}));
   const action=String(body.action||"");
-  if(action==="list"||action==="connect"){
+  if(action==="list"||action==="import"){
    const token=String(body.provider_token||"");
    if(token.length<20||token.length>4096)return json({error:"Google calendar permission is missing."},400);
-   // Only connect the same Google account as the authenticated household user.
+   // Only the same Google account as the signed-in Household user can import.
    const identity=await getGoogle("/oauth2/v2/userinfo",token);
    if(String(identity.email||"").toLowerCase()!==String(user.email||"").toLowerCase())
     return json({error:"Select the same Google account you used to sign in to Household."},409);
-   const calendars=await listGoogleCalendars(token);
-   if(action==="list")return json({ok:true,calendars});
-   if(!GOOGLE_ID||!GOOGLE_SECRET)return json({error:"Google Calendar server credentials are not configured yet."},503);
-   const refresh=String(body.provider_refresh_token||"");
-   if(refresh.length<20||refresh.length>2048)return json({error:"Long-term calendar permission was not granted. Try connecting again."},400);
-   const chosen=Array.isArray(body.calendar_ids)?[...new Set(body.calendar_ids.map(String))]:[];
-   if(chosen.length<1||chosen.length>5||chosen.some(id=>!calendars.some(c=>c.id===id)))
-    return json({error:"Choose one to five calendars from your own Google account."},400);
-   const sources=await postgrest("calendar_sync_sources?select=id,household_id,provider,connection_kind,google_calendar_id,created_by,last_synced_at&household_id=eq."+
-    household+"&limit=20");
-   const free=Math.max(0,5-sources.length);let needed=0;
-   for(const id of chosen)if(!sources.some((x:Source)=>x.connection_kind==="google_oauth"&&x.google_calendar_id===id))needed++;
-   if(needed>free)return json({error:"A household can connect at most five calendars in total."},400);
-   const connected:any[]=[];
-   for(const id of chosen){
-    const details=calendars.find(x=>x.id===id)!;
-    let source:Source|undefined=sources.find((x:Source)=>x.connection_kind==="google_oauth"&&x.google_calendar_id===id);
-    let newSource=false;
-    if(!source){
-     const created=await postgrest("calendar_sync_sources","POST",{household_id:household,provider:"google",
-      label:details.label,created_by:user.id,connection_kind:"google_oauth",google_calendar_id:id});
-     source=created[0];newSource=true;
+   const available=await listGoogleCalendars(token);
+   if(action==="list")return json({ok:true,calendars:available});
+   const selected=Array.isArray(body.calendar_ids)?[...new Set(body.calendar_ids.map(String))]:[];
+   if(selected.length<1||selected.length>5||selected.some(id=>!available.some(c=>c.id===id)))
+    return json({error:"Choose one to five readable calendars."},400);
+   const range=syncRange();
+   const batches:EventRow[][]=[];
+   for(const calendarId of selected){
+    let page="",events:any[]=[];
+    for(let n=0;n<10;n++){
+     const path="/calendar/v3/calendars/"+encodeURIComponent(calendarId)+
+      "/events?singleEvents=true&showDeleted=false&maxResults=250&timeMin="+
+      encodeURIComponent(range.start)+"&timeMax="+encodeURIComponent(range.end)+
+      (page?"&pageToken="+encodeURIComponent(page):"");
+     const result=await getGoogle(path,token);
+     events.push(...(result.items||[]));
+     if(events.length>1300)throw Error("One calendar is too large for a safe import.");
+     if(!result.nextPageToken){page="";break}
+     page=String(result.nextPageToken);
     }
-    try{
-     await postgrest("rpc/save_google_calendar_refresh","POST",{p_source_id:source!.id,p_token:refresh});
-     const result=await syncSource(source!,true);
-     connected.push({id:source!.id,label:details.label,...result});
-    }catch(error){
-     if(newSource)await postgrest("calendar_sync_sources?id=eq."+source!.id,"DELETE").catch(()=>{});
-     throw error;
+    if(page)throw Error("Calendar contains too many pages for a safe import.");
+    const mapped=mapGoogleEvents(events,calendarId).map(event=>({
+     ...event,source_key:"google-copy:"+event.source_key
+    }));
+    if(mapped.some(row=>row.source_key.length>450))throw Error("Google supplied an event identifier that is too long.");
+    batches.push(mapped);
+   }
+   // Google is never written. Re-importing skips previously copied events,
+   // preserving all edits made by Household members.
+   let added=0,duplicates=0;
+   for(const batch of batches){
+    for(let i=0;i<batch.length;i+=80){
+     const records=batch.slice(i,i+80).map(event=>({
+      ...event,household_id:household,created_by:user.id
+     }));
+     const result=await dataApi("calendar_import_events?on_conflict=household_id%2Csource_key",
+      "POST",records,{"Prefer":"resolution=ignore-duplicates,return=representation"});
+     const saved=Array.isArray(result)?result.length:0;
+     added+=saved;duplicates+=records.length-saved;
     }
    }
-   return json({ok:true,connected});
+   return json({ok:true,calendars:selected.length,added,duplicates,
+    imported:batches.reduce((n,b)=>n+b.length,0)});
   }
-  if(action==="sync"){
-   const id=String(body.source_id||"");
-   if(!UUID.test(id))return json({error:"Invalid calendar source."},400);
-   const rows=await postgrest("calendar_sync_sources?select=id,household_id,provider,connection_kind,google_calendar_id,created_by,last_synced_at&id=eq."+
-    id+"&limit=1");
-   const source:Source|undefined=rows[0];
-   if(!source||source.household_id!==household||source.connection_kind!=="google_oauth")
-    return json({error:"Calendar is not connected to your household."},403);
-   const result=await syncSource(source,body.force===true);
-   return json(result,result.ok?200:422);
-  }
-  return json({error:"Unknown action"},400);
+  return json({error:"Unknown import action"},400);
  }catch(error){
-  const message=(error instanceof Error?error.message:"Calendar request failed").slice(0,210);
-  return json({error:message},422);
+  return json({error:(error instanceof Error?error.message:"Calendar import failed").slice(0,210)},422);
  }
 });
