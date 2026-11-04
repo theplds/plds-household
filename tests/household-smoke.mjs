@@ -3,8 +3,8 @@ import {readFileSync} from 'node:fs';
 import {Script,createContext,runInContext} from 'node:vm';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.136/);
-assert.ok(!html.includes('v0.3.135'),'The deployed version must be updated consistently');
+assert.match(html,/PLDS Household v0\.3\.137/);
+assert.ok(!html.includes('v0.3.136'),'The deployed version must be updated consistently');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.ok(scripts.length>=1,'No embedded app scripts found');
 for(const [,code] of scripts)new Script(code);
@@ -309,4 +309,60 @@ assert.match(html,/db\.rpc\('reset_my_qa_household',\{p_confirmation:'RESET QA'\
 assert.match(html,/await loadHouseholdProfile\(\);await load\(\);await loadPreferences\(\)/);
 assert.match(html,/openHouseholdSetup\(true\)/);
 assert.match(html,/qaMode=false;HOUSE=null/);
-console.log('PASS: finance, calendar import, notifications, plus isolated repeatable QA onboarding controls.');
+
+// Signup must visibly open a stand-alone registration form, not reuse hidden login fields.
+for(const id of ['signupDialog','signupForm','signupEmail','signupName','signupPassword','signupPasswordConfirm','signupSubmit','signupCancel','signupStatus']){
+ assert.equal(html.split('id="'+id+'"').length-1,1,'Missing or duplicated signup control '+id);
+}
+assert.match(html,/id="betaSignup" aria-haspopup="dialog" aria-controls="signupDialog"/);
+assert.match(html,/<form id="signupForm" novalidate>/);
+assert.ok(!html.includes('id="betaName"'),'Obsolete registration field must not remain outside the form');
+const signBegin=html.indexOf("$('betaSignup').onclick=()=>{");
+const signEnd=html.indexOf("$('revealPassword').onclick=",signBegin);
+assert.ok(signBegin>0&&signEnd>signBegin,'Invited signup interaction handlers missing');
+const signupElements=Object.fromEntries(['signupDialog','signupForm','signupEmail','signupName',
+ 'signupPassword','signupPasswordConfirm','signupStatus','signupSubmit','signupCancel',
+ 'betaSignup','betaStatus','email'].map(id=>[id,{value:'',textContent:'',disabled:false,
+  focus(){this.focused=true}}]));
+signupElements.signupDialog.showModal=function(){this.open=true};
+signupElements.signupDialog.close=function(){this.open=false};
+let signupSubmit,signupRequests=[];
+signupElements.signupForm.addEventListener=function(name,handler){if(name==='submit')signupSubmit=handler};
+const signupCtx=createContext({
+ $:id=>{assert.ok(signupElements[id],'Unexpected signup DOM reference '+id);return signupElements[id]},
+ requestJson:async(path,opts)=>{signupRequests.push({path,opts});return {user:{id:'new-user'}}},
+ saveSession:()=>{},start:async()=>{},HOUSE:null
+});
+runInContext(html.slice(signBegin,signEnd),signupCtx);
+signupElements.email.value='mpoulidis+household-qa@gmail.com';
+signupElements.betaSignup.onclick();
+assert.equal(signupElements.signupDialog.open,true,'Clicking Create invited account must open signup form');
+assert.equal(signupElements.signupEmail.value,'mpoulidis+household-qa@gmail.com');
+assert.equal(signupElements.signupEmail.focused,true);
+assert.equal(typeof signupSubmit,'function');
+const submitEvent={preventDefault(){this.prevented=true}};
+await signupSubmit(submitEvent);
+assert.equal(submitEvent.prevented,true);
+assert.equal(signupRequests.length,0,'Empty registration must not contact auth backend');
+assert.match(signupElements.signupStatus.textContent,/Enter your name/);
+signupElements.signupName.value='QA Tester';
+signupElements.signupPassword.value='twelve-letters-1234';
+signupElements.signupPasswordConfirm.value='wrong-password';
+await signupSubmit({preventDefault(){}});
+assert.equal(signupRequests.length,0,'Password mismatch must not create an account');
+assert.match(signupElements.signupStatus.textContent,/do not match/);
+signupElements.signupPasswordConfirm.value=signupElements.signupPassword.value;
+await signupSubmit({preventDefault(){}});
+assert.equal(signupRequests.length,1,'Valid registration submits exactly once');
+assert.equal(signupRequests[0].path,'/auth/v1/signup');
+const signupPayload=JSON.parse(signupRequests[0].opts.body);
+assert.equal(signupPayload.email,'mpoulidis+household-qa@gmail.com');
+assert.equal(signupPayload.data.display_name,'QA Tester');
+assert.equal(signupPayload.password,'twelve-letters-1234');
+assert.match(signupElements.signupStatus.textContent,/Check mpoulidis\+household-qa@gmail\.com for a confirmation link/);
+assert.equal(signupElements.signupSubmit.disabled,false,'Submit must reactivate when server completes');
+assert.equal(signupElements.signupDialog.open,true,'Keep confirmation instructions visible');
+signupElements.signupCancel.onclick();
+assert.equal(signupElements.signupDialog.open,false);
+
+console.log('PASS: pricing, calendar import, QA reset, and functional invited signup dialog.');
