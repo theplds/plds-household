@@ -3,8 +3,8 @@ import {readFileSync} from 'node:fs';
 import {Script,createContext,runInContext} from 'node:vm';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.135/);
-assert.ok(!html.includes('v0.3.134'),'The deployed version must be updated consistently');
+assert.match(html,/PLDS Household v0\.3\.136/);
+assert.ok(!html.includes('v0.3.135'),'The deployed version must be updated consistently');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.ok(scripts.length>=1,'No embedded app scripts found');
 for(const [,code] of scripts)new Script(code);
@@ -284,4 +284,29 @@ assert.match(html,/ignoreDuplicates:true,returning:true/);
 assert.match(html,/importedEvents\.filter/);
 assert.ok(!lessonCode.includes('importedEvents'), 'Imported events must remain outside the financial lesson model');
 
-console.log('PASS: pricing, notes, navigation, calendar import recurrences, timezone, duplicate and no-charge handling.');
+// QA onboarding may restart only in a specially designated, single-member household.
+const qaMigration=readFileSync(new URL('../migrations/20261104_repeatable_qa_household.sql',import.meta.url),'utf8');
+assert.match(qaMigration,/create table if not exists private\.qa_households/);
+assert.match(qaMigration,/revoke all on private\.qa_households from public, anon, authenticated/);
+assert.match(qaMigration,/v_actor uuid := \(select auth\.uid\(\)\)/);
+assert.match(qaMigration,/m\.role='owner'/);
+assert.match(qaMigration,/p_confirmation is distinct from 'RESET QA'/);
+assert.match(qaMigration,/count\(\*\) from public\.household_members where user_id=v_actor\)<>1/);
+assert.match(qaMigration,/count\(\*\) from public\.household_members where household_id=v_household\)<>1/);
+assert.match(qaMigration,/delete from public\.calendar_import_events where household_id=v_household/);
+assert.match(qaMigration,/delete from public\.activities where household_id=v_household/);
+assert.match(qaMigration,/delete from public\.children where household_id=v_household/);
+assert.match(qaMigration,/onboarding_completed_at=null/);
+assert.ok(!qaMigration.includes("delete from auth.users"),'QA reset must preserve the authentication account');
+for(const id of ['qaReplayTools','restartQaSetup','qaTestBanner']){
+ assert.equal(html.split('id="'+id+'"').length-1,1,'Duplicate or missing QA control '+id);
+}
+assert.match(html,/qaMode=!qaCheck\.error&&qaCheck\.data===true/);
+assert.match(html,/\$\('qaReplayTools'\)\.hidden=!qaMode/);
+assert.match(html,/if\(!qaMode\|\|!user\)return/);
+assert.match(html,/answer!=='RESET QA'/);
+assert.match(html,/db\.rpc\('reset_my_qa_household',\{p_confirmation:'RESET QA'\}\)/);
+assert.match(html,/await loadHouseholdProfile\(\);await load\(\);await loadPreferences\(\)/);
+assert.match(html,/openHouseholdSetup\(true\)/);
+assert.match(html,/qaMode=false;HOUSE=null/);
+console.log('PASS: finance, calendar import, notifications, plus isolated repeatable QA onboarding controls.');
