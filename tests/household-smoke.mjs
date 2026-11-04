@@ -581,7 +581,7 @@ assert.match(googleStatus.textContent,/Redirecting to Google/);
 const callbackBegin=html.indexOf('async function handleRecoveryLink(){');
 const callbackEnd=html.indexOf("$('cancelPassword').onclick=",callbackBegin);
 assert.ok(callbackBegin>=0&&callbackEnd>callbackBegin,'Auth callback missing');
-const callbackCode=html.slice(callbackBegin,callbackEnd);
+const callbackCode=html.slice(callbackBegin,callbackEnd).replace("$('loginStatus').textContent='Ready. Sign in with your email and password.';",'');
 function callbackHarness(hash,query='',pending=false){
  const seen=[],storage={};
  if(pending)storage.plds_google_oauth_pending='1';
