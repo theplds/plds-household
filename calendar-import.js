@@ -5,6 +5,12 @@
 (function(g){
 'use strict';
 const ATHENS='Europe/Athens',DOW=['SU','MO','TU','WE','TH','FR','SA'];
+const WINDOWS_TZ={
+ 'GTB Standard Time':'Europe/Athens','E. Europe Standard Time':'Europe/Bucharest',
+ 'W. Europe Standard Time':'Europe/Berlin','Central Europe Standard Time':'Europe/Budapest',
+ 'Romance Standard Time':'Europe/Paris','GMT Standard Time':'Europe/London',
+ 'UTC':'UTC','Eastern Standard Time':'America/New_York','Pacific Standard Time':'America/Los_Angeles'
+};
 const dtfCache=new Map();
 function partsInZone(ms,tz){
  let f=dtfCache.get(tz);
@@ -32,7 +38,7 @@ function propDate(p,value){
  const date={y:+m[1],m:+m[2],d:+m[3],h:+(m[4]||0),min:+(m[5]||0),sec:+(m[6]||0)};
  const check=new Date(Date.UTC(date.y,date.m-1,date.d));
  if(check.getUTCFullYear()!==date.y||check.getUTCMonth()!==date.m-1||check.getUTCDate()!==date.d||date.h>23||date.min>59||date.sec>59)return null;
- const allDay=!m[4],tz=m[7]?'UTC':(p.params.TZID||ATHENS);
+ const allDay=!m[4],externalTz=p.params.TZID||ATHENS,tz=m[7]?'UTC':(WINDOWS_TZ[externalTz]||externalTz);
  if(!allDay){try{new Intl.DateTimeFormat('en-US',{timeZone:tz})}catch(_){return null}}
  return {...date,allDay,tz,ms:allDay?Date.UTC(date.y,date.m-1,date.d):m[7]?Date.UTC(date.y,date.m-1,date.d,date.h,date.min,date.sec):zoneToMs(date,tz)};
 }
@@ -125,20 +131,28 @@ function parse(input,opts={}){
  }
  function add(item,instance,sourceKey){
   if(item.status==='CANCELLED')return;
-  let local=instance.allDay?instance:partsInZone(instance.ms,ATHENS);
-  let date=iso(local);if(dayNumber(local)<startN||dayNumber(local)>endN)return;
-  const key=String(item.uid).slice(0,250)+'|'+sourceKey;
-  if(seen.has(key))return;
-  seen.add(key);
-  const title=textValue(item.props.SUMMARY?.[0]?.value||'Untitled event').trim().slice(0,250)||'Untitled event';
-  const duration=item.end&&item.start?(item.end.ms-item.start.ms):instance.allDay?86400000:3600000;
-  const endMs=instance.ms+Math.max(0,Math.min(duration,14*86400000));
-  const endLocal=instance.allDay?null:partsInZone(endMs,ATHENS);
-  events.push({source_key:key,title,details:textValue(item.props.DESCRIPTION?.[0]?.value||'').slice(0,3000),
-   location:textValue(item.props.LOCATION?.[0]?.value||'').slice(0,300),event_date:date,
-   start_time:instance.allDay?null:String(local.h).padStart(2,'0')+':'+String(local.min).padStart(2,'0')+':00',
-   end_time:endLocal?String(endLocal.h).padStart(2,'0')+':'+String(endLocal.min).padStart(2,'0')+':00':null,
-   all_day:!!instance.allDay});
+  const rawDuration=item.end&&item.start?(item.end.ms-item.start.ms):instance.allDay?86400000:3600000;
+  const duration=Math.max(0,Math.min(rawDuration,31*86400000));
+  const span=instance.allDay?Math.max(1,Math.ceil(duration/86400000)):1;
+  if(instance.allDay&&rawDuration>31*86400000)warnings.push('An all-day event longer than 31 days was capped in the preview.');
+  for(let offset=0;offset<span;offset++){
+   const original=instance.allDay?ymdNum(dayNumber(instance)+offset):partsInZone(instance.ms,ATHENS);
+   if(dayNumber(original)<startN||dayNumber(original)>endN)continue;
+   const key=String(item.uid).slice(0,250)+'|'+sourceKey+(offset?'~'+offset:'');
+   if(seen.has(key))continue;
+   seen.add(key);
+   const title=textValue(item.props.SUMMARY?.[0]?.value||'Untitled event').trim().slice(0,250)||'Untitled event';
+   const endMs=instance.ms+duration;
+   const endLocal=instance.allDay?null:partsInZone(endMs,ATHENS);
+   const nextDay=!instance.allDay&&iso(endLocal)!==iso(original);
+   const details=(nextDay?'Ends on '+iso(endLocal)+'.\n':'')+textValue(item.props.DESCRIPTION?.[0]?.value||'');
+   events.push({source_key:key,title,details:details.slice(0,3000),
+    location:textValue(item.props.LOCATION?.[0]?.value||'').slice(0,300),event_date:iso(original),
+    start_time:instance.allDay?null:String(original.h).padStart(2,'0')+':'+String(original.min).padStart(2,'0')+':00',
+    end_time:endLocal?String(endLocal.h).padStart(2,'0')+':'+String(endLocal.min).padStart(2,'0')+':00':null,
+    all_day:!!instance.allDay});
+   if(events.length>=limit)break;
+  }
  }
  for(const item of masters){
   if(item.status==='CANCELLED')continue;
