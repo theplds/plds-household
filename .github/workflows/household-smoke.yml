@@ -17,3 +17,4 @@ jobs:
         run: |
           node tests/household-smoke.mjs
           node tests/google-calendar-oauth.mjs
+          node tests/calendar-account-isolation.mjs
