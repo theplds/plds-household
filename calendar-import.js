@@ -138,7 +138,8 @@ function parse(input,opts={}){
   for(let offset=0;offset<span;offset++){
    const original=instance.allDay?ymdNum(dayNumber(instance)+offset):partsInZone(instance.ms,ATHENS);
    if(dayNumber(original)<startN||dayNumber(original)>endN)continue;
-   const key=String(item.uid).slice(0,250)+'|'+sourceKey+(offset?'~'+offset:'');
+   const recurring=!!(item.props.RRULE?.length||item.props.RDATE?.length||item.props['RECURRENCE-ID']?.length);
+   const key=String(item.uid).slice(0,250)+(recurring?'|'+sourceKey:'')+(offset?'~'+offset:'');
    if(seen.has(key))continue;
    seen.add(key);
    const title=textValue(item.props.SUMMARY?.[0]?.value||'Untitled event').trim().slice(0,250)||'Untitled event';
