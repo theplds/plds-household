@@ -964,6 +964,115 @@ function colorStyle(a){
  return 'background:color-mix(in srgb,'+activityColor(a)+' 60%,white)';
 }
 
+
+/* Unread note state is per household member and reappears when content is updated. */
+function noticeKey(item){
+ if(item.kind==='teacher')return 'teacher:'+item.raw.schedule_id+':'+item.raw.lesson_date+':'+item.raw.teacher_id;
+ if(item.kind==='homework')return 'homework:'+item.raw.id;
+ return 'activity:'+item.raw.id;
+}
+function noticeItems(){
+ const all=[
+  ...teacherNotes.filter(n=>String(n.note||'').trim()).map(n=>({
+   kind:'teacher',raw:n,activity:activities.find(a=>schedules.some(s=>s.id===n.schedule_id&&s.activity_id===a.id))?.name||'Lesson',
+   date:n.lesson_date,title:'Teacher note',updated_at:n.updated_at
+  })),
+  ...lessonHomework.filter(h=>String(h.description||'').trim()||(h.files||[]).length).map(h=>({
+   kind:'homework',raw:h,activity:activities.find(a=>schedules.some(s=>s.id===h.schedule_id&&s.activity_id===a.id))?.name||'Lesson',
+   date:h.lesson_date,title:'Homework',updated_at:h.updated_at
+  })),
+  ...activityUpdates.map(n=>({
+   kind:'activity',raw:n,activity:activities.find(a=>a.id===n.activity_id)?.name||'Activity',
+   date:n.session_date||'',title:n.title,updated_at:n.updated_at
+  }))
+ ];
+ return all.map(n=>({...n,key:noticeKey(n)}));
+}
+async function initializeNoticeFeed(){
+ const startKey='__notices_started__';
+ let existing=noticeReads.find(r=>r.notice_key===startKey);
+ if(!existing){
+  const record={user_id:user.id,household_id:HOUSE,notice_key:startKey};
+  const result=await db.from('household_notice_reads').upsert(record,{onConflict:'user_id,household_id,notice_key',ignoreDuplicates:true});
+  if(result.error)throw result.error;
+  const latest=await db.from('household_notice_reads').select('notice_key,seen_at').eq('household_id',HOUSE).eq('user_id',user.id);
+  if(latest.error)throw latest.error;
+  noticeReads=latest.data||[];
+  existing=noticeReads.find(r=>r.notice_key===startKey);
+ }
+ noticeFeedStart=existing?.seen_at||new Date().toISOString();
+}
+function unreadNotices(){
+ const since=Date.parse(noticeFeedStart||new Date().toISOString());
+ return noticeItems().filter(n=>{
+  const updated=Date.parse(n.updated_at||0);
+  const receipt=noticeReads.find(r=>r.notice_key===n.key);
+  return updated>since&&(!receipt||updated>Date.parse(receipt.seen_at));
+ }).sort((a,b)=>Date.parse(b.updated_at)-Date.parse(a.updated_at));
+}
+function renderUnreadNotices(){
+ const p=$('unreadNoticePanel');if(!p)return;
+ const all=unreadNotices();
+ p.hidden=!all.length;if(!all.length){p.innerHTML='';return}
+ const n=all[0],label=n.kind==='teacher'?'Teacher note':n.kind==='homework'?'Homework':'Activity update';
+ p.innerHTML='<button type="button" class="notice-action" id="openUnreadNotice" aria-label="Open unread '+esc(label)+'">'
+ +'<span><strong>'+esc(label)+' · '+esc(n.activity)+'</strong>'
+ +esc(n.title)+(n.date?' · '+esc(displayDateDMY(n.date)):'')+'</span>'
+ +'<span class="notice-count">'+all.length+' unread</span></button>';
+}
+async function markNoticeSeen(n){
+ if(!n||!user)return;
+ const seen_at=new Date().toISOString(),record={user_id:user.id,household_id:HOUSE,notice_key:n.key,seen_at};
+ const res=await db.from('household_notice_reads').upsert(record,{onConflict:'user_id,household_id,notice_key'});
+ if(res.error)throw res.error;
+ const existing=noticeReads.find(r=>r.notice_key===n.key);
+ if(existing)existing.seen_at=seen_at;else noticeReads.push(record);
+ renderUnreadNotices();
+}
+function noteDetailMarkup(n){
+ if(n.kind==='teacher')return '<div class="activity-note-card"><strong>Teacher note · '+esc(n.activity)+'</strong>'
+   +'<small>'+esc(displayDateDMY(n.date))+'</small><p>'+esc(n.raw.note)+'</p></div>';
+ if(n.kind==='homework')return '<div class="activity-note-card"><strong>Homework · '+esc(n.activity)+'</strong>'
+   +'<small>'+esc(displayDateDMY(n.date))+'</small><p>'+esc(n.raw.description||'')+'</p>'
+   +(n.raw.files||[]).map(f=>'<p><button type="button" class="homework-download" data-homework-path="'+esc(f.path)+'">'+esc(f.name||'Download attachment')+'</button></p>').join('')+'</div>';
+ const a=n.raw;
+ return '<div class="activity-note-card"><strong>'+esc(a.title)+'</strong>'
+  +'<small>'+esc(n.activity)+(a.session_date?' · '+esc(displayDateDMY(a.session_date)):'')
+  +(a.source==='copied_email'?' · Copied team email':' · Manual note')+'</small>'
+  +(a.practice_time?'<p><strong>Time:</strong> '+esc(a.practice_time)+'</p>':'')
+  +(a.location?'<p><strong>Location:</strong> '+esc(a.location)+'</p>':'')
+  +(a.details?'<p>'+esc(a.details)+'</p>':'')+'</div>';
+}
+async function openNotice(n){
+ $('noteViewerHeading').textContent=(n.kind==='teacher'?'Teacher note':n.kind==='homework'?'Homework':'Activity update')+' · '+n.activity;
+ $('noteViewerBody').innerHTML=noteDetailMarkup(n);
+ $('noteViewerDialog').showModal();
+ try{await markNoticeSeen(n)}catch(err){msg('Could not mark note read: '+err.message)}
+}
+async function markSessionNotesSeen(scheduleId,date){
+ const aid=schedules.find(s=>s.id===scheduleId)?.activity_id;
+ const notes=noticeItems().filter(n=>(n.kind==='activity'&&n.raw.activity_id===aid&&n.date===date)
+  ||((n.kind==='teacher'||n.kind==='homework')&&n.raw.schedule_id===scheduleId&&n.date===date));
+ await Promise.all(notes.map(markNoticeSeen));
+}
+let activityNotesActivityId=null;
+function showActivityNoteList(){
+ const a=activities.find(a=>a.id===activityNotesActivityId);if(!a)return;
+ $('activityNotesHeading').textContent=a.name+' · Notes';
+ const notes=noticeItems().filter(n=>n.kind==='activity'&&n.raw.activity_id===a.id);
+ $('activityNoteItems').innerHTML=notes.length?notes.map(n=>
+ '<div class="activity-note-card"><strong>'+esc(n.title)+'</strong>'
+ +'<small>'+(n.date?esc(displayDateDMY(n.date))+' · ':'')+esc(n.raw.practice_time||'')
+ +(n.raw.location?' · '+esc(n.raw.location):'')+'</small>'
+ +'<button type="button" data-view-update="'+esc(n.raw.id)+'">Read note</button></div>').join(''):'<p class="muted">No activity notes yet.</p>';
+}
+function openActivityNotes(activityId){
+ if(!activities.some(a=>a.id===activityId))return;
+ activityNotesActivityId=activityId;showActivityNoteList();
+ $('activityNoteForm').reset();$('activityNoteStatus').textContent='';
+ $('activityNotesDialog').showModal();
+}
+
 function render(){
  if(!user)return;
  $('content').classList.toggle('calendar-edge-to-edge',tab==='monthview');
@@ -1162,7 +1271,67 @@ function openEditor(title,fields,save){
  $('save').onclick=submit;
  $('editform').onsubmit=e=>{e.preventDefault();submit()};
 }
+
+$('unreadNoticePanel').addEventListener('click',e=>{
+ if(!e.target.closest('#openUnreadNotice'))return;
+ const n=unreadNotices()[0];if(n)openNotice(n);
+});
+$('noteViewerClose').onclick=()=>$('noteViewerDialog').close();
+$('activityNoteClose').onclick=()=>$('activityNotesDialog').close();
+$('activityNoteItems').addEventListener('click',e=>{
+ const b=e.target.closest('[data-view-update]');if(!b)return;
+ const n=noticeItems().find(n=>n.kind==='activity'&&n.raw.id===b.dataset.viewUpdate);
+ if(!n)return;
+ $('activityNotesDialog').close();openNotice(n);
+});
+$('activityNoteForm').onsubmit=async e=>{
+ e.preventDefault();
+ const a=activities.find(a=>a.id===activityNotesActivityId);if(!a)return;
+ const b=$('activityNoteSave');b.disabled=true;$('activityNoteStatus').textContent='Saving…';
+ try{
+  const title=$('activityNoteTitle').value.trim(),details=$('activityNoteDetails').value.trim();
+  if(!title||title.length>120)throw Error('Enter a title up to 120 characters.');
+  const record={household_id:HOUSE,activity_id:a.id,created_by:user.id,title,details,
+   session_date:$('activityNoteDate').value||null,practice_time:$('activityNoteTime').value.trim(),
+   location:$('activityNoteLocation').value.trim(),source:$('activityNoteSource').value};
+  const result=await db.from('activity_updates').insert(record).select('*').single();
+  if(result.error)throw result.error;
+  activityUpdates.unshift(result.data);
+  $('activityNoteForm').reset();
+  $('activityNoteStatus').textContent='Note saved. The calendar and fixed monthly fee were not changed.';
+  showActivityNoteList();render();
+  await markNoticeSeen(noticeItems().find(n=>n.kind==='activity'&&n.raw.id===result.data.id));
+ }catch(err){$('activityNoteStatus').textContent='Could not save: '+err.message}
+ finally{b.disabled=false}
+};
+$('activityBalances').addEventListener('click',e=>{
+ const b=e.target.closest('[data-adjust-monthly]');if(!b)return;
+ const a=activities.find(a=>a.id===b.dataset.adjustMonthly);
+ if(!a||billingPeriodAt(a,month+'-01')!=='monthly')return;
+ const existing=monthlyAdjustments.find(o=>o.activity_id===a.id&&o.billing_month.slice(0,7)===month);
+ const label=new Date(month+'-01T12:00:00').toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+ openEditor('Adjust monthly fee · '+a.name,
+  '<p class="muted">Only '+esc(label)+' changes. Training attendance, cancellations and reschedules do not affect this fixed fee.</p>'
+  +'<label for="monthlyAdjustedAmount">Amount due (€)</label><input class="wide" id="monthlyAdjustedAmount" type="number" min="0" step="0.01" required value="'+esc(existing?existing.amount:monthlyActivityFee(a,month))+'">'
+  +'<label for="monthlyAdjustedReason">Reason (optional)</label><input class="wide" id="monthlyAdjustedReason" maxlength="500" value="'+esc(existing?.reason||'')+'">'
+  +(existing?'<button type="button" id="removeMonthlyAdjustment">Restore regular monthly fee</button>':''),
+  async()=>{
+   const amount=Number($('monthlyAdjustedAmount').value);
+   if($('monthlyAdjustedAmount').value===''||!Number.isFinite(amount)||amount<0)throw Error('Enter a valid amount of zero or more.');
+   const record={activity_id:a.id,billing_month:month+'-01',amount,reason:$('monthlyAdjustedReason').value.trim(),updated_by:user.id,updated_at:new Date().toISOString()};
+   const r=await db.from('monthly_activity_adjustments').upsert(record,{onConflict:'activity_id,billing_month'});
+   if(r.error)throw r.error;
+  });
+ if(existing)$('removeMonthlyAdjustment').onclick=async()=>{
+  const b=$('removeMonthlyAdjustment');b.disabled=true;
+  try{const x=await db.from('monthly_activity_adjustments').delete().eq('activity_id',a.id).eq('billing_month',month+'-01');if(x.error)throw x.error;
+   $('editor').close();await load();msg('Regular monthly fee restored for '+label+'.');
+  }catch(err){$('editorStatus').textContent=err.message}finally{b.disabled=false}
+ };
+});
+
 $('content').onclick=async e=>{let b=e.target.closest('button');if(!b)return;
+ if(b.dataset.activityNotes){openActivityNotes(b.dataset.activityNotes);return;}
  if(b.id==='newChild'||b.dataset.child){
   const child=children.find(c=>c.id===b.dataset.child);
   openEditor(child?'Edit child':'Add child',
