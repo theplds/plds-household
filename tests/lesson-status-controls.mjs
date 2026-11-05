@@ -13,7 +13,7 @@ for(const status of ['completed','cancelled_free','cancelled_charged','reschedul
 assert.match(html,/id="lessonStatusRescheduled"/);
 assert.match(html,/id="lessonStatusCurrent"/);
 assert.match(html,/class="lesson-status-options"/);
-assert.match(html,/name='lessonStatusChoice'/);
+assert.match(html,/e\.target\?\.name!==\x27lessonStatusChoice\x27/);
 assert.match(html,/status.value=e.target.value/);
 assert.match(html,/if\(status.value==='rescheduled'\)\$\('newdate'\)\?\.focus\(\)/);
 assert.match(html,/const choice=\$\('lessonStatusRescheduled'\)/);
