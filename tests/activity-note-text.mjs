@@ -10,8 +10,8 @@ assert.match(html,/\.activity-note-form textarea\{display:block;width:100%;min-h
 assert.match(html,/:root\[data-theme="light"\] \.activity-note-form textarea\{background:#fff;color:#1c2b42;border-color:#c9d4e5\}/);
 assert.match(html,/const details=\$\('activityNoteDetails'\)\.value\.trim\(\)/);
 assert.match(html,/if\(!details\)throw Error\('Enter a note\.'\)/);
-assert.match(html,/title:'Note',details,session_date:activityNotesContextDate/);
-assert.match(html,/const record=\{household_id:HOUSE,activity_id:a\.id,created_by:user\.id,/);
+assert.match(html,/title:'Note',details,session_date:sessionDate\|\|null/);
+assert.match(html,/const record=\{household_id:HOUSE,activity_id:activity\.id,created_by:user\.id,/);
 assert.match(html,/date:n\.session_date\|\|'',title:n\.title==='Note'\?/);
 assert.match(html,/a\.title==='Note'\?'':'<strong>'\+esc\(a\.title\)/);
 assert.match(html,/activityUpdates\.unshift\(saved\)/);
@@ -24,5 +24,6 @@ assert.equal((form.match(/<textarea\b/g)||[]).length,1,'One note entry field');
 assert.doesNotMatch(form,/<input\b|<select\b/,'No extra note entry fields');
 assert.doesNotMatch(html,/activityNoteDate|activityNoteTime|activityNoteLocation|activityNoteSource/);
 assert.match(html,/function openActivityNotes\(activityId,sessionDate=null\)/);
-assert.match(html,/openActivityNotes\(b\.dataset\.activity,b\.dataset\.date\|\|null\)/);
+assert.match(html,/inlineNoteSave\.dataset\.sessionDate=date/);
+assert.doesNotMatch(html,/id="openActivityNotesForLesson"/);
 console.log('PASS: one-field activity notes preserve note history, context date, schema and consistent themes.');
