@@ -151,3 +151,27 @@ emailEl('emailIntakeProposals').addEventListener('click',async e=>{
   emailEl('emailIntakeStatus').textContent='Review failed: '+(err.message||String(err));
  }finally{emailInboxBusy=false;button.disabled=false;}
 });
+
+let lastEmailPendingCount=null;
+async function checkNewForwardedSchedules(){
+ if(!user||!HOUSE||document.hidden)return;
+ const household=HOUSE;
+ try{
+  const r=await db.from('household_email_proposals').select('id')
+   .eq('household_id',household).eq('status','pending').limit(100);
+  if(r.error||HOUSE!==household)return;
+  const count=(r.data||[]).length;
+  const button=emailEl('openEmailIntake');
+  button.textContent=count?'Review ('+count+')':'Set up / review';
+  if(lastEmailPendingCount!==null&&count>lastEmailPendingCount){
+   msg(count+' proposed sports session(s) waiting for review. Open Options → Incoming email schedules.');
+  }
+  lastEmailPendingCount=count;
+ }catch(e){console.warn('Email proposal count unavailable:',e?.message||String(e))}
+}
+setInterval(checkNewForwardedSchedules,90000);
+document.addEventListener('visibilitychange',()=>{
+ if(!document.hidden)checkNewForwardedSchedules();
+});
+window.addEventListener('focus',checkNewForwardedSchedules);
+setTimeout(checkNewForwardedSchedules,1500);
