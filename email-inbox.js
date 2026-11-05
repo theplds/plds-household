@@ -132,7 +132,9 @@ emailEl('emailIntakeProposals').addEventListener('click',async e=>{
   const activity=activities.find(a=>a.id===activityId);
   if(!activity){emailEl('emailIntakeStatus').textContent='Choose the activity first.';return;}
   const rate=Number(activity.price)||0;
-  const chargeNotice=rate>0?' This may generate a '+euro(rate)+' lesson charge (or affect the existing monthly fee).':'';
+  const chargeNotice=activity.billing_period==='monthly'?
+   ' This activity has a fixed monthly fee; adding a session does not create another monthly charge.':
+   rate>0?' This may generate a '+euro(rate)+' per-session charge.':' This activity is currently free per session.';
   if(!confirm('Approve this one-time session for '+activity.name+'?'+chargeNotice+
      ' It will create a normal Household activity session. Any conflicting existing appointment must be resolved manually.'))return;
  }else if(!confirm('Dismiss this proposed session?'))return;
