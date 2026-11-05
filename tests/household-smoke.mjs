@@ -4,7 +4,18 @@ import {Script,createContext,runInContext} from 'node:vm';
 import {URL as NodeURL} from 'node:url';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.151/);
+assert.match(html,/PLDS Household v0\.3\.152/);
+const noteFormMarkup=html.slice(html.indexOf('<form id="activityNoteForm"'),html.indexOf('</form></dialog>',html.indexOf('<form id="activityNoteForm"')));
+assert.ok(noteFormMarkup.startsWith('<form id="activityNoteForm"'),'Activity note form exists');
+assert.equal((noteFormMarkup.match(/<textarea\b/g)||[]).length,1,'Note entry must have exactly one text field');
+assert.equal((noteFormMarkup.match(/<input\b|<select\b/g)||[]).length,0,'Note entry must have no date/time/location/source fields');
+assert.match(noteFormMarkup,/id="activityNoteDetails"/);
+assert.match(noteFormMarkup,/id="activityNoteDetails"[^>]*required/);
+assert.doesNotMatch(html,/activityNoteDate|activityNoteTime|activityNoteLocation|activityNoteSource/);
+assert.match(html,/activityNotesContextDate=/,'Lesson-linked notes retain date context without an extra UI field');
+assert.match(html,/openActivityNotes\(b\.dataset\.activity,b\.dataset\.date\|\|null\)/);
+assert.match(html,/title:'Note',details,session_date:activityNotesContextDate/,'Required backend note title is automatic');
+
 assert.doesNotMatch(html,/addHouseholdEvent|\+ Event<\/button>/,'The calendar toolbar must not expose a standalone Add Event control');
 assert.match(html,/function showImportedEvent\(id=null\)/,'Existing imported event editing must remain available');
 assert.match(html,/data-import-event/,'Imported events must remain accessible from calendar');
