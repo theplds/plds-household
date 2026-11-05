@@ -49,6 +49,18 @@ async function pg(path:string,method='GET',body?:unknown,prefer?:string){
 }
 const safeText=(s:unknown,limit:number)=>String(s||'').slice(0,limit);
 Deno.serve(async(req:Request)=>{
+ const origin=req.headers.get('origin')||'';
+ const cors=origin==='https://theplds.github.io'?{
+  'Access-Control-Allow-Origin':origin,
+  'Access-Control-Allow-Methods':'GET,OPTIONS',
+  'Access-Control-Allow-Headers':'authorization,apikey,content-type',
+  Vary:'Origin'
+ }:{} as Record<string,string>;
+ if(req.method==='OPTIONS')return new Response(null,{status:204,headers:cors});
+ if(req.method==='GET')return new Response(JSON.stringify({
+  configured:Boolean(serviceUrl&&serviceKey&&resendKey&&webhookSecret&&inboundDomain),
+  domain:inboundDomain||null
+ }),{headers:{'Content-Type':'application/json','Cache-Control':'no-store',...cors}});
  if(req.method!=='POST')return response(405,{error:'Method not allowed'});
  // Fail closed until the external provider is configured by the owner.
  if(!serviceUrl||!serviceKey||!resendKey||!webhookSecret||
@@ -96,9 +108,15 @@ Deno.serve(async(req:Request)=>{
    status:proposals.length?'new':'unparsed',
    received_at:email?.created_at||event?.created_at||new Date().toISOString()
   }],'resolution=ignore-duplicates,return=representation');
-  if(!Array.isArray(created)||!created.length)
-   return response(200,{ok:true,ignored:'already_processed'});
-  const inboxId=created[0].id;
+  let inboxId=Array.isArray(created)&&created.length?created[0].id:null;
+  if(!inboxId){
+   const existing=await pg('household_email_inbox?provider_email_id=eq.'+
+    encodeURIComponent(emailId)+'&household_id=eq.'+
+    encodeURIComponent(config.household_id)+'&select=id');
+   if(!Array.isArray(existing)||existing.length!==1)
+    throw Error('Could not resolve received message');
+   inboxId=existing[0].id;
+  }
   if(proposals.length){
    await pg('household_email_proposals?on_conflict=inbox_id,proposed_date,start_time,end_time',
     'POST',proposals.map((p:any)=>({
