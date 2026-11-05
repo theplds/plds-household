@@ -20,5 +20,6 @@ jobs:
           node tests/calendar-account-isolation.mjs
           node tests/imported-event-status.mjs
           node tests/lesson-status-controls.mjs
+          node tests/activity-note-text.mjs
           node tests/calendar-conversion.mjs
           node tests/google-calendar-error-reasons.mjs
