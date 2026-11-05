@@ -22,5 +22,6 @@ jobs:
           node tests/lesson-status-controls.mjs
           node tests/activity-note-text.mjs
           node tests/lesson-inline-notes.mjs
+          node tests/email-inbound.mjs
           node tests/calendar-conversion.mjs
           node tests/google-calendar-error-reasons.mjs

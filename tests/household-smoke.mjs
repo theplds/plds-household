@@ -4,7 +4,7 @@ import {Script,createContext,runInContext} from 'node:vm';
 import {URL as NodeURL} from 'node:url';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(html,/PLDS Household v0\.3\.153/);
+assert.match(html,/PLDS Household v0\.3\.154/);
 const noteFormMarkup=html.slice(html.indexOf('<form id="activityNoteForm"'),html.indexOf('</form></dialog>',html.indexOf('<form id="activityNoteForm"')));
 assert.ok(noteFormMarkup.startsWith('<form id="activityNoteForm"'),'Activity note form exists');
 assert.equal((noteFormMarkup.match(/<textarea\b/g)||[]).length,1,'Note entry must have exactly one text field');
