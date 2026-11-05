@@ -11,7 +11,7 @@ assert.match(html,/:root\[data-theme="light"\] \.activity-note-form textarea\{ba
 assert.match(html,/const details=\$\('activityNoteDetails'\)\.value\.trim\(\)/);
 assert.match(html,/if\(!details\)throw Error\('Enter a note\.'\)/);
 assert.match(html,/title:'Note',details,session_date:sessionDate\|\|null/);
-assert.match(html,/const record=\{household_id:HOUSE,activity_id:a\.id,created_by:user\.id,/);
+assert.match(html,/const record=\{household_id:HOUSE,activity_id:activity\.id,created_by:user\.id,/);
 assert.match(html,/date:n\.session_date\|\|'',title:n\.title==='Note'\?/);
 assert.match(html,/a\.title==='Note'\?'':'<strong>'\+esc\(a\.title\)/);
 assert.match(html,/activityUpdates\.unshift\(saved\)/);
