@@ -60,4 +60,11 @@ assert.match(sql,/insert into public\.schedules/);
 assert.match(sql,/v\.proposed_date,v\.proposed_date,p_child_id is null/);
 assert.match(sql,/grant execute on function public\.review_household_email_proposal/);
 assert.match(sql,/inbox_token text not null unique/);
+const isolation=readFileSync(new URL('migrations/20261105_household_email_venue_and_isolation.sql',root),'utf8');
+assert.match(isolation,/Email proposal household mismatch/);
+assert.match(isolation,/Email proposal activity household mismatch/);
+assert.match(isolation,/Email proposal child household mismatch/);
+assert.match(isolation,/old\.status='pending' and new\.status='approved'/);
+assert.match(isolation,/insert into public\.activity_updates/);
+
 console.log('PASS: forwarded sports schedule parsing, signed webhook, household RLS and approval-only sessions.');
